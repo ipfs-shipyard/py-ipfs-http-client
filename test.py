@@ -1,0 +1,15 @@
+import ipfs
+
+
+if __name__ == "__main__":
+    api = ipfs.Client()
+
+    #print api.swarm_peers()
+    #print api.cat('Qmf3sE2DaCSEc9XVr9yro9Y4Sj5Ac8rgjqqWYAsC2c9FrV')
+
+    test_json = {'dsadsd': ['dsdsad', 'dsadsad', 'dsdsad']}
+
+    res = api.add_json(test_json)
+    mhash = res['Hash']
+    print mhash
+    print api.load_json(mhash)
