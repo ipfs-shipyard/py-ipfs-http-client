@@ -3,6 +3,12 @@ IPFS API Bindings for Python
 
 Self-explanatory.  Check out `ipfs <http://ipfs.io/>`_ and `the command reference <http://ipfs.io/docs/commands/>`_ for more information about the IPFS Api.
 
+Install with pip:
+
+.. code-block::
+
+    pip install ipfs
+
 Basic use-case:
 
 .. code-block:: python
