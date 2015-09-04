@@ -3,7 +3,7 @@ IPFS API Bindings for Python
 
 Self-explanatory.  Check out `ipfs <http://ipfs.io/>`_ and `the command reference <http://ipfs.io/docs/commands/>`_ for more information on the IPFS Api.
 
-This module also sports from helper function for adding non-files and even python objects to IPFS:
+This module also contains some helper functions for adding strings, json, and even python objects to IPFS:
 
 .. code-block:: python
     
