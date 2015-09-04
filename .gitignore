@@ -1,5 +1,4 @@
-git_rm_deleted_files
-*.pyc
 ipfs/test/
-*~
+*.pyc
 *.swp
+*~
