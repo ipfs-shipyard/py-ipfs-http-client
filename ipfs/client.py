@@ -4,7 +4,6 @@ IPFS API Bindings for Python
 import os
 import functools
 import requests
-import mimetypes
 import fnmatch
 
 from . import utils
