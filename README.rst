@@ -6,6 +6,7 @@ Self-explanatory.  Check out `ipfs <http://ipfs.io/>`_ and `the command referenc
 This module also sports from helper function for adding non-files and even python objects to IPFS:
 
 .. code-block:: python
+    
     >>> import ipfs
     >>> api = ipfs.Client()
     >>> lst = [1, 77, 'lol']
@@ -16,3 +17,17 @@ This module also sports from helper function for adding non-files and even pytho
     ...
 
 More to come soon...
+
+Things shouldn't be this way. Not in Python.
+
+.. code-block:: python
+
+    >>> r = requests.get('https://api.github.com', auth=('user', 'pass'))
+    >>> r.status_code
+    204
+    >>> r.headers['content-type']
+    'application/json'
+    >>> r.text
+    ...
+
+See `the same code, without Requests <https://gist.github.com/973705>`_.
