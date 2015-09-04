@@ -98,8 +98,6 @@ class HTTPClient(object):
             except:
                 pass
         return res.text
-
-    
     
 
 
@@ -271,7 +269,3 @@ class Client(object):
         s = None
         walk(dirname, s)
         return results
-
-
-
-
