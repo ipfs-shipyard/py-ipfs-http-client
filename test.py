@@ -12,3 +12,7 @@ if __name__ == "__main__":
     res = api.add_json(test_json)
     print res
     print api.load_json(res)
+
+    print
+
+    print api.add_dir('test')

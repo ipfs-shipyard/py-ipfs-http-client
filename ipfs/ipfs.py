@@ -5,9 +5,9 @@ import os
 import functools
 import requests
 import mimetypes
-import json
-import cPickle as pickle
-from cStringIO import StringIO
+import fnmatch
+
+from . import utils
 
 
 
@@ -60,7 +60,7 @@ class FileCommand(Command):
             with open(fn, 'rb') as fp:
                 content = fp.read()
         
-        files = [('file', (fn, content, 'application/octet-stream'))]
+        files = [('file', (os.path.basename(fn), content, 'application/octet-stream'))]
         
         return client.request(self.path, files=files, **kwargs)
 
@@ -73,7 +73,7 @@ class HTTPClient(object):
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
 
-    def request(self, path, args=[], opts=[], files=[], json=True):
+    def request(self, path, args=[], opts=[], files=[], json=True, session=None):
         url = self.base + path
         
         params = []
@@ -86,8 +86,11 @@ class HTTPClient(object):
             params.append(('arg', arg))
 
         method = 'post' if files else 'get'
-
-        res = requests.request(method, url, params=params, files=files)
+        
+        if session:
+            res = session.request(method, url, params=params, files=files)
+        else:
+            res = requests.request(method, url, params=params, files=files)
 
         if json:
             try:
@@ -96,7 +99,8 @@ class HTTPClient(object):
                 pass
         return res.text
 
-
+    
+    
 
 
 class Client(object):
@@ -111,6 +115,8 @@ class Client(object):
         ############
         
         # BASIC COMMANDS
+        # ***NOTE: self.add ONLY works for a single file object (for now).  For
+        #          recursive add please use self.add_dir.
         self.add                = FileCommand('/add')
         self.cat                =  ArgCommand('/cat', json=False)
         self.ls                 =  ArgCommand('/ls')
@@ -177,16 +183,10 @@ class Client(object):
     ###########
     # HELPERS #
     ###########
-    @staticmethod
-    def make_buffer(string):
-        buf = StringIO()
-        buf.write(string)
-        buf.seek(0)
-        return buf
 
     def add_str(self, string, **kwargs):
         """Adds a Python string as a file to IPFS."""
-        res = self.add(self.make_buffer(string), **kwargs)
+        res = self.add(self.make_string_buffer(string), **kwargs)
         try:
             return res['Hash']
         except:
@@ -194,7 +194,7 @@ class Client(object):
     
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS."""
-        res = self.add(self.make_buffer(json.dumps(json_obj)), **kwargs)
+        res = self.add(self.make_json_buffer(json_obj), **kwargs)
         try:
             return res['Hash']
         except:
@@ -206,7 +206,7 @@ class Client(object):
         
     def add_pyobj(self, py_obj, **kwargs):
         """Adds a picklable Python object as a file to IPFS."""
-        res = self.add(self.make_buffer(pickle.dumps(py_obj)), **kwargs)
+        res = self.add(utils.make_pyobj_buffer(py_obj), **kwargs)
         try:
             return res['Hash']
         except:
@@ -214,6 +214,61 @@ class Client(object):
 
     def load_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS."""
-        return pickle.loads(self.cat(multihash, **kwargs))
+        return utils.parse_pyobj(self.cat(multihash, **kwargs))
+    
+
+    #################
+    # RECURSIVE ADD #
+    #################
+    
+    def add_dir(self, dirname, match='*', **kwargs):
+        """Loads a directory recursively into IPFS, files are matched against
+        the given pattern.
+        
+        ***NOTE: This is a temp solution until streaming multipart files can be
+                 figured out.
+        """
+        
+        results = []
+
+        def fsize(fullpath):
+            """This value is fudged to match the discrepancy between however
+            the IPFS Api calculates file sizes and the value given by Python"""
+            return os.path.getsize(fullpath) + 8
+        
+        def walk(dirname, session):
+            ls = os.listdir(dirname)
+            files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
+            dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
+            
+            dir_json = { u"Data": u'\x08\x01',
+                        u"Links": []}
+
+            for fn in files:
+                if not fnmatch.fnmatch(fn, match):
+                    continue
+
+                fullpath = os.path.join(dirname, fn)
+                
+                res = self.add(fullpath, session=session)
+                size = fsize(fullpath)
+                res[u"Size"] = size
+                
+                dir_json[u"Links"].append(res)
+                results.append(res)
+            
+            for dirn in dirs:
+                res = walk(os.path.join(dirname, dirn), session)
+                dir_json[u"Links"].append(res)
+                results.append(res)
+            
+            return self.object_add(utils.make_json_buffer(dir_json))
+
+        #with requests.Session() as s:
+        s = None
+        walk(dirname, s)
+        return results
+
+
 
 
