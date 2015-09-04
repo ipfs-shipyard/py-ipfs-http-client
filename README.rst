@@ -1,7 +1,7 @@
 IPFS API Bindings for Python
 ============================
 
-Self-explanatory.  Check out `ipfs <http://ipfs.io/>`_ and `the command reference <http://ipfs.io/docs/commands/>`_ for more information on the IPFS Api.
+Self-explanatory.  Check out `ipfs <http://ipfs.io/>`_ and `the command reference <http://ipfs.io/docs/commands/>`_ for more information about the IPFS Api.
 
 This module also contains some helper functions for adding strings, json, and even python objects to IPFS:
 
