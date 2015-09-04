@@ -10,6 +10,5 @@ if __name__ == "__main__":
     test_json = {'dsadsd': ['dsdsad', 'dsadsad', 'dsdsad']}
 
     res = api.add_json(test_json)
-    mhash = res['Hash']
-    print mhash
-    print api.load_json(mhash)
+    print res
+    print api.load_json(res)

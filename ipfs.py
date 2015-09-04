@@ -43,7 +43,7 @@ class ArgCommand(Command):
             args = [args]
         if self.argc and len(args) != self.argc:
             raise InvalidArguments
-        return client.request(self.path, args, **kwargs)
+        return client.request(self.path, args=args, **kwargs)
 
 
 class FileCommand(Command):
@@ -74,18 +74,14 @@ class HTTPClient(object):
         self.base = 'http://%s:%s/%s' % (host, port, base)
 
     def request(self, path, args=[], opts=[], files=[], json=True):
-        
         url = self.base + path
         
         params = []
         params.append(('stream-channels', 'true'))
-        
         if json:
             params.append(('encoding', 'json'))
-        
         for opt in opts:
             params.append(opt)
-
         for arg in args:
             params.append(('arg', arg))
 
@@ -98,7 +94,6 @@ class HTTPClient(object):
                 return res.json()
             except:
                 pass
-        
         return res.text
 
 
@@ -191,19 +186,31 @@ class Client(object):
 
     def add_str(self, string, **kwargs):
         """Adds a Python string as a file to IPFS."""
-        return self.add(self.make_buffer(string), **kwargs)
+        res = self.add(self.make_buffer(string), **kwargs)
+        try:
+            return res['Hash']
+        except:
+            return res
     
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS."""
-        return self.add(self.make_buffer(json.dumps(json_obj)), **kwargs)
-    
+        res = self.add(self.make_buffer(json.dumps(json_obj)), **kwargs)
+        try:
+            return res['Hash']
+        except:
+            return res
+
     def load_json(self, multihash, **kwargs):
         """Loads a json object from IPFS."""
         return self.cat(multihash, json=True, **kwargs)
-
+        
     def add_pyobj(self, py_obj, **kwargs):
         """Adds a picklable Python object as a file to IPFS."""
-        return self.add(self.make_buffer(pickle.dumps(py_obj)), **kwargs)
+        res = self.add(self.make_buffer(pickle.dumps(py_obj)), **kwargs)
+        try:
+            return res['Hash']
+        except:
+            return res
 
     def load_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS."""
