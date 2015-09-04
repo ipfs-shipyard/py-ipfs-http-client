@@ -15,7 +15,6 @@ Basic use-case:
     >>> api.cat(res['Hash'])
     'fdsafkljdskafjaksdjf\n'
 
-
 Administrative functions:
 
 .. code-block:: python
@@ -38,6 +37,18 @@ Pass in API options:
               'QmNQ1h6o1xJARvYzwmySPsuv9L5XfzS4WTvJSTAWwYRSd8': {'Count': 1,
                                                                  'Type': 'indirect'},
               ...
+
+Add a directory and match against a filename pattern:
+
+.. code-block:: python
+
+    >>> api.add_dir('photos', match='*.jpg')
+    [{'Hash': 'QmcqBstfu5AWpXUqbucwimmWdJbu89qqYmE3WXVktvaXhX',
+      'Name': 'photos/photo1.jpg'},
+     {'Hash': 'QmSbmgg7kYwkSNzGLvWELnw1KthvTAMszN5TNg3XQ799Fu',
+      'Name': 'photos/photo2.jpg'},
+     {'Hash': 'Qma6K85PJ8dN3qWjxgsDNaMjWjTNy8ygUWXH2kfoq9bVxH',
+      'Name': 'photos/photo3.jpg'}]
 
 This module also contains some helper functions for adding strings, json, and even python objects to IPFS:
 
