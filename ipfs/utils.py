@@ -18,4 +18,4 @@ def make_pyobj_buffer(py_obj):
     return make_string_buffer(pickle.dumps(py_obj))
 
 def parse_pyobj(pickled):
-    return pickle.loads(pickled)
+    return pickle.loads(str(pickled))
