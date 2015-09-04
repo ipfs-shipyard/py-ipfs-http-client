@@ -120,7 +120,7 @@ class Client(object):
         else:
             defaults.update({'opts': {'encoding': default_enc}})
 
-        self.defaults = defaults
+        self._defaults = defaults
 
 
         ############
@@ -186,11 +186,15 @@ class Client(object):
         try:
             attr = object.__getattribute__(self, name)
             if isinstance(attr, Command):
-                return attr.prepare(self._http_client, **self.defaults)
+                return attr.prepare(self._http_client, **self._defaults)
             else:
                 return attr
         except AttributeError:
-            raise InvalidCommand
+            # all non-private attributes are api commands
+            if name[0] != '_':
+                raise InvalidCommand
+            else:
+                raise AttributeError
 
 
     ###########
@@ -249,7 +253,7 @@ class Client(object):
             the IPFS Api calculates file sizes and the value given by Python"""
             return os.path.getsize(fullpath) + 8
         
-        def walk(dirname, session):
+        def walk(dirname):
             ls = os.listdir(dirname)
             files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
             dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
@@ -263,7 +267,7 @@ class Client(object):
 
                 fullpath = os.path.join(dirname, fn)
                 
-                res = self.add(fullpath, session=session)
+                res = self.add(fullpath, **kwargs)
                 size = fsize(fullpath)
                 res[u"Size"] = size
                 
@@ -272,15 +276,13 @@ class Client(object):
             
             for subdir in dirs:
                 fullpath = os.path.join(dirname, subdir)
-                res = walk(fullpath, session)
+                res = walk(fullpath)
 
                 dir_json[u"Links"].append(res)
                 results.append({"Name": fullpath, "Hash": res[u"Hash"]})
             
-            return self.object_put(utils.make_json_buffer(dir_json))
+            return self.object_put(utils.make_json_buffer(dir_json), **kwargs)
         
-        # TODO: get max retries exception when using sessions
-        #with requests.Session() as s:
-        s = None
-        walk(dirname, s)
+        # do recursive walk and return global results
+        walk(dirname)
         return results
