@@ -28,8 +28,8 @@ class Command(object):
         return client.request(self.path, **kwargs)
 
     def prepare(self, client, **kwargs):
-        self.defaults.update(kwargs)
-        return functools.partial(self.request, client, **self.defaults)
+        kwargs.update(self.defaults)
+        return functools.partial(self.request, client, **kwargs)
 
 
 class ArgCommand(Command):
