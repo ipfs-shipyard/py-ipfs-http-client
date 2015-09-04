@@ -54,7 +54,7 @@ class FileCommand(Command):
             try:
                 fn = fp_or_fn.name
             except AttributeError:
-                fn = 'StringIO'
+                fn = ''
         except AttributeError:
             fn = fp_or_fn
             with open(fn, 'rb') as fp:
