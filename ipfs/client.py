@@ -186,7 +186,7 @@ class Client(object):
 
     def add_str(self, string, **kwargs):
         """Adds a Python string as a file to IPFS."""
-        res = self.add(self.make_string_buffer(string), **kwargs)
+        res = self.add(utils.make_string_buffer(string), **kwargs)
         try:
             return res['Hash']
         except:
@@ -194,7 +194,7 @@ class Client(object):
     
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS."""
-        res = self.add(self.make_json_buffer(json_obj), **kwargs)
+        res = self.add(utils.make_json_buffer(json_obj), **kwargs)
         try:
             return res['Hash']
         except:
@@ -225,8 +225,8 @@ class Client(object):
         """Loads a directory recursively into IPFS, files are matched against
         the given pattern.
         
-        ***NOTE: This is a temp solution until streaming multipart files can be
-                 figured out.
+        ***NOTE: This is a ghetto temp solution until streaming multipart files
+                 can be figured out.
         """
         
         results = []
@@ -255,15 +255,18 @@ class Client(object):
                 res[u"Size"] = size
                 
                 dir_json[u"Links"].append(res)
-                results.append(res)
+                results.append({"Name": fullpath, "Hash": res[u"Hash"]})
             
-            for dirn in dirs:
-                res = walk(os.path.join(dirname, dirn), session)
-                dir_json[u"Links"].append(res)
-                results.append(res)
-            
-            return self.object_add(utils.make_json_buffer(dir_json))
+            for subdir in dirs:
+                fullpath = os.path.join(dirname, subdir)
+                res = walk(fullpath, session)
 
+                dir_json[u"Links"].append(res)
+                results.append({"Name": fullpath, "Hash": res[u"Hash"]})
+            
+            return self.object_put(utils.make_json_buffer(dir_json))
+        
+        # TODO: get max retries exception when using sessions
         #with requests.Session() as s:
         s = None
         walk(dirname, s)

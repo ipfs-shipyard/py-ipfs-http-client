@@ -1,5 +1,5 @@
 import ipfs
-
+from pprint import pprint
 
 if __name__ == "__main__":
     api = ipfs.Client()
@@ -15,4 +15,4 @@ if __name__ == "__main__":
 
     print
 
-    print api.add_dir('test')
+    pprint( api.add_dir('ipfs/test') )
