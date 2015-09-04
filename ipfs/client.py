@@ -79,8 +79,12 @@ class HTTPClient(object):
         params.append(('stream-channels', 'true'))
         if json:
             params.append(('encoding', 'json'))
-        for opt in opts:
-            params.append(opt)
+        if isinstance(opts, dict):
+            for opt in opts.items():
+                params.append(opt)
+        else:
+            for opt in opts:
+                params.append(opt)
         for arg in args:
             params.append(('arg', arg))
 
@@ -115,7 +119,7 @@ class Client(object):
         # ***NOTE: self.add ONLY works for a single file object (for now).  For
         #          recursive add please use self.add_dir.
         self.add                = FileCommand('/add')
-        self.cat                =  ArgCommand('/cat', json=False)
+        self.cat                =  ArgCommand('/cat')
         self.ls                 =  ArgCommand('/ls')
         self.refs               =  ArgCommand('/refs')
         
