@@ -27,7 +27,8 @@ class Command(object):
     def request(self, client, **kwargs):
         return client.request(self.path, **kwargs)
 
-    def prepare(self, client):
+    def prepare(self, client, **kwargs):
+        self.defaults.update(kwargs)
         return functools.partial(self.request, client, **self.defaults)
 
 
@@ -72,13 +73,11 @@ class HTTPClient(object):
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
 
-    def request(self, path, args=[], opts=[], files=[], json=True, session=None):
+    def request(self, path, args=[], opts={}, files=[], json=True, session=None):
         url = self.base + path
         
         params = []
         params.append(('stream-channels', 'true'))
-        if json:
-            params.append(('encoding', 'json'))
         if isinstance(opts, dict):
             for opt in opts.items():
                 params.append(opt)
@@ -106,9 +105,22 @@ class HTTPClient(object):
 
 class Client(object):
 
-    def __init__(self, host='127.0.0.1', port=5001, base='api/v0'):
+    def __init__(self,
+                 host='127.0.0.1',
+                 port=5001,
+                 base='api/v0',
+                 default_enc='json',
+                 **defaults):
 
         self._http_client = HTTPClient(host, port, base)
+        
+        # default request keyword-args
+        if defaults.has_key('opts'):
+            defaults['opts'].update({'encoding': default_enc})
+        else:
+            defaults.update({'opts': {'encoding': default_enc}})
+
+        self.defaults = defaults
 
 
         ############
@@ -174,7 +186,7 @@ class Client(object):
         try:
             attr = object.__getattribute__(self, name)
             if isinstance(attr, Command):
-                return attr.prepare(self._http_client)
+                return attr.prepare(self._http_client, **self.defaults)
             else:
                 return attr
         except AttributeError:
