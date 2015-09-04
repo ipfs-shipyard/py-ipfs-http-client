@@ -7,14 +7,14 @@ Install with pip:
 
 .. code-block::
 
-    pip install ipfs
+    pip install ipfs-api
 
 Basic use-case:
 
 .. code-block:: python
 
-    >>> import ipfs
-    >>> api = ipfs.Client('127.0.0.1', 5001)
+    >>> import ipfsApi
+    >>> api = ipfsApi.Client('127.0.0.1', 5001)
     >>> res = api.add('test.txt')
     >>> res
     {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
