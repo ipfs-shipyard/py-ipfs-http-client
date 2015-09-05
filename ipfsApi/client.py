@@ -264,12 +264,10 @@ class Client(object):
             for fn in files:
                 if not fnmatch.fnmatch(fn, match):
                     continue
-
                 fullpath = os.path.join(dirname, fn)
                 res = self.add(fullpath, **kwargs)
                 
-                size = fsize(fullpath)
-                res[u"Size"] = size
+                res[u"Size"] = fsize(fullpath)
                 dir_json[u"Links"].append(res)
                 results.append({"Name": fullpath, "Hash": res[u"Hash"]})
             
