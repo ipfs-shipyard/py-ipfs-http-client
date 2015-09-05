@@ -266,11 +266,10 @@ class Client(object):
                     continue
 
                 fullpath = os.path.join(dirname, fn)
-                
                 res = self.add(fullpath, **kwargs)
+                
                 size = fsize(fullpath)
                 res[u"Size"] = size
-                
                 dir_json[u"Links"].append(res)
                 results.append({"Name": fullpath, "Hash": res[u"Hash"]})
             
@@ -283,6 +282,5 @@ class Client(object):
             
             return self.object_put(utils.make_json_buffer(dir_json), **kwargs)
         
-        # do recursive walk and return global results
         walk(dirname)
         return results
