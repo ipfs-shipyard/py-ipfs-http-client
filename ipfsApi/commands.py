@@ -97,6 +97,7 @@ class FileCommand(Command):
         ***NOTE: This is a ghetto temp solution until streaming multipart files
                  can be figured out.
         """
+        kwargs.update({'decoder': 'json'})
         fnpattern = kwargs.pop('match', '*')
         results = []
 
