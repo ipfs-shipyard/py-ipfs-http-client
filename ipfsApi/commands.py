@@ -121,7 +121,7 @@ class FileCommand(Command):
                 res = client.request('/add',
                                      files=[self._multipart_field(fullpath)],
                                      **kwargs)
-                
+                print res
                 res[u"Size"] = fsize(fullpath)
                 dir_json[u"Links"].append(res)
                 results.append({"Name": fullpath, "Hash": res[u"Hash"]})

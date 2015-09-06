@@ -2,6 +2,7 @@
 IPFS API Bindings for Python
 """
 import os
+import contextlib
 import requests
 
 from . import utils
@@ -21,8 +22,9 @@ class HTTPClient(object):
         self.host = host
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
-        
+
         self.default_enc = encoding.get_encoding(default_enc)
+        self._session = None
 
 
     def request(self, path, args=[], opts={}, files=[], decoder=None):
@@ -37,8 +39,11 @@ class HTTPClient(object):
 
         method = 'post' if files else 'get'
         
-        res = requests.request(method, url, params=params, files=files)
-        
+        if self._session:
+            res = self._session.request(method, url, params=params, files=files)
+        else:
+            res = requests.request(method, url, params=params, files=files)
+
         if not decoder:
             try:
                 return self.default_enc.parse(res.text)
@@ -47,15 +52,26 @@ class HTTPClient(object):
         else:
             enc = encoding.get_encoding(decoder)
             try:
-                return self.enc.parse(res.text)
+                return enc.parse(res.text)
             except:
                 pass
-
+        
         return res.text
+
+
+    @contextlib.contextmanager
+    def session(self):
+        self._session = requests.session()
+        yield
+        self._session.close()
+        self._session = None
     
 
 
 class Client(object):
+
+    api_client = HTTPClient
+
 
     def __init__(self,
                  host='127.0.0.1',
@@ -64,7 +80,7 @@ class Client(object):
                  default_enc='json',
                  **defaults):
         
-        self._http_client = HTTPClient(host, port, base, default_enc)
+        self._api_client = self.api_client(host, port, base, default_enc)
         
         # default request keyword-args
         if defaults.has_key('opts'):
@@ -136,7 +152,7 @@ class Client(object):
         try:
             attr = object.__getattribute__(self, name)
             if isinstance(attr, Command):
-                return attr.prepare(self._http_client, **self._defaults)
+                return attr.prepare(self._api_client, **self._defaults)
             else:
                 return attr
         except AttributeError:
