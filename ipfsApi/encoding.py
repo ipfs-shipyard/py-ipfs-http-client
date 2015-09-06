@@ -11,7 +11,7 @@ class Encoding(object):
         raise NotImplemented
 
 
-class Json(object):
+class Json(Encoding):
     name = 'json'
 
     def __init__(self):
