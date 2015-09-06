@@ -77,7 +77,7 @@ This module also contains some helper functions for adding strings, json, and ev
     >>> lst = [1, 77, 'lol']
     >>> api.add_pyobj(lst)
     'QmRFqz1ABQtbMBDfjpMubTaginvpVnf58Y87gheRzGfe4i'
-    >>> api.load_pyobj(_)
+    >>> api.get_pyobj(_)
     [1, 77, 'lol']
 
 More to come soon...

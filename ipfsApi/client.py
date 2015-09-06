@@ -167,7 +167,7 @@ class Client(object):
         except:
             return res
 
-    def load_json(self, multihash, **kwargs):
+    def get_json(self, multihash, **kwargs):
         """Loads a json object from IPFS."""
         return self.cat(multihash, decoder='json', **kwargs)
         
@@ -179,6 +179,6 @@ class Client(object):
         except:
             return res
 
-    def load_pyobj(self, multihash, **kwargs):
+    def get_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS."""
         return utils.parse_pyobj(self.cat(multihash, **kwargs))
