@@ -1,7 +1,6 @@
 build/
 dist/
 *.egg-info
-ipfsApi/test/
 *.pyc
 *.swp
 *~

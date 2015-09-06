@@ -48,13 +48,28 @@ Add a directory and match against a filename pattern:
 
 .. code-block:: python
 
-    >>> api.add_dir('photos', match='*.jpg')
+    >>> api.add('photos', match='*.jpg')
     [{'Hash': 'QmcqBstfu5AWpXUqbucwimmWdJbu89qqYmE3WXVktvaXhX',
       'Name': 'photos/photo1.jpg'},
      {'Hash': 'QmSbmgg7kYwkSNzGLvWELnw1KthvTAMszN5TNg3XQ799Fu',
       'Name': 'photos/photo2.jpg'},
      {'Hash': 'Qma6K85PJ8dN3qWjxgsDNaMjWjTNy8ygUWXH2kfoq9bVxH',
       'Name': 'photos/photo3.jpg'}]
+
+Or add a directory recursively:
+
+.. code-block:: python
+
+    >>> api = ipfsApi.Client()
+    >>> api.add('fake_dir', recursive=True)
+    [{'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
+      'Name': 'fake_dir/fsdfgh'},
+     {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
+      'Name': 'fake_dir/test2/llllg'},
+     {'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ',
+      'Name': 'fake_dir/test2'},
+     {'Hash': 'Qmenzb5J4fR9c69BbpbBhPTSp2Snjthu2hKPWGPPJUHb9M',
+      'Name': 'fake_dir'}]
 
 This module also contains some helper functions for adding strings, json, and even python objects to IPFS:
 

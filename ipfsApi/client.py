@@ -2,103 +2,55 @@
 IPFS API Bindings for Python
 """
 import os
-import functools
 import requests
-import fnmatch
 
 from . import utils
-
-
-
-class InvalidCommand(Exception):
-    pass
-
-class InvalidArguments(Exception):
-    pass
-
-
-
-class Command(object):
-    
-    def __init__(self, path, **defaults):
-        self.path = path
-        self.defaults = defaults
-
-    def request(self, client, **kwargs):
-        return client.request(self.path, **kwargs)
-
-    def prepare(self, client, **kwargs):
-        kwargs.update(self.defaults)
-        return functools.partial(self.request, client, **kwargs)
-
-
-class ArgCommand(Command):
-    
-    def __init__(self, path, argc=None, **defaults):
-        Command.__init__(self, path, **defaults)
-        self.argc = argc
-
-    def request(self, client, args, **kwargs):
-        if not isinstance(args, (list, tuple)):
-            args = [args]
-        if self.argc and len(args) != self.argc:
-            raise InvalidArguments
-        return client.request(self.path, args=args, **kwargs)
-
-
-class FileCommand(Command):
-    
-    def request(self, client, fp_or_fn, **kwargs):
-        try:
-            content = fp_or_fn.read()
-            try:
-                fn = fp_or_fn.name
-            except AttributeError:
-                fn = ''
-        except AttributeError:
-            fn = fp_or_fn
-            with open(fn, 'rb') as fp:
-                content = fp.read()
-        
-        files = [('file', (os.path.basename(fn), content, 'application/octet-stream'))]
-        
-        return client.request(self.path, files=files, **kwargs)
+from . import encoding
+from .commands import Command, \
+                      ArgCommand, \
+                      FileCommand
+from .exceptions import InvalidCommand, \
+                        InvalidArguments, \
+                        InvalidPath
 
 
 
 class HTTPClient(object):
 
-    def __init__(self, host, port, base):
+    def __init__(self, host, port, base, default_enc):
         self.host = host
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
+        
+        self.default_enc = encoding.get_encoding(default_enc)
 
-    def request(self, path, args=[], opts={}, files=[], json=True, session=None):
+
+    def request(self, path, args=[], opts={}, files=[], decoder=None):
         url = self.base + path
         
         params = []
         params.append(('stream-channels', 'true'))
-        if isinstance(opts, dict):
-            for opt in opts.items():
-                params.append(opt)
-        else:
-            for opt in opts:
-                params.append(opt)
+        for opt in opts.items():
+            params.append(opt)
         for arg in args:
             params.append(('arg', arg))
 
         method = 'post' if files else 'get'
         
-        if session:
-            res = session.request(method, url, params=params, files=files)
-        else:
-            res = requests.request(method, url, params=params, files=files)
-
-        if json:
+        res = requests.request(method, url, params=params, files=files)
+        
+        if not decoder:
             try:
-                return res.json()
+                return self.default_enc.parse(res.text)
             except:
                 pass
+        else:
+            try:
+                enc = encoding.get_encoding(decoder)
+                return self.enc.parse(res.text)
+            except:
+                pass
+
         return res.text
     
 
@@ -111,8 +63,8 @@ class Client(object):
                  base='api/v0',
                  default_enc='json',
                  **defaults):
-
-        self._http_client = HTTPClient(host, port, base)
+        
+        self._http_client = HTTPClient(host, port, base, default_enc)
         
         # default request keyword-args
         if defaults.has_key('opts'):
@@ -128,8 +80,6 @@ class Client(object):
         ############
         
         # BASIC COMMANDS
-        # ***NOTE: self.add ONLY works for a single file object (for now).  For
-        #          recursive add please use self.add_dir.
         self.add                = FileCommand('/add')
         self.cat                =  ArgCommand('/cat')
         self.ls                 =  ArgCommand('/ls')
@@ -219,7 +169,7 @@ class Client(object):
 
     def load_json(self, multihash, **kwargs):
         """Loads a json object from IPFS."""
-        return self.cat(multihash, json=True, **kwargs)
+        return self.cat(multihash, decoder='json', **kwargs)
         
     def add_pyobj(self, py_obj, **kwargs):
         """Adds a picklable Python object as a file to IPFS."""
@@ -232,53 +182,3 @@ class Client(object):
     def load_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS."""
         return utils.parse_pyobj(self.cat(multihash, **kwargs))
-    
-
-    #################
-    # RECURSIVE ADD #
-    #################
-    
-    def add_dir(self, dirname, match='*', **kwargs):
-        """Loads a directory recursively into IPFS, files are matched against
-        the given pattern.
-        
-        ***NOTE: This is a ghetto temp solution until streaming multipart files
-                 can be figured out.
-        """
-        
-        results = []
-
-        def fsize(fullpath):
-            """This value is fudged to match the discrepancy between however
-            the IPFS Api calculates file sizes and the value given by Python"""
-            return os.path.getsize(fullpath) + 8
-        
-        def walk(dirname):
-            ls = os.listdir(dirname)
-            files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
-            dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
-            
-            dir_json = { u"Data": u'\x08\x01',
-                        u"Links": []}
-
-            for fn in files:
-                if not fnmatch.fnmatch(fn, match):
-                    continue
-                fullpath = os.path.join(dirname, fn)
-                res = self.add(fullpath, **kwargs)
-                
-                res[u"Size"] = fsize(fullpath)
-                dir_json[u"Links"].append(res)
-                results.append({"Name": fullpath, "Hash": res[u"Hash"]})
-            
-            for subdir in dirs:
-                fullpath = os.path.join(dirname, subdir)
-                res = walk(fullpath)
-
-                dir_json[u"Links"].append(res)
-                results.append({"Name": fullpath, "Hash": res[u"Hash"]})
-            
-            return self.object_put(utils.make_json_buffer(dir_json), **kwargs)
-        
-        walk(dirname)
-        return results
