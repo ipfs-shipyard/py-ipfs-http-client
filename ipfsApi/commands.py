@@ -42,9 +42,9 @@ class FileCommand(Command):
     def request(self, client, f, **kwargs):
         if kwargs.pop('recursive', False):
             return self.recursive(client, f, **kwargs)
-        if hasattr(f, '__iter__'):
+        if isinstance(f, (list, tuple)):
             return self.multiple(client, f, **kwargs)
-        if os.path.isdir(f):
+        if isinstance(f, basestring) and os.path.isdir(f):
             ls = [os.path.join(f,p) for p in os.listdir(f)]
             fs = filter(os.path.isfile, ls)
             return self.multiple(client, fs, **kwargs)
