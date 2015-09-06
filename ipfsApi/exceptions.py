@@ -9,3 +9,6 @@ class InvalidPath(Exception):
 
 class FileCommandException(Exception):
     pass
+
+class EncodingException(Exception):
+    pass

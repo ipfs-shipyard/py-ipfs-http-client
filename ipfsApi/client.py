@@ -45,8 +45,8 @@ class HTTPClient(object):
             except:
                 pass
         else:
+            enc = encoding.get_encoding(decoder)
             try:
-                enc = encoding.get_encoding(decoder)
                 return self.enc.parse(res.text)
             except:
                 pass

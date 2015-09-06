@@ -1,5 +1,7 @@
 import json
 
+from .exceptions import EncodingException
+
 
 
 class Encoding(object):
@@ -61,4 +63,4 @@ def get_encoding(name):
     try:
         return __encodings[name.lower()]()
     except KeyError:
-        return None
+        raise EncodingException("Invalid encoding: '{}'".format(name))
