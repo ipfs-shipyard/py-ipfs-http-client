@@ -29,15 +29,17 @@ class ArgCommand(Command):
         Command.__init__(self, path, **defaults)
         self.argc = argc
 
-    def request(self, client, args, **kwargs):
-        if not isinstance(args, (list, tuple)):
-            args = [args]
+    def request(self, client, *args, **kwargs):
         if self.argc and len(args) != self.argc:
-            raise InvalidArguments
+            raise InvalidArguments("[%s] command requires %d arguments." % (self.path, self.argc))
         return client.request(self.path, args=args, **kwargs)
 
 
 class FileCommand(Command):
+
+    def __init__(self, path, accept_multiple=True, **defaults):
+        Command.__init__(self, path, **defaults)
+        self.accept_multiple = accept_multiple
     
     def request(self, client, f, **kwargs):
         if kwargs.pop('recursive', False):
@@ -79,6 +81,9 @@ class FileCommand(Command):
 
     def multiple(self, client, _files, **kwargs):
         """Adds multiple file-like objects as a multipart request to IPFS."""
+        if not self.accept_multiple:
+            raise FileCommandException("[%s] does not accept multiple files." % self.path)
+        
         fnpattern = kwargs.pop('match', '*')
         files = []
         for fn in _files:
@@ -97,6 +102,9 @@ class FileCommand(Command):
         ***NOTE: This is a ghetto temp solution until streaming multipart files
                  can be figured out.
         """
+        if not self.accept_multiple:
+            raise FileCommandException("[%s] does not accept multiple files." % self.path)
+        
         kwargs.update({'decoder': 'json'})
         fnpattern = kwargs.pop('match', '*')
         results = []
@@ -129,8 +137,8 @@ class FileCommand(Command):
             for subdir in dirs:
                 fullpath = os.path.join(dirname, subdir)
                 res = walk(fullpath)
-
-                dir_json[u"Links"].append(res)
+                
+                dir_json[u"Links"].append({u"Name": unicode(subdir, 'utf-8'), u"Hash": res[u"Hash"]})
                 results.append({"Name": fullpath, "Hash": res[u"Hash"]})
             
             buf = utils.make_json_buffer(dir_json)

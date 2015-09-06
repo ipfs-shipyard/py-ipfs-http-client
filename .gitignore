@@ -1,6 +1,5 @@
 build/
 dist/
-test/
 *.egg-info
 *.pyc
 *.swp

@@ -27,7 +27,10 @@ class HTTPClient(object):
         self._session = None
 
 
-    def request(self, path, args=[], opts={}, files=[], decoder=None):
+    def request(self, path,
+                args=[], opts={}, files=[],
+                decoder=None, post_hook=None):
+        
         url = self.base + path
         
         params = []
@@ -46,17 +49,19 @@ class HTTPClient(object):
 
         if not decoder:
             try:
-                return self.default_enc.parse(res.text)
+                ret = self.default_enc.parse(res.text)
             except:
-                pass
+                ret = res.text
         else:
             enc = encoding.get_encoding(decoder)
             try:
-                return enc.parse(res.text)
+                ret = enc.parse(res.text)
             except:
-                pass
+                ret = res.text
         
-        return res.text
+        if post_hook:
+            return post_hook(ret)
+        return ret
 
 
     @contextlib.contextmanager
@@ -104,7 +109,8 @@ class Client(object):
         # DATA STRUCTURE COMMANDS
         self.block_stat         =  ArgCommand('/block/stat')
         self.block_get          =  ArgCommand('/block/get')
-        self.block_put          = FileCommand('/block/put')
+        self.block_put          = FileCommand('/block/put',
+                                              accept_multiple=False)
         self.object_data        =  ArgCommand('/object/data')
         self.object_links       =  ArgCommand('/object/links')
         self.object_get         =  ArgCommand('/object/get')
@@ -135,7 +141,9 @@ class Client(object):
         self.dht_query          =  ArgCommand('/dht/query')
         self.dht_findprovs      =  ArgCommand('/dht/findprovs')
         self.dht_findpeer       =  ArgCommand('/dht/findpeer')
-        self.dht_get            =  ArgCommand('/dht/get')
+        self.dht_get            =  ArgCommand('/dht/get',
+                                              decoder='json',
+                                              post_hook=lambda r: r[u"Extra"])
         self.dht_put            =  ArgCommand('/dht/put', argc=2)
         self.ping               =  ArgCommand('/ping')
         
