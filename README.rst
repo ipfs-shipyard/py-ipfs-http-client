@@ -60,7 +60,6 @@ Or add a directory recursively:
 
 .. code-block:: python
 
-    >>> api = ipfsApi.Client()
     >>> api.add('fake_dir', recursive=True)
     [{'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
       'Name': 'fake_dir/fsdfgh'},
