@@ -1,6 +1,6 @@
 """
 HTTP client for api requests.  This is pluggable into the IPFS Api client and
-can/will eventually supplemented with an asynchronous version.
+can/will eventually be supplemented with an asynchronous version.
 """
 import requests
 import contextlib
