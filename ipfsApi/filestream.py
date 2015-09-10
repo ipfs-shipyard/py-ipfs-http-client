@@ -115,7 +115,7 @@ def recursive(dirname, fnpattern='*'):
         return
     
     envelope = MultipartWriter(buf,
-            headers=content_disposition_header('form-data', dirname),
+            headers=content_disposition_header(dirname, 'form-data'),
             subtype='form-data')
     
     walk(dirname, envelope)
