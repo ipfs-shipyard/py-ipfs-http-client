@@ -11,7 +11,7 @@ from urllib import quote
 from uuid import uuid4
 from cStringIO import StringIO
 
-from .utils import guess_mimetype
+from . import utils
 
 
 CRLF = '\r\n'
@@ -37,13 +37,12 @@ class MultipartWriter(object):
         self.buf.write(CRLF)
         return MultipartWriter(self.buf, **kwargs)
 
-    def add(self, fn, content):
+    def add(self, fn, content, headers={}):
         self.buf.write('--')
         self.buf.write(self.boundary)
         self.buf.write(CRLF)
 
-        headers = {'Content-Type': guess_mimetype(fn)}
-        headers.update(content_disposition_header(fn))
+        headers['Content-Type'] = utils.guess_mimetype(fn)
 
         self._write_headers(headers)
         if content:
@@ -96,20 +95,19 @@ def recursive(dirname, fnpattern='*'):
     def walk(dirname, part):
         subpart = part.open(headers=content_disposition_header(dirname))
         subpart.write_headers()
-
-        ls = os.listdir(dirname)
-        files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
-        dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
         
+        files, subdirs = utils.ls_dir(dirname)
+
         for fn in files:
             if not fnmatch.fnmatch(fn, fnpattern):
                 continue
             fullpath = os.path.join(dirname, fn)
-
             with open(fullpath, 'rb') as fp:
-                subpart.add(fullpath, fp.read())
+                subpart.add(fullpath,
+                            fp.read(),
+                            headers=content_disposition_header(fullpath))
             
-        for subdir in dirs:
+        for subdir in subdirs:
             fullpath = os.path.join(dirname, subdir)
             walk(fullpath, subpart)
         

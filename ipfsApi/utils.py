@@ -27,3 +27,12 @@ def parse_pyobj(pickled):
 def guess_mimetype(filename):
     fn = os.path.basename(filename)
     return mimetypes.guess_type(fn)[0] or 'application/octet-stream'
+
+
+def ls_dir(dirname):
+    ls = os.listdir(dirname)
+    files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
+    dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
+    return files, dirs
+        
+
