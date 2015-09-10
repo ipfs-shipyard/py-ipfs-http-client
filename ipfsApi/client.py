@@ -59,7 +59,7 @@ class Client(object):
         # ADVANCED COMMANDS
         self.resolve            =  ArgCommand('/resolve')
         self.name_publish       =  ArgCommand('/name/publish')
-        self.name_resolve       =     Command('/name/resolve')
+        self.name_resolve       =  ArgCommand('/name/resolve')
         self.dns                =  ArgCommand('/dns')
         self.pin_add            =  ArgCommand('/pin/add')
         self.pin_rm             =  ArgCommand('/pin/rm')
