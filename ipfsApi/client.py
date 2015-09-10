@@ -8,6 +8,9 @@ from .commands import Command, \
                       FileCommand
 from .exceptions import InvalidCommand
 
+default_host = 'localhost'
+default_port = 5001
+default_base = 'api/v0'
 
 
 class Client(object):
@@ -16,11 +19,18 @@ class Client(object):
 
 
     def __init__(self,
-                 host='127.0.0.1',
-                 port=5001,
-                 base='api/v0',
+                 host=None,
+                 port=None,
+                 base=None,
                  default_enc='json',
                  **defaults):
+
+        if host is None:
+            host = default_host
+        if port is None:
+            port = default_port
+        if base is None:
+            base = default_base
         
         self._client = self.__client__(host, port, base, default_enc)
         
