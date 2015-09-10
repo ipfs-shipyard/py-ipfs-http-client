@@ -92,8 +92,9 @@ class Client(object):
 
 
     def __getattribute__(self, name):
-        """Prepares command context or raises InvalidCommand
-        exception."""
+        """
+        Prepares command request or raises InvalidCommand exception.
+        """
         try:
             attr = object.__getattribute__(self, name)
             if isinstance(attr, Command):

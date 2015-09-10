@@ -21,9 +21,11 @@ class Json(Encoding):
         self.decoder = json.JSONDecoder()
 
     def parse(self, raw):
-        """Some responses from the IPFS api are a concatenated string of JSON
+        """
+        Some responses from the IPFS api are a concatenated string of JSON
         objects, which crashes json.loads(), so we need to use this instead as
-        a general approach."""
+        a general approach.
+        """
         json_string = raw.strip()
         results = []
 
