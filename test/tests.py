@@ -49,7 +49,6 @@ class IpfsApiTest(unittest.TestCase):
                     {u'Hash': u'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ',
                      u'Name': u''}]
 
-
     #########
     # TESTS #
     #########

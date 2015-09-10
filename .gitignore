@@ -1,6 +1,5 @@
 build/
 dist/
-ipfsApi/filestream.py
 *.egg-info
 *.pyc
 *.swp

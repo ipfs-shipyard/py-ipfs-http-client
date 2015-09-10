@@ -4,6 +4,7 @@ import functools
 import mimetypes
 
 from . import utils
+from . import filestream
 from .exceptions import InvalidArguments, \
                         FileCommandException
 
@@ -74,13 +75,17 @@ class FileCommand(Command):
 
     
     def single(self, client, _file, **kwargs):
-        """Adds a single file-like object to IPFS."""
+        """
+        Adds a single file-like object to IPFS.
+        """
         files = [self._multipart_field(_file)]
         return client.request(self.path, files=files, **kwargs)
    
 
     def multiple(self, client, _files, **kwargs):
-        """Adds multiple file-like objects as a multipart request to IPFS."""
+        """
+        Adds multiple file-like objects as a multipart request to IPFS.
+        """
         if not self.accept_multiple:
             raise FileCommandException("[%s] does not accept multiple files." % self.path)
         
@@ -96,57 +101,15 @@ class FileCommand(Command):
 
 
     def recursive(self, client, dirname, **kwargs):
-        """Loads a directory recursively into IPFS, files are matched against
-        the given pattern.
-        
-        ***NOTE: This is a ghetto temp solution until streaming multipart files
-                 can be figured out.
+        """
+        Loads a directory recursively into IPFS, files are matched against the
+        given pattern.
         """
         if not self.accept_multiple:
             raise FileCommandException("[%s] does not accept multiple files." % self.path)
         
-        kwargs.update({'decoder': 'json'})
         fnpattern = kwargs.pop('match', '*')
-        results = []
-
-        def fsize(fullpath):
-            """This value is fudged to match the discrepancy between however
-            the IPFS Api calculates file sizes and the value given by Python"""
-            return os.path.getsize(fullpath) + 8
         
-        def walk(dirname):
-            ls = os.listdir(dirname)
-            files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
-            dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
-            
-            dir_json = { u"Data": u'\x08\x01',
-                        u"Links": []}
+        raw_body, raw_headers = filestream.recursive(dirname, fnpattern)
 
-            for fn in files:
-                if not fnmatch.fnmatch(fn, fnpattern):
-                    continue
-                fullpath = os.path.join(dirname, fn)
-                res = client.request('/add',
-                                     files=[self._multipart_field(fullpath)],
-                                     **kwargs)
-                
-                res[u"Size"] = fsize(fullpath)
-                dir_json[u"Links"].append(res)
-                results.append({"Name": fullpath, "Hash": res[u"Hash"]})
-            
-            for subdir in dirs:
-                fullpath = os.path.join(dirname, subdir)
-                res = walk(fullpath)
-                
-                dir_json[u"Links"].append({u"Name": unicode(subdir, 'utf-8'), u"Hash": res[u"Hash"]})
-                results.append({"Name": fullpath, "Hash": res[u"Hash"]})
-            
-            buf = utils.make_json_buffer(dir_json)
-            return client.request('/object/put',
-                                  files=[self._multipart_field(buf)],
-                                  **kwargs)
-        
-        # walk directory and then add final hash root to results
-        res = walk(dirname)
-        results.append({"Name": dirname, "Hash": res[u"Hash"]})
-        return results
+        return client.request(self.path, data=raw_body, headers=raw_headers, **kwargs)

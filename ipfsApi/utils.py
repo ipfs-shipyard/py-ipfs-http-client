@@ -1,6 +1,9 @@
+import os
 import json
-from cStringIO import StringIO
+import mimetypes
 import cPickle as pickle
+from cStringIO import StringIO
+
 
 def make_string_buffer(string):
     buf = StringIO()
@@ -19,3 +22,8 @@ def make_pyobj_buffer(py_obj):
 
 def parse_pyobj(pickled):
     return pickle.loads(str(pickled))
+
+
+def guess_mimetype(filename):
+    fn = os.path.basename(filename)
+    return mimetypes.guess_type(fn)[0] or 'application/octet-stream'
