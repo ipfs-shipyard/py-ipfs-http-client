@@ -20,11 +20,14 @@ class MultipartWriter(object):
 
     def __init__(self, buf, headers={}, subtype='mixed', boundary=None):
         self.buf = buf
+        
         if boundary is None:
             boundary = self._make_boundary()
         self.boundary = boundary
+        
         headers['Content-Type'] = 'multipart/%s; boundary="%s"' % (
-            subtype, self.boundary
+            subtype,
+            self.boundary
         )
         self.headers = headers
 
@@ -70,7 +73,10 @@ class MultipartWriter(object):
 
 
 def content_disposition_header(fn, disptype='file'):
-    disposition = '%s; filename="%s"' % (disptype, quote(fn, safe=''))
+    disposition = '%s; filename="%s"' % (
+        disptype,
+        quote(fn, safe='')
+    )
     return {'Content-Disposition': disposition}
 
 
