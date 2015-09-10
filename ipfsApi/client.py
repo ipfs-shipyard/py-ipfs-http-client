@@ -12,7 +12,7 @@ from .exceptions import InvalidCommand
 
 class Client(object):
 
-    api_client = http.HTTPClient
+    __client__ = http.HTTPClient
 
 
     def __init__(self,
@@ -22,7 +22,7 @@ class Client(object):
                  default_enc='json',
                  **defaults):
         
-        self._api_client = self.api_client(host, port, base, default_enc)
+        self._client = self.__client__(host, port, base, default_enc)
         
         # default request keyword-args
         if defaults.has_key('opts'):
@@ -97,7 +97,7 @@ class Client(object):
         try:
             attr = object.__getattribute__(self, name)
             if isinstance(attr, Command):
-                return attr.prepare(self._api_client, **self._defaults)
+                return attr.prepare(self._client, **self._defaults)
             else:
                 return attr
         except AttributeError:
