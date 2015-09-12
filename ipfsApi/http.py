@@ -34,8 +34,8 @@ class HTTPClient(object):
         for arg in args:
             params.append(('arg', arg))
 
-        method = 'post' if (files or kwargs.has_key('data')) else 'get'
-        
+        method = 'post' if (files or 'data' in kwargs) else 'get'
+
         if self._session:
             res = self._session.request(method, url,
                                         params=params, files=files, **kwargs)
