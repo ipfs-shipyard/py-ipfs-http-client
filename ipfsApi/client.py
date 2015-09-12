@@ -79,6 +79,8 @@ class Client(object):
         # NETWORK COMMANDS
         self.id                 =     Command('/id')
         self.bootstrap          =     Command('/bootstrap')
+        self.bootstrap_add      =  ArgCommand('/bootstrap/add')
+        self.bootstrap_rm       =  ArgCommand('/bootstrap/rm')
         self.swarm_peers        =     Command('/swarm/peers')
         self.swarm_addrs        =     Command('/swarm/addrs')
         self.swarm_connect      =  ArgCommand('/swarm/connect')
