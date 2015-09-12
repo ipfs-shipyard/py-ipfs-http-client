@@ -10,6 +10,7 @@ from . import filestream
 from .exceptions import InvalidArguments, \
                         FileCommandException
 
+import six
 
 
 class Command(object):
@@ -49,7 +50,7 @@ class FileCommand(Command):
             return self.recursive(client, f, **kwargs)
         if isinstance(f, (list, tuple)):
             return self.multiple(client, f, **kwargs)
-        if isinstance(f, basestring) and os.path.isdir(f):
+        if isinstance(f, six.string_types) and os.path.isdir(f):
             ls = [os.path.join(f,p) for p in os.listdir(f)]
             fs = [p for p in ls if os.path.isfile(p)]
             return self.multiple(client, fs, **kwargs)

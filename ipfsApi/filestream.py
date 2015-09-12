@@ -9,9 +9,10 @@ from __future__ import absolute_import
 
 import os
 import fnmatch
-from urllib import quote
 from uuid import uuid4
-from cStringIO import StringIO
+
+from six.moves.urllib.parse import quote
+from six.moves import cStringIO as StringIO
 
 from . import utils
 

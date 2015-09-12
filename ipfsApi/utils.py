@@ -3,8 +3,10 @@ from __future__ import absolute_import
 import os
 import json
 import mimetypes
-import cPickle as pickle
-from cStringIO import StringIO
+
+import six
+from six.moves import cPickle as pickle
+from six.moves import cStringIO as StringIO
 
 
 def make_string_buffer(string):
