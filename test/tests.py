@@ -41,13 +41,32 @@ class IpfsApiTest(unittest.TestCase):
                        u'Name': u''}]
     
     ## test_add_multiple_from_dirname
-    fake_dir = 'fake_dir/test2'
+    fake_dir_test2 = 'fake_dir/test2'
     fake_dir_res = [{u'Hash': u'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
                      u'Name': u'llllg'},
                     {u'Hash': u'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD',
                      u'Name': u'fssdf'},
                     {u'Hash': u'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ',
                      u'Name': u''}]
+
+    ## test_add_recursive
+    fake_dir = 'fake_dir'
+    fake_dir_recursive_res = [{u'Hash': u'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
+                      u'Name': u'fake_dir/fsdfgh'},
+                     {u'Hash': u'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv',
+                      u'Name': u'fake_dir/popoiopiu'},
+                     {u'Hash': u'QmeMbJSHNCesAh7EeopackUdjutTJznum1Fn7knPm873Fe',
+                      u'Name': u'fake_dir/test3/ppppoooooooooo'},
+                     {u'Hash': u'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q',
+                      u'Name': u'fake_dir/test3'},
+                     {u'Hash': u'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
+                      u'Name': u'fake_dir/test2/llllg'},
+                     {u'Hash': u'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD',
+                      u'Name': u'fake_dir/test2/fssdf'},
+                     {u'Hash': u'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ',
+                      u'Name': u'fake_dir/test2'},
+                     {u'Hash': u'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY',
+                      u'Name': u'fake_dir'}]
 
     #########
     # TESTS #
@@ -67,11 +86,12 @@ class IpfsApiTest(unittest.TestCase):
         self.assertEqual(res, self.fake_files_res)
 
     def test_add_multiple_from_dirname(self):
-        res = self.api.add(self.fake_dir)
+        res = self.api.add(self.fake_dir_test2)
         self.assertEqual(res, self.fake_dir_res)
 
     def test_add_recursive(self):
-        pass
+        res = self.api.add(self.fake_dir, recursive=True)
+        self.assertEqual(res, self.fake_dir_recursive_res)
 
 
 

@@ -51,6 +51,7 @@ class MultipartWriter(object):
         self.boundary = boundary
         
         headers.update(multipart_content_type(boundary, subtype=subtype))
+        self.headers = headers
 
     def _make_boundary(self):
         return uuid4().hex
