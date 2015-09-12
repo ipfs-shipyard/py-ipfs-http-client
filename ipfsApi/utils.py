@@ -33,8 +33,8 @@ def guess_mimetype(filename):
 
 def ls_dir(dirname):
     ls = os.listdir(dirname)
-    files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
-    dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
+    files = [p for p in ls if os.path.isfile(os.path.join(dirname, p))]
+    dirs  = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
     return files, dirs
         
 

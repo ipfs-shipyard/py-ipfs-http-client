@@ -37,7 +37,7 @@ class Client(object):
         self._client = self.__client__(host, port, base, default_enc)
         
         # default request keyword-args
-        if defaults.has_key('opts'):
+        if 'opts' in defaults:
             defaults['opts'].update({'encoding': default_enc})
         else:
             defaults.update({'opts': {'encoding': default_enc}})

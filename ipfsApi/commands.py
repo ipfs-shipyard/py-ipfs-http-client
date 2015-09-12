@@ -51,7 +51,7 @@ class FileCommand(Command):
             return self.multiple(client, f, **kwargs)
         if isinstance(f, basestring) and os.path.isdir(f):
             ls = [os.path.join(f,p) for p in os.listdir(f)]
-            fs = filter(os.path.isfile, ls)
+            fs = [p for p in ls if os.path.isfile(p)]
             return self.multiple(client, fs, **kwargs)
         else:
             return self.single(client, f, **kwargs)
