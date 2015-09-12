@@ -6,7 +6,7 @@ import requests
 import contextlib
 
 from . import encoding
-
+from .exceptions import ipfsApiError
 
 
 class HTTPClient(object):
@@ -18,7 +18,6 @@ class HTTPClient(object):
 
         self.default_enc = encoding.get_encoding(default_enc)
         self._session = None
-
 
     def request(self, path,
                 args=[], opts={}, files=[],
@@ -54,11 +53,21 @@ class HTTPClient(object):
                 ret = enc.parse(res.text)
             except:
                 ret = res.text
-        
+
+        try:
+            res.raise_for_status()
+        except requests.exceptions.HTTPError:
+            # If we have decoded an error response from the server,
+            # use that as the exception message; otherwise, just pass
+            # the exception on to the caller.
+            if 'Message' in ret:
+                raise ipfsApiError(ret['Message'])
+            else:
+                raise
+
         if post_hook:
             return post_hook(ret)
         return ret
-
 
     @contextlib.contextmanager
     def session(self):
