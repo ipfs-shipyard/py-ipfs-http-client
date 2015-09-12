@@ -17,8 +17,7 @@ default_base = 'api/v0'
 
 class Client(object):
 
-    __client__ = http.HTTPClient
-
+    _clientfactory = http.HTTPClient
 
     def __init__(self,
                  host=None,
@@ -34,7 +33,7 @@ class Client(object):
         if base is None:
             base = default_base
         
-        self._client = self.__client__(host, port, base, default_enc)
+        self._client = self._clientfactory(host, port, base, default_enc)
         
         # default request keyword-args
         if 'opts' in defaults:
