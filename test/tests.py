@@ -27,8 +27,7 @@ class IpfsApiTest(unittest.TestCase):
             {'Hash': u'QmbZuss6aAizLEAt2Jt2BD29oq4XfMieGezi6mN4vz9g9A',
              'Name': 'fake_dir'}]
 
-    fake_lookup = {i['Name']: i['Hash'] for i in fake}
-  
+    fake_lookup = dict((i['Name'], i['Hash']) for i in fake)
 
     ## test_add_multiple_from_list
     fake_file  = 'fake_dir/fsdfgh'
