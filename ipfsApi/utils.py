@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import io
 import os
 import json
 import mimetypes
@@ -10,7 +11,10 @@ from six.moves import cStringIO as StringIO
 
 
 def make_string_buffer(string):
-    buf = StringIO()
+    if isinstance(string, six.text_type):
+        buf = StringIO()
+    else:
+        buf = io.BytesIO()
     buf.write(string)
     buf.seek(0)
     return buf
@@ -25,7 +29,9 @@ def make_pyobj_buffer(py_obj):
     return make_string_buffer(pickle.dumps(py_obj))
 
 def parse_pyobj(pickled):
-    return pickle.loads(str(pickled))
+    if isinstance(pickled, six.text_type):
+        pickled = pickled.encode('ascii')
+    return pickle.loads(pickled)
 
 
 def guess_mimetype(filename):
