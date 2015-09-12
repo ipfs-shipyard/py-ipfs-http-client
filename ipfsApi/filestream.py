@@ -13,8 +13,30 @@ from cStringIO import StringIO
 
 from . import utils
 
-
 CRLF = '\r\n'
+
+
+
+def content_disposition(fn, disptype='file'):
+    disp = '%s; filename="%s"' % (
+        disptype,
+        quote(fn, safe='')
+    )
+    return {'Content-Disposition': disp}
+
+
+def content_type(fn):
+    return {'Content-Type': utils.guess_mimetype(fn)}
+
+
+def multipart_content_type(boundary, subtype='mixed'):
+    ctype = 'multipart/%s; boundary="%s"' % (
+        subtype,
+        boundary
+    )
+    return {'Content-Type': ctype}
+
+
 
 class MultipartWriter(object):
 
@@ -25,11 +47,22 @@ class MultipartWriter(object):
             boundary = self._make_boundary()
         self.boundary = boundary
         
-        headers['Content-Type'] = 'multipart/%s; boundary="%s"' % (
-            subtype,
-            self.boundary
-        )
-        self.headers = headers
+        headers.update(multipart_content_type(boundary, subtype=subtype))
+
+    def _make_boundary(self):
+        return uuid4().hex
+
+    def _write_headers(self, headers):
+        if headers:
+            for name in sorted(headers.keys()):
+                self.buf.write(name)
+                self.buf.write(': ')
+                self.buf.write(headers[name])
+                self.buf.write(CRLF)
+        self.buf.write(CRLF)
+    
+    def write_headers(self):
+        self._write_headers(self.headers)
 
     def open(self, **kwargs):
         self.buf.write('--')
@@ -41,9 +74,7 @@ class MultipartWriter(object):
         self.buf.write('--')
         self.buf.write(self.boundary)
         self.buf.write(CRLF)
-
-        headers['Content-Type'] = utils.guess_mimetype(fn)
-
+        headers.update(content_type(fn))
         self._write_headers(headers)
         if content:
             self.buf.write(content)
@@ -55,28 +86,29 @@ class MultipartWriter(object):
         self.buf.write('--')
         self.buf.write(CRLF)
 
-    def _make_boundary(self):
-        return uuid4().hex
 
-    def write_headers(self):
-        self._write_headers(self.headers)
+##
+## TURN THIS INTO A CLASS WHERE YOU OVERWRITE METHODS THAT ARE TRIGGERED WHEN
+## YOU ENTER AND EXIT A SUBDIRECTORY
+##
+def walk(dirname, fnpattern='*', recursive=False):
+    """
+    Generator that walks a directory (optionally recursive).
+    """
+    yield dirname, False
 
-    def _write_headers(self, headers):
-        if headers:
-            for name in sorted(headers.keys()):
-                self.buf.write(name)
-                self.buf.write(': ')
-                self.buf.write(headers[name])
-                self.buf.write(CRLF)
-        self.buf.write(CRLF)
+    files, subdirs = utils.ls_dir(dirname)
 
+    for fn in files:
+        if not fnmatch.fnmatch(fn, fnpattern):
+            continue
+        yield os.path.join(dirname, fn), True
+    
+    if recursive:
+        for sd in subdirs:
+            for result in walk(os.path.join(dirname, sd), recursive=True):
+                yield result
 
-def content_disposition_header(fn, disptype='file'):
-    disposition = '%s; filename="%s"' % (
-        disptype,
-        quote(fn, safe='')
-    )
-    return {'Content-Disposition': disposition}
 
 
 def recursive(dirname, fnpattern='*'):
@@ -93,7 +125,7 @@ def recursive(dirname, fnpattern='*'):
 
 
     def walk(dirname, part):
-        subpart = part.open(headers=content_disposition_header(dirname))
+        subpart = part.open(headers=content_disposition(dirname))
         subpart.write_headers()
         
         files, subdirs = utils.ls_dir(dirname)
@@ -105,7 +137,7 @@ def recursive(dirname, fnpattern='*'):
             with open(fullpath, 'rb') as fp:
                 subpart.add(fullpath,
                             fp.read(),
-                            headers=content_disposition_header(fullpath))
+                            headers=content_disposition(fullpath))
             
         for subdir in subdirs:
             fullpath = os.path.join(dirname, subdir)
@@ -115,7 +147,7 @@ def recursive(dirname, fnpattern='*'):
         return
     
     envelope = MultipartWriter(buf,
-            headers=content_disposition_header(dirname, 'form-data'),
+            headers=content_disposition(dirname, 'form-data'),
             subtype='form-data')
     
     walk(dirname, envelope)
