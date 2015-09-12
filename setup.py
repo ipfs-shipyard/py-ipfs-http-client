@@ -1,4 +1,11 @@
+from os import path
 from setuptools import setup, find_packages
+
+
+requirements_txt = path.join(path.split(__file__)[0], 'requirements.txt')
+
+with open(requirements_txt) as f:
+        requires = [l.strip() for l in f.readlines()]
 
 
 setup(
@@ -58,9 +65,6 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=[
-        'requests>=2.2.1',
-        'six',
-    ],
+    install_requires=requires,
 
 )
