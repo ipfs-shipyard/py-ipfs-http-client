@@ -25,9 +25,9 @@ class HTTPClient(object):
                 args=[], opts={}, files=[],
                 decoder=None, post_hook=None,
                 **kwargs):
-        
+
         url = self.base + path
-        
+
         params = []
         params.append(('stream-channels', 'true'))
         for opt in opts.items():

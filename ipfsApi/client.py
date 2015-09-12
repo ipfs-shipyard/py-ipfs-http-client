@@ -5,9 +5,7 @@ from __future__ import absolute_import
 
 from . import http
 from . import utils
-from .commands import Command, \
-                      ArgCommand, \
-                      FileCommand
+from .commands import Command, ArgCommand, FileCommand
 from .exceptions import InvalidCommand
 
 default_host = 'localhost'
@@ -32,9 +30,9 @@ class Client(object):
             port = default_port
         if base is None:
             base = default_base
-        
+
         self._client = self._clientfactory(host, port, base, default_enc)
-        
+
         # default request keyword-args
         if 'opts' in defaults:
             defaults['opts'].update({'encoding': default_enc})
@@ -43,17 +41,16 @@ class Client(object):
 
         self._defaults = defaults
 
-
         ############
         # COMMANDS #
         ############
-        
+
         # BASIC COMMANDS
         self.add                = FileCommand('/add')
         self.cat                =  ArgCommand('/cat')
         self.ls                 =  ArgCommand('/ls')
         self.refs               =  ArgCommand('/refs')
-        
+
         # DATA STRUCTURE COMMANDS
         self.block_stat         =  ArgCommand('/block/stat')
         self.block_get          =  ArgCommand('/block/get')
@@ -96,13 +93,12 @@ class Client(object):
                                               post_hook=lambda r: r[u"Extra"])
         self.dht_put            =  ArgCommand('/dht/put', argc=2)
         self.ping               =  ArgCommand('/ping')
-        
+
         # TOOL COMMANDS
         self.config             =  ArgCommand('/config')
         self.config_show        =     Command('/config/show')
         self.config_replace     =  ArgCommand('/config/replace')
         self.version            =     Command('/version')
-
 
     def __getattribute__(self, name):
         """
@@ -121,7 +117,6 @@ class Client(object):
             else:
                 raise AttributeError
 
-
     ###########
     # HELPERS #
     ###########
@@ -133,7 +128,7 @@ class Client(object):
             return res['Hash']
         except:
             return res
-    
+
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS."""
         res = self.add(utils.make_json_buffer(json_obj), **kwargs)
@@ -145,7 +140,7 @@ class Client(object):
     def get_json(self, multihash, **kwargs):
         """Loads a json object from IPFS."""
         return self.cat(multihash, decoder='json', **kwargs)
-        
+
     def add_pyobj(self, py_obj, **kwargs):
         """Adds a picklable Python object as a file to IPFS."""
         res = self.add(utils.make_pyobj_buffer(py_obj), **kwargs)
