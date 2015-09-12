@@ -1,14 +1,17 @@
-class InvalidCommand(Exception):
+class ipfsApiError(Exception):
     pass
 
-class InvalidArguments(Exception):
+class InvalidCommand(ipfsApiError):
     pass
 
-class InvalidPath(Exception):
+class InvalidArguments(ipfsApiError):
     pass
 
-class FileCommandException(Exception):
+class InvalidPath(ipfsApiError):
     pass
 
-class EncodingException(Exception):
+class FileCommandException(ipfsApiError):
+    pass
+
+class EncodingException(ipfsApiError):
     pass
