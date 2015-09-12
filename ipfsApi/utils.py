@@ -1,12 +1,20 @@
+from __future__ import absolute_import
+
+import io
 import os
 import json
 import mimetypes
-import cPickle as pickle
-from cStringIO import StringIO
+
+import six
+from six.moves import cPickle as pickle
+from six.moves import cStringIO as StringIO
 
 
 def make_string_buffer(string):
-    buf = StringIO()
+    if isinstance(string, six.text_type):
+        buf = StringIO()
+    else:
+        buf = io.BytesIO()
     buf.write(string)
     buf.seek(0)
     return buf
@@ -21,7 +29,9 @@ def make_pyobj_buffer(py_obj):
     return make_string_buffer(pickle.dumps(py_obj))
 
 def parse_pyobj(pickled):
-    return pickle.loads(str(pickled))
+    if isinstance(pickled, six.text_type):
+        pickled = pickled.encode('ascii')
+    return pickle.loads(pickled)
 
 
 def guess_mimetype(filename):
@@ -31,8 +41,8 @@ def guess_mimetype(filename):
 
 def ls_dir(dirname):
     ls = os.listdir(dirname)
-    files = filter(lambda p: os.path.isfile(os.path.join(dirname, p)), ls)
-    dirs  = filter(lambda p: os.path.isdir(os.path.join(dirname, p)), ls)
+    files = [p for p in ls if os.path.isfile(os.path.join(dirname, p))]
+    dirs  = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
     return files, dirs
         
 
