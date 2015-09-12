@@ -1,6 +1,8 @@
 """
 IPFS API Bindings for Python
 """
+from __future__ import absolute_import
+
 from . import http
 from . import utils
 from .commands import Command, \
