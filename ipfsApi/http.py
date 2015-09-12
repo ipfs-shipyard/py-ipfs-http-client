@@ -2,6 +2,8 @@
 HTTP client for api requests.  This is pluggable into the IPFS Api client and
 can/will eventually be supplemented with an asynchronous version.
 """
+from __future__ import absolute_import
+
 import requests
 import contextlib
 
@@ -34,7 +36,7 @@ class HTTPClient(object):
         for arg in args:
             params.append(('arg', arg))
 
-        method = 'post' if (files or kwargs.has_key('data')) else 'get'
+        method = 'post' if (files or 'data' in kwargs) else 'get'
         
         if self._session:
             res = self._session.request(method, url,
