@@ -1,6 +1,6 @@
-.. image:: https://img.shields.io/pypi/v/ipfs-api.svg
+.. image:: https://img.shields.io/pypi/v/ipfs-api.svg?style=flat-square
 
-.. image:: https://travis-ci.org/ipfs/python-ipfs-api.svg?branch=master
+.. image:: https://img.shields.io/travis/ipfs/python-ipfs-api.svg?style=flat-square
     :target: https://travis-ci.org/ipfs/python-ipfs-api
 
 
