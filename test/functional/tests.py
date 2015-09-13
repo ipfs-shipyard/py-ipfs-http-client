@@ -93,12 +93,18 @@ class IpfsApiTest(unittest.TestCase):
 
     def test_add_multiple_from_dirname(self):
         res = self.api.add(self.fake_dir_test2)
-        self.assertEqual(res, self.fake_dir_res)
+        self.assertEqual(sorted(res,
+                                key=lambda x: x['Name']),
+                         sorted(self.fake_dir_res,
+                                key=lambda x: x['Name']))
+
 
     def test_add_recursive(self):
         res = self.api.add(self.fake_dir, recursive=True)
-        self.assertEqual(res, self.fake_dir_recursive_res)
-
+        self.assertEqual(sorted(res,
+                                key=lambda x: x['Name']),
+                         sorted(self.fake_dir_recursive_res,
+                                key=lambda x: x['Name']))
 
 
 if __name__ == "__main__":
