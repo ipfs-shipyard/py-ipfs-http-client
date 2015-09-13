@@ -90,7 +90,7 @@ This module also contains some helper functions for adding strings, json, and ev
 How to Contribute
 -----------------
 
-Join us on IRC at `ipfs on chat.freenode.net <irc://chat.freenode.net/%23ipfs>`_ if you have any suggestions or questions, or if you just want to discuss IPFS and python.
+Join us on IRC at #ipfs_ on chat.freenode.net if you have any suggestions or questions, or if you just want to discuss IPFS and python.
 
 Before making any commits, make sure to install the dependencies listed in ``requirements.txt`` and ``test-requirements.txt``, and also install the PEP8 lint tool as a git commit hook::
     
@@ -108,3 +108,4 @@ As you make changes, make sure to run unit tests::
 
 *Note:* This will run unit tests against the python versions defined in ``tox.ini``.  If you don't have one of these python versions installed, it will raise an error for that version only but still run tests for the rest of the versions.
 
+.. _#ipfs: irc://chat.freenode.net/%23ipfs
