@@ -1,5 +1,7 @@
+.. image:: https://img.shields.io/pypi/v/ipfs-api.svg   :target: 
 .. image:: https://travis-ci.org/ipfs/python-ipfs-api.svg?branch=master
     :target: https://travis-ci.org/ipfs/python-ipfs-api
+
 
 IPFS API Bindings for Python
 ============================
