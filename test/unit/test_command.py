@@ -63,9 +63,9 @@ class TestCommands(unittest.TestCase):
             self.assertEquals(res['Arg'][0], 'arg1')
 
     def test_file_command_fd(self):
-        data = 'content\ngoes\nhere'
+        data = u'content\ngoes\nhere'
         fd = StringIO(data)
         with HTTMock(cmd_with_file):
             cmd = ipfsApi.commands.FileCommand('/file')
             res = cmd.prepare(self.client)(fd)
-            self.assertIn(data, res['Body'])
+            self.assertEquals(data, res['Body'])

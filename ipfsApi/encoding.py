@@ -65,4 +65,8 @@ def get_encoding(name):
     try:
         return __encodings[name.lower()]()
     except KeyError:
-        raise EncodingException("Invalid encoding: '{}'".format(name))
+        try:
+            msg = "Invalid encoding: '{}'".format(name)
+        except:
+            msg = "Invalid encoding"
+        raise EncodingException(msg)
