@@ -68,4 +68,4 @@ class TestCommands(unittest.TestCase):
         with HTTMock(cmd_with_file):
             cmd = ipfsApi.commands.FileCommand('/file')
             res = cmd.prepare(self.client)(fd)
-            self.assertEquals(data, res['Body'])
+            self.assertTrue( data in res['Body'] )
