@@ -7,7 +7,8 @@
 IPFS API Bindings for Python
 ============================
 
-Check out `ipfs <http://ipfs.io/>`_ and `the api command reference <http://ipfs.io/docs/commands/>`_ for more information about the IPFS Api.
+Check out `ipfs <http://ipfs.io/>`_ and `the api command reference
+<http://ipfs.io/docs/commands/>`_ for more information about the IPFS Api.
 
 Install with pip:
 
@@ -90,18 +91,43 @@ This module also contains some helper functions for adding strings, json, and ev
 How to Contribute
 -----------------
 
-Join us on IRC at #ipfs on chat.freenode.net if you have any suggestions or questions, or if you just want to discuss IPFS and python.
+IRC
+~~~
 
-Before making any commits, make sure to install the PEP8 lint tool as a git commit hook::
-    
-    $ ./tools/pre-commit --install
+Join us on IRC at ``#ipfs`` on `chat.freenode.net
+<https://webchat.freenode.net>`_ if you have any suggestions or questions,
+or if you just want to discuss IPFS and python.
 
-You can also manually run the pep8 lint tool whenever you want::
+Bug reports
+~~~~~~~~~~~
+
+You can submit bug reports using the `GitHub issue tracker
+<https://github.com/ipfs/python-ipfs-api/issues>`_.
+
+Pull requests
+~~~~~~~~~~~~~
+
+Pull requests are welcome.  Before submitting a new pull request, please
+make sure that your code passes both the `pep8
+<https://www.python.org/dev/peps/pep-0008/>`_ formatting check::
 
     $ tox -e pep8
 
-As you make changes, make sure to run unit tests::
+And the unit tests::
 
     $ tox
 
-*Note:* This will run unit tests against the python versions defined in ``tox.ini``.  If you don't have one of these python versions installed, it will raise an error for that version only but still run tests for the rest of the versions.
+You can arrange to run the pep8 tests automatically before each commit by
+installing a ``pre-commit`` hook::
+
+    $ ./tools/pre-commit --install
+
+Please make sure to include new unit tests for new features or changes in
+behavior.
+
+License
+-------
+
+This code is distributed under the terms of the `MIT license
+<https://opensource.org/licenses/MIT>`_.  Details can be found in the file
+`LICENSE.txt <LICENSE.txt>`_ in this repository.
