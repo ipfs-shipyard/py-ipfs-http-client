@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if [ "x$1" = "x--install" ]; then
+	top_dir=$(git rev-parse --show-toplevel)
+	git_dir=$(git rev-parse --git-dir)
+
+	if [ -f "$git_dir/hooks/pre-commit" ]; then
+		echo "ERROR: found existing pre-commit hook; " \
+			"cowardly giving up." >&2
+		exit 1
+	fi
+
+	echo "installing pre-commit hook in $git_dir/hooks"
+
+	ln -s $top_dir/tools/pre-commit $git_dir/hooks/pre-commit
+	exit
+fi
+
+# run pep8 tests before accepting a commit
+tox -e pep8

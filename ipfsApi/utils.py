@@ -32,6 +32,7 @@ def make_string_buffer(string):
     buf.seek(0)
     return buf
 
+
 def make_json_buffer(json_obj):
     """Returns a file-like object containing json_obj serialized to JSON
 
@@ -41,6 +42,7 @@ def make_json_buffer(json_obj):
     """
     return make_string_buffer(json.dumps(json_obj))
 
+
 def parse_json(json_str):
     """Returns a Python object unserialized from JSON in json_str
 
@@ -48,6 +50,7 @@ def parse_json(json_str):
     [1, 2, 3, True, 4.5, None, 6000.0]
     """
     return json.loads(json_str)
+
 
 def make_pyobj_buffer(py_obj):
     """Returns a file-like object containing py_obj serialized to a pickle
@@ -57,6 +60,7 @@ def make_pyobj_buffer(py_obj):
     True
     """
     return make_string_buffer(pickle.dumps(py_obj))
+
 
 def parse_pyobj(pickled):
     r"""Returns a Python object unpickled from the provided string
@@ -80,7 +84,5 @@ def guess_mimetype(filename):
 def ls_dir(dirname):
     ls = os.listdir(dirname)
     files = [p for p in ls if os.path.isfile(os.path.join(dirname, p))]
-    dirs  = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
+    dirs = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
     return files, dirs
-        
-

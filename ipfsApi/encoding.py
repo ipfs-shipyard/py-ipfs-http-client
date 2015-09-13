@@ -5,9 +5,8 @@ import json
 from .exceptions import EncodingException
 
 
-
 class Encoding(object):
-    
+
     def parse(self, string):
         raise NotImplemented
 
@@ -36,7 +35,7 @@ class Json(Encoding):
         cur = idx
         while cur < len(json_string) - 1:
             obj, idx = self.decoder.raw_decode(json_string[cur:])
-            results.append(obj) 
+            results.append(obj)
             cur += idx
 
         if len(results) == 1:
@@ -54,14 +53,13 @@ class Protobuf(Encoding):
 class Xml(Encoding):
     name = 'xml'
 
-
-
 # encodings supported by the IPFS api (default is json)
 __encodings = {
-            Json.name:     Json,
-        Protobuf.name: Protobuf,
-             Xml.name:      Xml
-        }
+    Json.name: Json,
+    Protobuf.name: Protobuf,
+    Xml.name: Xml
+}
+
 
 def get_encoding(name):
     try:

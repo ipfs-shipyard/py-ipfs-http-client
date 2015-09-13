@@ -19,7 +19,6 @@ from . import utils
 CRLF = '\r\n'
 
 
-
 def content_disposition(fn, disptype='file'):
     disp = '%s; filename="%s"' % (
         disptype,
@@ -40,16 +39,15 @@ def multipart_content_type(boundary, subtype='mixed'):
     return {'Content-Type': ctype}
 
 
-
 class MultipartWriter(object):
 
     def __init__(self, buf, headers={}, subtype='mixed', boundary=None):
         self.buf = buf
-        
+
         if boundary is None:
             boundary = self._make_boundary()
         self.boundary = boundary
-        
+
         headers.update(multipart_content_type(boundary, subtype=subtype))
         self.headers = headers
 
@@ -64,7 +62,7 @@ class MultipartWriter(object):
                 self.buf.write(headers[name])
                 self.buf.write(CRLF)
         self.buf.write(CRLF)
-    
+
     def write_headers(self):
         self._write_headers(self.headers)
 
@@ -91,10 +89,10 @@ class MultipartWriter(object):
         self.buf.write(CRLF)
 
 
-##
-## TURN THIS INTO A CLASS WHERE YOU OVERWRITE METHODS THAT ARE TRIGGERED WHEN
-## YOU ENTER AND EXIT A SUBDIRECTORY
-##
+#
+# TURN THIS INTO A CLASS WHERE YOU OVERWRITE METHODS THAT ARE TRIGGERED WHEN
+# YOU ENTER AND EXIT A SUBDIRECTORY
+#
 def walk(dirname, fnpattern='*', recursive=False):
     """
     Generator that walks a directory (optionally recursive).
@@ -107,12 +105,11 @@ def walk(dirname, fnpattern='*', recursive=False):
         if not fnmatch.fnmatch(fn, fnpattern):
             continue
         yield os.path.join(dirname, fn), True
-    
+
     if recursive:
         for sd in subdirs:
             for result in walk(os.path.join(dirname, sd), recursive=True):
                 yield result
-
 
 
 def recursive(dirname, fnpattern='*'):
@@ -123,15 +120,14 @@ def recursive(dirname, fnpattern='*'):
 
     TODO: transform this into a generator for chunked file output
     """
-    
+
     # this should really be a io.BufferedWriter or something
     buf = StringIO()
-
 
     def walk(dirname, part):
         subpart = part.open(headers=content_disposition(dirname))
         subpart.write_headers()
-        
+
         files, subdirs = utils.ls_dir(dirname)
 
         for fn in files:
@@ -142,20 +138,21 @@ def recursive(dirname, fnpattern='*'):
                 subpart.add(fullpath,
                             fp.read(),
                             headers=content_disposition(fullpath))
-            
+
         for subdir in subdirs:
             fullpath = os.path.join(dirname, subdir)
             walk(fullpath, subpart)
-        
+
         subpart.close()
         return
-    
-    envelope = MultipartWriter(buf,
-            headers=content_disposition(dirname, 'form-data'),
-            subtype='form-data')
-    
+
+    envelope = MultipartWriter(
+        buf,
+        headers=content_disposition(dirname, 'form-data'),
+        subtype='form-data')
+
     walk(dirname, envelope)
-    
+
     envelope.close()
-    
+
     return buf.getvalue(), envelope.headers
