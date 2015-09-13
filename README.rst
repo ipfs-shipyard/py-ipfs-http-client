@@ -1,4 +1,5 @@
-.. image:: https://img.shields.io/pypi/v/ipfs-api.svg   :target: 
+.. image:: https://img.shields.io/pypi/v/ipfs-api.svg
+
 .. image:: https://travis-ci.org/ipfs/python-ipfs-api.svg?branch=master
     :target: https://travis-ci.org/ipfs/python-ipfs-api
 
