@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from six.moves.urllib.parse import quote
 from six.moves import cStringIO as StringIO
+import six
 
 from . import utils
 
@@ -79,6 +80,8 @@ class MultipartWriter(object):
         headers.update(content_type(fn))
         self._write_headers(headers)
         if content:
+            if not isinstance(content, six.string_types):
+                content = content.decode('utf-8')
             self.buf.write(content)
             self.buf.write(CRLF)
 
