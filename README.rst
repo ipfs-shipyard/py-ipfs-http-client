@@ -90,7 +90,7 @@ This module also contains some helper functions for adding strings, json, and ev
 How to Contribute
 -----------------
 
-Join us on IRC at `#ipfs on chat.freenode.net <irc://chat.freenode.net/%23ipfs>`_ if you have any suggestions or questions, or if you just want to discuss IPFS and python.
+Join us on IRC at `ipfs on chat.freenode.net <irc://chat.freenode.net/%23ipfs>`_ if you have any suggestions or questions, or if you just want to discuss IPFS and python.
 
 Before making any commits, make sure to install the dependencies listed in ``requirements.txt`` and ``test-requirements.txt``, and also install the PEP8 lint tool as a git commit hook::
     
