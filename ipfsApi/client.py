@@ -6,7 +6,6 @@ from __future__ import absolute_import
 from . import http
 from . import utils
 from .commands import Command, ArgCommand, FileCommand
-from .exceptions import InvalidCommand
 
 default_host = 'localhost'
 default_port = 5001
