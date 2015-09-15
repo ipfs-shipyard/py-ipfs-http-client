@@ -18,9 +18,10 @@ class Command(object):
         self.defaults = defaults
 
     def request(self, client, **kwargs):
-        return client.request(self.path, **kwargs)
+        req = self.__prepare(client, **kwargs)
+        return req(self.path, **kwargs)
 
-    def prepare(self, client, **kwargs):
+    def __prepare(self, client, **kwargs):
         request_kwargs = {}
         request_kwargs.update(self.defaults)
         request_kwargs.update(kwargs)
