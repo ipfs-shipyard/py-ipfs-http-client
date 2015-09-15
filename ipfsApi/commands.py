@@ -17,15 +17,14 @@ class Command(object):
         self.path = path
         self.defaults = defaults
 
-    def request(self, client, **kwargs):
-        req = self.__prepare(client, **kwargs)
-        return req(self.path, **kwargs)
+    def request(self, client, *args, **kwargs):
+        return client.request(self.path, **kwargs)
 
-    def __prepare(self, client, **kwargs):
+    def __call__(self, client, *args, **kwargs):
         request_kwargs = {}
         request_kwargs.update(self.defaults)
         request_kwargs.update(kwargs)
-        return functools.partial(self.request, client, **request_kwargs)
+        return self.request(client, *args, **request_kwargs)
 
 
 class ArgCommand(Command):

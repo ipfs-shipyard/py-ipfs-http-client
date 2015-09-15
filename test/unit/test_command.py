@@ -53,13 +53,13 @@ class TestCommands(unittest.TestCase):
     def test_simple_command(self):
         with HTTMock(cmd_simple):
             cmd = ipfsApi.commands.Command('/simple')
-            res = cmd.prepare(self.client)()
+            res = cmd(self.client)
             self.assertEquals(res['Message'], 'okay')
 
     def test_arg_command(self):
         with HTTMock(cmd_with_arg):
             cmd = ipfsApi.commands.ArgCommand('/arg')
-            res = cmd.prepare(self.client)('arg1')
+            res = cmd(self.client, 'arg1')
             self.assertEquals(res['Arg'][0], 'arg1')
 
     def test_file_command_fd(self):
@@ -67,5 +67,5 @@ class TestCommands(unittest.TestCase):
         fd = StringIO(data)
         with HTTMock(cmd_with_file):
             cmd = ipfsApi.commands.FileCommand('/file')
-            res = cmd.prepare(self.client)(fd)
-            self.assertTrue( data in res['Body'] )
+            res = cmd(self.client, fd)
+            self.assertTrue(data in res['Body'])

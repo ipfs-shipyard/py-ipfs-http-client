@@ -43,161 +43,183 @@ class Client(object):
 
     # BASIC COMMANDS
     def add(self, *args, **kwargs):
-     """  """
-     FileCommand('/add').request(self, **kwargs)
+        """
+        """
+        return FileCommand('/add')(self, **kwargs)
 
-    def cat(self,*args,**kwargs):
-     """  """
-        ArgCommand('/cat').request(self, **kwargs)
-        
-    def ls(self,*args,**kwargs):
-     """  """
-        ArgCommand('/ls').request(self, **kwargs)
+    def cat(self, *args, **kwargs):
+        """
+        """
+        return ArgCommand('/cat')(self, **kwargs)
 
-    def refs(self,*args,**kwargs):
-     """  """
-        ArgCommand('/refs').request(self, **kwargs)
+    def ls(self, *args, **kwargs):
+        """
+        """
+        return ArgCommand('/ls')(self, **kwargs)
+
+    def refs(self, *args, **kwargs):
+        """
+        """
+        return ArgCommand('/refs')(self, **kwargs)
 
     # DATA STRUCTURE COMMANDS
-    def block_stat(self,*args,**kwargs):
-     """  """
-        ArgCommand('/block/stat').request(self, **kwargs)
+    def block_stat(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/block/stat')(self, **kwargs)
 
-    def block_get(self,*args,**kwargs):
-     """  """
-        ArgCommand('/block/get').request(self, **kwargs)
+    def block_get(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/block/get')(self, **kwargs)
 
-    def block_put(self,*args,**kwargs):
-     """  """
-     FileCommand('/block/put', accept_multiple=False).request(self, **kwargs)
-    def object_data(self,*args,**kwargs):
-     """  """
-        ArgCommand('/object/data').request(self, **kwargs)
-    def object_links(self,*args,**kwargs):
-     """  """
-        ArgCommand('/object/links').request(self, **kwargs)
-    def object_get(self,*args,**kwargs):
-     """  """
-        ArgCommand('/object/get').request(self, **kwargs)
-    def object_put(self,*args,**kwargs):
-     """  """
-     FileCommand('/object/put').request(self, **kwargs)
-    def object_stat(self,*args,**kwargs):
-     """  """
-        ArgCommand('/object/stat').request(self, **kwargs)
-    def object_patch(self,*args,**kwargs):
-     """  """
-        ArgCommand('/object/patch').request(self, **kwargs)
-    def file_ls(self,*args,**kwargs):
-     """  """
-        ArgCommand('/file/ls').request(self, **kwargs)
+    def block_put(self, *args, **kwargs):
+        """  """
+        return FileCommand('/block/put', accept_multiple=False
+                           )(self, **kwargs)
+
+    def object_data(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/data')(self, **kwargs)
+
+    def object_links(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/links')(self, **kwargs)
+
+    def object_get(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/get')(self, **kwargs)
+
+    def object_put(self, *args, **kwargs):
+        """  """
+        return FileCommand('/object/put')(self, **kwargs)
+
+    def object_stat(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/stat')(self, **kwargs)
+
+    def object_patch(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/patch')(self, **kwargs)
+
+    def file_ls(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/file/ls')(self, **kwargs)
 
     # ADVANCED COMMANDS
-    def resolve(self,*args,**kwargs):
-     """  """
-        ArgCommand('/resolve').request(self, **kwargs)
-    def name_publish(self,*args,**kwargs):
-     """  """
-        ArgCommand('/name/publish').request(self, **kwargs)
-    def name_resolve(self,*args,**kwargs):
-     """  """
-        ArgCommand('/name/resolve').request(self, **kwargs)
-    def dns(self,*args,**kwargs):
-     """  """
-        ArgCommand('/dns').request(self, **kwargs)
-    def pin_add(self,*args,**kwargs):
-     """  """
-        ArgCommand('/pin/add').request(self, **kwargs)
-    def pin_rm(self,*args,**kwargs):
-     """  """
-        ArgCommand('/pin/rm').request(self, **kwargs)
-    def pin_ls(self,*args,**kwargs):
-     """  """
-         Command('/pin/ls').request(self, **kwargs)
-    def repo_gc(self,*args,**kwargs):
-     """  """
-         Command('/repo/gc').request(self, **kwargs)
+    def resolve(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/resolve')(self, **kwargs)
+
+    def name_publish(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/name/publish')(self, **kwargs)
+
+    def name_resolve(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/name/resolve')(self, **kwargs)
+
+    def dns(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dns')(self, **kwargs)
+
+    def pin_add(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/pin/add')(self, **kwargs)
+
+    def pin_rm(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/pin/rm')(self, **kwargs)
+
+    def pin_ls(self, *args, **kwargs):
+        """  """
+        return Command('/pin/ls')(self, **kwargs)
+
+    def repo_gc(self, *args, **kwargs):
+        """  """
+        return Command('/repo/gc')(self, **kwargs)
 
     # NETWORK COMMANDS
-    def id(self,*args,**kwargs):
-     """  """
-         Command('/id').request(self, **kwargs)
-    def bootstrap(self,*args,**kwargs):
-     """  """
-         Command('/bootstrap').request(self, **kwargs)
-    def bootstrap_add(self,*args,**kwargs):
-     """  """
-        ArgCommand('/bootstrap/add').request(self, **kwargs)
-    def bootstrap_rm(self,*args,**kwargs):
-     """  """
-        ArgCommand('/bootstrap/rm').request(self, **kwargs)
-    def swarm_peers(self,*args,**kwargs):
-     """  """
-         Command('/swarm/peers').request(self, **kwargs)
-    def swarm_addrs(self,*args,**kwargs):
-     """  """
-         Command('/swarm/addrs').request(self, **kwargs)
-    def swarm_connect(self,*args,**kwargs):
-     """  """
-        ArgCommand('/swarm/connect').request(self, **kwargs)
-    def swarm_disconnect(self,*args,**kwargs):
-     """  """
-        ArgCommand('/swarm/disconnect').request(self, **kwargs)
-    def swarm_filters_add(self,*args,**kwargs):
-     """  """
-        ArgCommand('/swarm/filters/add').request(self, **kwargs)
-    def swarm_filters_rm(self,*args,**kwargs):
-     """  """
-        ArgCommand('/swarm/filters/rm').request(self, **kwargs)
-    def dht_query(self,*args,**kwargs):
-     """  """
-        ArgCommand('/dht/query').request(self, **kwargs)
-    def dht_findprovs(self,*args,**kwargs):
-     """  """
-        ArgCommand('/dht/findprovs').request(self, **kwargs)
-    def dht_findpeer(self,*args,**kwargs):
-     """  """
-        ArgCommand('/dht/findpeer').request(self, **kwargs)
-    def dht_get(self,*args,**kwargs):
-     """  """
-        ArgCommand('/dht/get', decoder='json', post_hook=lambda r: r[u"Extra"]).request(self, **kwargs)
-    def dht_put(self,*args,**kwargs):
-     """  """
-        ArgCommand('/dht/put', argc=2).request(self, **kwargs)
-    def ping(self,*args,**kwargs):
-     """  """
-        ArgCommand('/ping').request(self, **kwargs)
+    def id(self, *args, **kwargs):
+        """  """
+        return Command('/id')(self, **kwargs)
+
+    def bootstrap(self, *args, **kwargs):
+        """  """
+        return Command('/bootstrap')(self, **kwargs)
+
+    def bootstrap_add(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/bootstrap/add')(self, **kwargs)
+
+    def bootstrap_rm(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/bootstrap/rm')(self, **kwargs)
+
+    def swarm_peers(self, *args, **kwargs):
+        """  """
+        return Command('/swarm/peers')(self, **kwargs)
+
+    def swarm_addrs(self, *args, **kwargs):
+        """  """
+        return Command('/swarm/addrs')(self, **kwargs)
+
+    def swarm_connect(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/connect')(self, **kwargs)
+
+    def swarm_disconnect(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/disconnect')(self, **kwargs)
+
+    def swarm_filters_add(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/filters/add')(self, **kwargs)
+
+    def swarm_filters_rm(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/filters/rm')(self, **kwargs)
+
+    def dht_query(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/query')(self, **kwargs)
+
+    def dht_findprovs(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/findprovs')(self, **kwargs)
+
+    def dht_findpeer(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/findpeer')(self, **kwargs)
+
+    def dht_get(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/get', decoder='json',
+                          post_hook=lambda r: r[u"Extra"])(self,
+                                                           **kwargs)
+
+    def dht_put(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/put', argc=2)(self, **kwargs)
+
+    def ping(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/ping')(self, **kwargs)
 
     # TOOL COMMANDS
-    def config(self,*args,**kwargs):
-     """  """
-        ArgCommand('/config').request(self, **kwargs)
-    def config_show(self,*args,**kwargs):
-     """  """
-         Command('/config/show').request(self, **kwargs)
-    def config_replace(self,*args,**kwargs):
-     """  """
-        ArgCommand('/config/replace').request(self, **kwargs)
-    def version(self,*args,**kwargs):
-     """  """
-         Command('/version')
+    def config(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/config')(self, **kwargs)
 
-    def __getattribute__(self, name):
-        """
-        Prepares command request or raises InvalidCommand exception.
-        """
-        try:
-            attr = object.__getattribute__(self, name)
-            if isinstance(attr, Command):
-                return attr.prepare(self._client, **self._defaults)
-            else:
-                return attr
-        except AttributeError:
-            # all non-private attributes are api commands
-            if name[0] != '_':
-                raise InvalidCommand
-            else:
-                raise AttributeError
+    def config_show(self, *args, **kwargs):
+        """  """
+        return Command('/config/show')(self, **kwargs)
+
+    def config_replace(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/config/replace')(self, **kwargs)
+
+    def version(self, *args, **kwargs):
+        """  """
+        return Command('/version')
 
     ###########
     # HELPERS #
