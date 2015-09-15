@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import os
 import fnmatch
-import functools
 import mimetypes
 
 from . import filestream
