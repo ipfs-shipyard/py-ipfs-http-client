@@ -45,150 +45,150 @@ class Client(object):
     def add(self, *args, **kwargs):
         """
         """
-        return FileCommand('/add')(self, **kwargs)
+        return FileCommand('/add')(self._client, *args, **kwargs)
 
     def cat(self, *args, **kwargs):
         """
         """
-        return ArgCommand('/cat')(self, **kwargs)
+        return ArgCommand('/cat')(self._client, *args, **kwargs)
 
     def ls(self, *args, **kwargs):
         """
         """
-        return ArgCommand('/ls')(self, **kwargs)
+        return ArgCommand('/ls')(self._client, *args, **kwargs)
 
     def refs(self, *args, **kwargs):
         """
         """
-        return ArgCommand('/refs')(self, **kwargs)
+        return ArgCommand('/refs')(self._client, *args, **kwargs)
 
     # DATA STRUCTURE COMMANDS
     def block_stat(self, *args, **kwargs):
         """  """
-        return ArgCommand('/block/stat')(self, **kwargs)
+        return ArgCommand('/block/stat')(self._client, *args, **kwargs)
 
     def block_get(self, *args, **kwargs):
         """  """
-        return ArgCommand('/block/get')(self, **kwargs)
+        return ArgCommand('/block/get')(self._client, *args, **kwargs)
 
     def block_put(self, *args, **kwargs):
         """  """
         return FileCommand('/block/put', accept_multiple=False
-                           )(self, **kwargs)
+                           )(self._client, *args, **kwargs)
 
     def object_data(self, *args, **kwargs):
         """  """
-        return ArgCommand('/object/data')(self, **kwargs)
+        return ArgCommand('/object/data')(self._client, *args, **kwargs)
 
     def object_links(self, *args, **kwargs):
         """  """
-        return ArgCommand('/object/links')(self, **kwargs)
+        return ArgCommand('/object/links')(self._client, *args, **kwargs)
 
     def object_get(self, *args, **kwargs):
         """  """
-        return ArgCommand('/object/get')(self, **kwargs)
+        return ArgCommand('/object/get')(self._client, *args, **kwargs)
 
     def object_put(self, *args, **kwargs):
         """  """
-        return FileCommand('/object/put')(self, **kwargs)
+        return FileCommand('/object/put')(self._client, *args, **kwargs)
 
     def object_stat(self, *args, **kwargs):
         """  """
-        return ArgCommand('/object/stat')(self, **kwargs)
+        return ArgCommand('/object/stat')(self._client, *args, **kwargs)
 
     def object_patch(self, *args, **kwargs):
         """  """
-        return ArgCommand('/object/patch')(self, **kwargs)
+        return ArgCommand('/object/patch')(self._client, *args, **kwargs)
 
     def file_ls(self, *args, **kwargs):
         """  """
-        return ArgCommand('/file/ls')(self, **kwargs)
+        return ArgCommand('/file/ls')(self._client, *args, **kwargs)
 
     # ADVANCED COMMANDS
     def resolve(self, *args, **kwargs):
         """  """
-        return ArgCommand('/resolve')(self, **kwargs)
+        return ArgCommand('/resolve')(self._client, *args, **kwargs)
 
     def name_publish(self, *args, **kwargs):
         """  """
-        return ArgCommand('/name/publish')(self, **kwargs)
+        return ArgCommand('/name/publish')(self._client, *args, **kwargs)
 
     def name_resolve(self, *args, **kwargs):
         """  """
-        return ArgCommand('/name/resolve')(self, **kwargs)
+        return ArgCommand('/name/resolve')(self._client, *args, **kwargs)
 
     def dns(self, *args, **kwargs):
         """  """
-        return ArgCommand('/dns')(self, **kwargs)
+        return ArgCommand('/dns')(self._client, *args, **kwargs)
 
     def pin_add(self, *args, **kwargs):
         """  """
-        return ArgCommand('/pin/add')(self, **kwargs)
+        return ArgCommand('/pin/add')(self._client, *args, **kwargs)
 
     def pin_rm(self, *args, **kwargs):
         """  """
-        return ArgCommand('/pin/rm')(self, **kwargs)
+        return ArgCommand('/pin/rm')(self._client, *args, **kwargs)
 
     def pin_ls(self, *args, **kwargs):
         """  """
-        return Command('/pin/ls')(self, **kwargs)
+        return Command('/pin/ls')(self._client, *args, **kwargs)
 
     def repo_gc(self, *args, **kwargs):
         """  """
-        return Command('/repo/gc')(self, **kwargs)
+        return Command('/repo/gc')(self._client, *args, **kwargs)
 
     # NETWORK COMMANDS
     def id(self, *args, **kwargs):
         """  """
-        return Command('/id')(self, **kwargs)
+        return Command('/id')(self._client, *args, **kwargs)
 
     def bootstrap(self, *args, **kwargs):
         """  """
-        return Command('/bootstrap')(self, **kwargs)
+        return Command('/bootstrap')(self._client, *args, **kwargs)
 
     def bootstrap_add(self, *args, **kwargs):
         """  """
-        return ArgCommand('/bootstrap/add')(self, **kwargs)
+        return ArgCommand('/bootstrap/add')(self._client, *args, **kwargs)
 
     def bootstrap_rm(self, *args, **kwargs):
         """  """
-        return ArgCommand('/bootstrap/rm')(self, **kwargs)
+        return ArgCommand('/bootstrap/rm')(self._client, *args, **kwargs)
 
     def swarm_peers(self, *args, **kwargs):
         """  """
-        return Command('/swarm/peers')(self, **kwargs)
+        return Command('/swarm/peers')(self._client, *args, **kwargs)
 
     def swarm_addrs(self, *args, **kwargs):
         """  """
-        return Command('/swarm/addrs')(self, **kwargs)
+        return Command('/swarm/addrs')(self._client, *args, **kwargs)
 
     def swarm_connect(self, *args, **kwargs):
         """  """
-        return ArgCommand('/swarm/connect')(self, **kwargs)
+        return ArgCommand('/swarm/connect')(self._client, *args, **kwargs)
 
     def swarm_disconnect(self, *args, **kwargs):
         """  """
-        return ArgCommand('/swarm/disconnect')(self, **kwargs)
+        return ArgCommand('/swarm/disconnect')(self._client, *args, **kwargs)
 
     def swarm_filters_add(self, *args, **kwargs):
         """  """
-        return ArgCommand('/swarm/filters/add')(self, **kwargs)
+        return ArgCommand('/swarm/filters/add')(self._client, *args, **kwargs)
 
     def swarm_filters_rm(self, *args, **kwargs):
         """  """
-        return ArgCommand('/swarm/filters/rm')(self, **kwargs)
+        return ArgCommand('/swarm/filters/rm')(self._client, *args, **kwargs)
 
     def dht_query(self, *args, **kwargs):
         """  """
-        return ArgCommand('/dht/query')(self, **kwargs)
+        return ArgCommand('/dht/query')(self._client, *args, **kwargs)
 
     def dht_findprovs(self, *args, **kwargs):
         """  """
-        return ArgCommand('/dht/findprovs')(self, **kwargs)
+        return ArgCommand('/dht/findprovs')(self._client, *args, **kwargs)
 
     def dht_findpeer(self, *args, **kwargs):
         """  """
-        return ArgCommand('/dht/findpeer')(self, **kwargs)
+        return ArgCommand('/dht/findpeer')(self._client, *args, **kwargs)
 
     def dht_get(self, *args, **kwargs):
         """  """
@@ -198,24 +198,24 @@ class Client(object):
 
     def dht_put(self, *args, **kwargs):
         """  """
-        return ArgCommand('/dht/put', argc=2)(self, **kwargs)
+        return ArgCommand('/dht/put', argc=2)(self._client, *args, **kwargs)
 
     def ping(self, *args, **kwargs):
         """  """
-        return ArgCommand('/ping')(self, **kwargs)
+        return ArgCommand('/ping')(self._client, *args, **kwargs)
 
     # TOOL COMMANDS
     def config(self, *args, **kwargs):
         """  """
-        return ArgCommand('/config')(self, **kwargs)
+        return ArgCommand('/config')(self._client, *args, **kwargs)
 
     def config_show(self, *args, **kwargs):
         """  """
-        return Command('/config/show')(self, **kwargs)
+        return Command('/config/show')(self._client, *args, **kwargs)
 
     def config_replace(self, *args, **kwargs):
         """  """
-        return ArgCommand('/config/replace')(self, **kwargs)
+        return ArgCommand('/config/replace')(self._client, *args, **kwargs)
 
     def version(self, *args, **kwargs):
         """  """
