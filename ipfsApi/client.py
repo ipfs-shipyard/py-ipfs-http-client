@@ -6,7 +6,6 @@ from __future__ import absolute_import
 from . import http
 from . import utils
 from .commands import Command, ArgCommand, FileCommand
-from .exceptions import InvalidCommand
 
 default_host = 'localhost'
 default_port = 5001
@@ -41,81 +40,185 @@ class Client(object):
 
         self._defaults = defaults
 
-        ############
-        # COMMANDS #
-        ############
-
-        # BASIC COMMANDS
-        self.add                = FileCommand('/add')
-        self.cat                =  ArgCommand('/cat')
-        self.ls                 =  ArgCommand('/ls')
-        self.refs               =  ArgCommand('/refs')
-
-        # DATA STRUCTURE COMMANDS
-        self.block_stat         =  ArgCommand('/block/stat')
-        self.block_get          =  ArgCommand('/block/get')
-        self.block_put          = FileCommand('/block/put',
-                                              accept_multiple=False)
-        self.object_data        =  ArgCommand('/object/data')
-        self.object_links       =  ArgCommand('/object/links')
-        self.object_get         =  ArgCommand('/object/get')
-        self.object_put         = FileCommand('/object/put')
-        self.object_stat        =  ArgCommand('/object/stat')
-        self.object_patch       =  ArgCommand('/object/patch')
-        self.file_ls            =  ArgCommand('/file/ls')
-
-        # ADVANCED COMMANDS
-        self.resolve            =  ArgCommand('/resolve')
-        self.name_publish       =  ArgCommand('/name/publish')
-        self.name_resolve       =  ArgCommand('/name/resolve')
-        self.dns                =  ArgCommand('/dns')
-        self.pin_add            =  ArgCommand('/pin/add')
-        self.pin_rm             =  ArgCommand('/pin/rm')
-        self.pin_ls             =     Command('/pin/ls')
-        self.repo_gc            =     Command('/repo/gc')
-
-        # NETWORK COMMANDS
-        self.id                 =     Command('/id')
-        self.bootstrap          =     Command('/bootstrap')
-        self.bootstrap_add      =  ArgCommand('/bootstrap/add')
-        self.bootstrap_rm       =  ArgCommand('/bootstrap/rm')
-        self.swarm_peers        =     Command('/swarm/peers')
-        self.swarm_addrs        =     Command('/swarm/addrs')
-        self.swarm_connect      =  ArgCommand('/swarm/connect')
-        self.swarm_disconnect   =  ArgCommand('/swarm/disconnect')
-        self.swarm_filters_add  =  ArgCommand('/swarm/filters/add')
-        self.swarm_filters_rm   =  ArgCommand('/swarm/filters/rm')
-        self.dht_query          =  ArgCommand('/dht/query')
-        self.dht_findprovs      =  ArgCommand('/dht/findprovs')
-        self.dht_findpeer       =  ArgCommand('/dht/findpeer')
-        self.dht_get            =  ArgCommand('/dht/get',
-                                              decoder='json',
-                                              post_hook=lambda r: r[u"Extra"])
-        self.dht_put            =  ArgCommand('/dht/put', argc=2)
-        self.ping               =  ArgCommand('/ping')
-
-        # TOOL COMMANDS
-        self.config             =  ArgCommand('/config')
-        self.config_show        =     Command('/config/show')
-        self.config_replace     =  ArgCommand('/config/replace')
-        self.version            =     Command('/version')
-
-    def __getattribute__(self, name):
+    # BASIC COMMANDS
+    def add(self, *args, **kwargs):
         """
-        Prepares command request or raises InvalidCommand exception.
         """
-        try:
-            attr = object.__getattribute__(self, name)
-            if isinstance(attr, Command):
-                return attr.prepare(self._client, **self._defaults)
-            else:
-                return attr
-        except AttributeError:
-            # all non-private attributes are api commands
-            if name[0] != '_':
-                raise InvalidCommand
-            else:
-                raise AttributeError
+        return FileCommand('/add')(self._client, *args, **kwargs)
+
+    def cat(self, *args, **kwargs):
+        """
+        """
+        return ArgCommand('/cat')(self._client, *args, **kwargs)
+
+    def ls(self, *args, **kwargs):
+        """
+        """
+        return ArgCommand('/ls')(self._client, *args, **kwargs)
+
+    def refs(self, *args, **kwargs):
+        """
+        """
+        return ArgCommand('/refs')(self._client, *args, **kwargs)
+
+    # DATA STRUCTURE COMMANDS
+    def block_stat(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/block/stat')(self._client, *args, **kwargs)
+
+    def block_get(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/block/get')(self._client, *args, **kwargs)
+
+    def block_put(self, *args, **kwargs):
+        """  """
+        return FileCommand('/block/put', accept_multiple=False
+                           )(self._client, *args, **kwargs)
+
+    def object_data(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/data')(self._client, *args, **kwargs)
+
+    def object_links(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/links')(self._client, *args, **kwargs)
+
+    def object_get(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/get')(self._client, *args, **kwargs)
+
+    def object_put(self, *args, **kwargs):
+        """  """
+        return FileCommand('/object/put')(self._client, *args, **kwargs)
+
+    def object_stat(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/stat')(self._client, *args, **kwargs)
+
+    def object_patch(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/object/patch')(self._client, *args, **kwargs)
+
+    def file_ls(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/file/ls')(self._client, *args, **kwargs)
+
+    # ADVANCED COMMANDS
+    def resolve(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/resolve')(self._client, *args, **kwargs)
+
+    def name_publish(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/name/publish')(self._client, *args, **kwargs)
+
+    def name_resolve(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/name/resolve')(self._client, *args, **kwargs)
+
+    def dns(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dns')(self._client, *args, **kwargs)
+
+    def pin_add(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/pin/add')(self._client, *args, **kwargs)
+
+    def pin_rm(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/pin/rm')(self._client, *args, **kwargs)
+
+    def pin_ls(self, *args, **kwargs):
+        """  """
+        return Command('/pin/ls')(self._client, *args, **kwargs)
+
+    def repo_gc(self, *args, **kwargs):
+        """  """
+        return Command('/repo/gc')(self._client, *args, **kwargs)
+
+    # NETWORK COMMANDS
+    def id(self, *args, **kwargs):
+        """  """
+        return Command('/id')(self._client, *args, **kwargs)
+
+    def bootstrap(self, *args, **kwargs):
+        """  """
+        return Command('/bootstrap')(self._client, *args, **kwargs)
+
+    def bootstrap_add(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/bootstrap/add')(self._client, *args, **kwargs)
+
+    def bootstrap_rm(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/bootstrap/rm')(self._client, *args, **kwargs)
+
+    def swarm_peers(self, *args, **kwargs):
+        """  """
+        return Command('/swarm/peers')(self._client, *args, **kwargs)
+
+    def swarm_addrs(self, *args, **kwargs):
+        """  """
+        return Command('/swarm/addrs')(self._client, *args, **kwargs)
+
+    def swarm_connect(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/connect')(self._client, *args, **kwargs)
+
+    def swarm_disconnect(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/disconnect')(self._client, *args, **kwargs)
+
+    def swarm_filters_add(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/filters/add')(self._client, *args, **kwargs)
+
+    def swarm_filters_rm(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/swarm/filters/rm')(self._client, *args, **kwargs)
+
+    def dht_query(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/query')(self._client, *args, **kwargs)
+
+    def dht_findprovs(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/findprovs')(self._client, *args, **kwargs)
+
+    def dht_findpeer(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/findpeer')(self._client, *args, **kwargs)
+
+    def dht_get(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/get', decoder='json',
+                          post_hook=lambda r: r[u"Extra"])(self,
+                                                           **kwargs)
+
+    def dht_put(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/dht/put', argc=2)(self._client, *args, **kwargs)
+
+    def ping(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/ping')(self._client, *args, **kwargs)
+
+    # TOOL COMMANDS
+    def config(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/config')(self._client, *args, **kwargs)
+
+    def config_show(self, *args, **kwargs):
+        """  """
+        return Command('/config/show')(self._client, *args, **kwargs)
+
+    def config_replace(self, *args, **kwargs):
+        """  """
+        return ArgCommand('/config/replace')(self._client, *args, **kwargs)
+
+    def version(self, *args, **kwargs):
+        """  """
+        return Command('/version')
 
     ###########
     # HELPERS #

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 import os
 import fnmatch
-import functools
 import mimetypes
 
 from . import filestream
@@ -17,14 +16,14 @@ class Command(object):
         self.path = path
         self.defaults = defaults
 
-    def request(self, client, **kwargs):
+    def request(self, client, *args, **kwargs):
         return client.request(self.path, **kwargs)
 
-    def prepare(self, client, **kwargs):
+    def __call__(self, client, *args, **kwargs):
         request_kwargs = {}
         request_kwargs.update(self.defaults)
         request_kwargs.update(kwargs)
-        return functools.partial(self.request, client, **request_kwargs)
+        return self.request(client, *args, **request_kwargs)
 
 
 class ArgCommand(Command):
