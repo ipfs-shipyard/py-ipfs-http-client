@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import fnmatch
 import mimetypes
+from functools import partial, wraps
 
 from . import filestream
 from .exceptions import InvalidArguments, FileCommandException
@@ -12,24 +13,27 @@ import six
 
 class Command(object):
 
-    def __init__(self, path, **defaults):
+    def __init__(self, path):
         self.path = path
-        self.defaults = defaults
+
+    def __call__(self, cmd):
+        @wraps(cmd)
+        def wrapper(api, *args, **kwargs):
+            """
+            Pass request function to api methods in order simplify method code
+            and maintenance.
+            """
+            return cmd(partial(self.request, api._client), *args, **kwargs)
+        return wrapper
 
     def request(self, client, *args, **kwargs):
         return client.request(self.path, **kwargs)
 
-    def __call__(self, client, *args, **kwargs):
-        request_kwargs = {}
-        request_kwargs.update(self.defaults)
-        request_kwargs.update(kwargs)
-        return self.request(client, *args, **request_kwargs)
-
 
 class ArgCommand(Command):
 
-    def __init__(self, path, argc=None, **defaults):
-        Command.__init__(self, path, **defaults)
+    def __init__(self, path, argc=None):
+        Command.__init__(self, path)
         self.argc = argc
 
     def request(self, client, *args, **kwargs):
@@ -41,8 +45,8 @@ class ArgCommand(Command):
 
 class FileCommand(Command):
 
-    def __init__(self, path, accept_multiple=True, **defaults):
-        Command.__init__(self, path, **defaults)
+    def __init__(self, path, accept_multiple=True):
+        Command.__init__(self, path)
         self.accept_multiple = accept_multiple
 
     def request(self, client, f, **kwargs):

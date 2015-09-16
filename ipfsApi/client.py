@@ -41,217 +41,301 @@ class Client(object):
         self._defaults = defaults
 
     # BASIC COMMANDS
-    def add(self, *args, **kwargs):
-        """
-        """
-        return FileCommand('/add')(self._client, *args, **kwargs)
 
-    def cat(self, *args, **kwargs):
+    @FileCommand('/add')
+    def add(req, files, recursive=False, **kwargs):
         """
         """
-        return ArgCommand('/cat')(self._client, *args, **kwargs)
+        return req(files, recursive=recursive, **kwargs)
 
-    def ls(self, *args, **kwargs):
+    @ArgCommand('/cat')
+    def cat(req, *args, **kwargs):
         """
         """
-        return ArgCommand('/ls')(self._client, *args, **kwargs)
+        return req(*args, **kwargs)
 
-    def refs(self, *args, **kwargs):
+    @ArgCommand('/ls')
+    def ls(req, *args, **kwargs):
         """
         """
-        return ArgCommand('/refs')(self._client, *args, **kwargs)
+        return req(*args, **kwargs)
+
+    @ArgCommand('/refs')
+    def refs(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
     # DATA STRUCTURE COMMANDS
-    def block_stat(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/block/stat')(self._client, *args, **kwargs)
 
-    def block_get(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/block/get')(self._client, *args, **kwargs)
+    @ArgCommand('/block/stat')
+    def block_stat(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def block_put(self, *args, **kwargs):
-        """  """
-        return FileCommand('/block/put', accept_multiple=False
-                           )(self._client, *args, **kwargs)
+    @ArgCommand('/block/get')
+    def block_get(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def object_data(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/object/data')(self._client, *args, **kwargs)
+    @FileCommand('/block/put', accept_multiple=False)
+    def block_put(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def object_links(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/object/links')(self._client, *args, **kwargs)
+    @ArgCommand('/object/data')
+    def object_data(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def object_get(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/object/get')(self._client, *args, **kwargs)
+    @ArgCommand('/object/links')
+    def object_links(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def object_put(self, *args, **kwargs):
-        """  """
-        return FileCommand('/object/put')(self._client, *args, **kwargs)
+    @ArgCommand('/object/get')
+    def object_get(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def object_stat(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/object/stat')(self._client, *args, **kwargs)
+    @FileCommand('/object/put')
+    def object_put(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def object_patch(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/object/patch')(self._client, *args, **kwargs)
+    @ArgCommand('/object/stat')
+    def object_stat(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def file_ls(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/file/ls')(self._client, *args, **kwargs)
+    @ArgCommand('/object/patch')
+    def object_patch(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
+
+    @ArgCommand('/file/ls')
+    def file_ls(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
     # ADVANCED COMMANDS
-    def resolve(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/resolve')(self._client, *args, **kwargs)
 
-    def name_publish(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/name/publish')(self._client, *args, **kwargs)
+    @ArgCommand('/resolve')
+    def resolve(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def name_resolve(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/name/resolve')(self._client, *args, **kwargs)
+    @ArgCommand('/name/publish')
+    def name_publish(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def dns(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/dns')(self._client, *args, **kwargs)
+    @ArgCommand('/name/resolve')
+    def name_resolve(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def pin_add(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/pin/add')(self._client, *args, **kwargs)
+    @ArgCommand('/dns')
+    def dns(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def pin_rm(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/pin/rm')(self._client, *args, **kwargs)
+    @ArgCommand('/pin/add')
+    def pin_add(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def pin_ls(self, *args, **kwargs):
-        """  """
-        return Command('/pin/ls')(self._client, *args, **kwargs)
+    @ArgCommand('/pin/rm')
+    def pin_rm(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def repo_gc(self, *args, **kwargs):
-        """  """
-        return Command('/repo/gc')(self._client, *args, **kwargs)
+    @Command('/pin/ls')
+    def pin_ls(req, **kwargs):
+        """
+        """
+        return req(**kwargs)
+
+    @Command('/repo/gc')
+    def repo_gc(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
     # NETWORK COMMANDS
-    def id(self, *args, **kwargs):
-        """  """
-        return Command('/id')(self._client, *args, **kwargs)
 
-    def bootstrap(self, *args, **kwargs):
-        """  """
-        return Command('/bootstrap')(self._client, *args, **kwargs)
+    @Command('/id')
+    def id(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def bootstrap_add(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/bootstrap/add')(self._client, *args, **kwargs)
+    @Command('/bootstrap')
+    def bootstrap(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def bootstrap_rm(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/bootstrap/rm')(self._client, *args, **kwargs)
+    @ArgCommand('/bootstrap/add')
+    def bootstrap_add(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def swarm_peers(self, *args, **kwargs):
-        """  """
-        return Command('/swarm/peers')(self._client, *args, **kwargs)
+    @ArgCommand('/bootstrap/rm')
+    def bootstrap_rm(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def swarm_addrs(self, *args, **kwargs):
-        """  """
-        return Command('/swarm/addrs')(self._client, *args, **kwargs)
+    @Command('/swarm/peers')
+    def swarm_peers(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def swarm_connect(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/swarm/connect')(self._client, *args, **kwargs)
+    @Command('/swarm/addrs')
+    def swarm_addrs(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def swarm_disconnect(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/swarm/disconnect')(self._client, *args, **kwargs)
+    @ArgCommand('/swarm/connect')
+    def swarm_connect(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def swarm_filters_add(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/swarm/filters/add')(self._client, *args, **kwargs)
+    @ArgCommand('/swarm/disconnect')
+    def swarm_disconnect(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def swarm_filters_rm(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/swarm/filters/rm')(self._client, *args, **kwargs)
+    @ArgCommand('/swarm/filters/add')
+    def swarm_filters_add(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def dht_query(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/dht/query')(self._client, *args, **kwargs)
+    @ArgCommand('/swarm/filters/rm')
+    def swarm_filters_rm(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def dht_findprovs(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/dht/findprovs')(self._client, *args, **kwargs)
+    @ArgCommand('/dht/query')
+    def dht_query(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def dht_findpeer(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/dht/findpeer')(self._client, *args, **kwargs)
+    @ArgCommand('/dht/findprovs')
+    def dht_findprovs(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def dht_get(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/dht/get', decoder='json',
-                          post_hook=lambda r: r[u"Extra"])(self,
-                                                           **kwargs)
+    @ArgCommand('/dht/findpeer')
+    def dht_findpeer(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def dht_put(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/dht/put', argc=2)(self._client, *args, **kwargs)
+    @utils.return_field('Extra')
+    @ArgCommand('/dht/get')
+    def dht_get(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def ping(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/ping')(self._client, *args, **kwargs)
+    @ArgCommand('/dht/put', argc=2)
+    def dht_put(req, key, value, **kwargs):
+        """
+        """
+        return req(key, value, **kwargs)
+
+    @ArgCommand('/ping')
+    def ping(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
     # TOOL COMMANDS
-    def config(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/config')(self._client, *args, **kwargs)
 
-    def config_show(self, *args, **kwargs):
-        """  """
-        return Command('/config/show')(self._client, *args, **kwargs)
+    @ArgCommand('/config')
+    def config(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def config_replace(self, *args, **kwargs):
-        """  """
-        return ArgCommand('/config/replace')(self._client, *args, **kwargs)
+    @Command('/config/show')
+    def config_show(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
 
-    def version(self, *args, **kwargs):
-        """  """
-        return Command('/version')
+    @ArgCommand('/config/replace')
+    def config_replace(req, *args, **kwargs):
+        """
+        """
+        return req(*args, **kwargs)
+
+    @Command('/version')
+    def version(req, **kwargs):
+        """
+        """
+        return req(**kwargs)
 
     ###########
     # HELPERS #
     ###########
 
+    @utils.return_field('Hash')
     def add_str(self, string, **kwargs):
-        """Adds a Python string as a file to IPFS."""
-        res = self.add(utils.make_string_buffer(string), **kwargs)
-        try:
-            return res['Hash']
-        except:
-            return res
+        """
+        Adds a Python string as a file to IPFS.
+        """
+        return self.add(utils.make_string_buffer(string), **kwargs)
 
+    @utils.return_field('Hash')
     def add_json(self, json_obj, **kwargs):
-        """Adds a json-serializable Python dict as a json file to IPFS."""
-        res = self.add(utils.make_json_buffer(json_obj), **kwargs)
-        try:
-            return res['Hash']
-        except:
-            return res
+        """
+        Adds a json-serializable Python dict as a json file to IPFS.
+        """
+        return self.add(utils.make_json_buffer(json_obj), **kwargs)
 
     def get_json(self, multihash, **kwargs):
-        """Loads a json object from IPFS."""
+        """
+        Loads a json object from IPFS.
+        """
         return self.cat(multihash, decoder='json', **kwargs)
 
+    @utils.return_field('Hash')
     def add_pyobj(self, py_obj, **kwargs):
-        """Adds a picklable Python object as a file to IPFS."""
-        res = self.add(utils.make_pyobj_buffer(py_obj), **kwargs)
-        try:
-            return res['Hash']
-        except:
-            return res
+        """
+        Adds a picklable Python object as a file to IPFS.
+        """
+        return self.add(utils.make_pyobj_buffer(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
-        """Loads a pickled Python object from IPFS."""
+        """
+        Loads a pickled Python object from IPFS.
+        """
         return utils.parse_pyobj(self.cat(multihash, **kwargs))

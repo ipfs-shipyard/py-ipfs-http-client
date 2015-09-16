@@ -44,28 +44,37 @@ def cmd_with_file(url, request):
 
 class TestCommands(unittest.TestCase):
     def setUp(self):
-        self.client = ipfsApi.http.HTTPClient(
+        self._client = ipfsApi.http.HTTPClient(
             'localhost',
             5001,
             'api/v0',
             'json')
 
+    @ipfsApi.commands.Command('/simple')
+    def simple(req, **kwargs):
+        return req(**kwargs)
+
     def test_simple_command(self):
         with HTTMock(cmd_simple):
-            cmd = ipfsApi.commands.Command('/simple')
-            res = cmd(self.client)
+            res = self.simple()
             self.assertEquals(res['Message'], 'okay')
+    
+    @ipfsApi.commands.ArgCommand('/arg')
+    def with_arg(req, *args, **kwargs):
+        return req(*args, **kwargs)
 
     def test_arg_command(self):
         with HTTMock(cmd_with_arg):
-            cmd = ipfsApi.commands.ArgCommand('/arg')
-            res = cmd(self.client, 'arg1')
+            res = self.with_arg('arg1')
             self.assertEquals(res['Arg'][0], 'arg1')
+    
+    @ipfsApi.commands.FileCommand('/file')
+    def with_file(req, files, **kwargs):
+        return req(files, **kwargs)
 
     def test_file_command_fd(self):
         data = 'content\ngoes\nhere'
         fd = StringIO(data)
         with HTTMock(cmd_with_file):
-            cmd = ipfsApi.commands.FileCommand('/file')
-            res = cmd(self.client, fd)
+            res = self.with_file(fd)
             self.assertTrue(data in res['Body'])

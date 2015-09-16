@@ -4,6 +4,7 @@ import io
 import os
 import json
 import mimetypes
+from functools import wraps
 
 import six
 from six.moves import cPickle as pickle
@@ -86,3 +87,18 @@ def ls_dir(dirname):
     files = [p for p in ls if os.path.isfile(os.path.join(dirname, p))]
     dirs = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
     return files, dirs
+
+
+class return_field(object):
+    """
+    Decorator that returns the given field of a json response.
+    """
+    def __init__(self, field):
+        self.field = field
+
+    def __call__(self, cmd):
+        @wraps(cmd)
+        def wrapper(api, *args, **kwargs):
+            res = cmd(api, *args, **kwargs)
+            return res[self.field]
+        return wrapper

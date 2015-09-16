@@ -18,19 +18,24 @@ class HTTPClient(object):
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
 
-        self.default_enc = encoding.get_encoding(default_enc)
+        self.default_enc  = encoding.get_encoding(default_enc)
+        self.default_opts = {'encoding': default_enc}
         self._session = None
 
     def request(self, path,
                 args=[], opts={}, files=[],
-                decoder=None, post_hook=None,
+                decoder=None,
                 **kwargs):
 
         url = self.base + path
 
         params = []
         params.append(('stream-channels', 'true'))
-        for opt in opts.items():
+
+        merged_opts = {}
+        merged_opts.update(self.default_opts)
+        merged_opts.update(opts)
+        for opt in merged_opts.items():
             params.append(opt)
         for arg in args:
             params.append(('arg', arg))
@@ -66,9 +71,6 @@ class HTTPClient(object):
                 raise ipfsApiError(ret['Message'])
             else:
                 raise
-
-        if post_hook:
-            return post_hook(ret)
         return ret
 
     @contextlib.contextmanager
