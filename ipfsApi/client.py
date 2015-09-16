@@ -43,90 +43,90 @@ class Client(object):
     # BASIC COMMANDS
 
     @FileCommand('/add')
-    def add(req, files, recursive=False, **kwargs):
+    def add(req, file, recursive=False, **kwargs):
         """
         """
-        return req(files, recursive=recursive, **kwargs)
+        return req(file, recursive=recursive, **kwargs)
 
     @ArgCommand('/cat')
-    def cat(req, *args, **kwargs):
+    def cat(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/ls')
-    def ls(req, *args, **kwargs):
+    def ls(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/refs')
-    def refs(req, *args, **kwargs):
+    def refs(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     # DATA STRUCTURE COMMANDS
 
     @ArgCommand('/block/stat')
-    def block_stat(req, *args, **kwargs):
+    def block_stat(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/block/get')
-    def block_get(req, *args, **kwargs):
+    def block_get(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @FileCommand('/block/put', accept_multiple=False)
-    def block_put(req, *args, **kwargs):
+    def block_put(req, file, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(file, **kwargs)
 
     @ArgCommand('/object/data')
-    def object_data(req, *args, **kwargs):
+    def object_data(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/object/links')
-    def object_links(req, *args, **kwargs):
+    def object_links(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/object/get')
-    def object_get(req, *args, **kwargs):
+    def object_get(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @FileCommand('/object/put')
-    def object_put(req, *args, **kwargs):
+    def object_put(req, file, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(file, **kwargs)
 
     @ArgCommand('/object/stat')
-    def object_stat(req, *args, **kwargs):
+    def object_stat(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/object/patch')
-    def object_patch(req, *args, **kwargs):
+    def object_patch(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     @ArgCommand('/file/ls')
-    def file_ls(req, *args, **kwargs):
+    def file_ls(req, multihash, **kwargs):
         """
         """
-        return req(*args, **kwargs)
+        return req(multihash, **kwargs)
 
     # ADVANCED COMMANDS
 

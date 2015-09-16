@@ -23,9 +23,8 @@ class HTTPClient(object):
         self._session = None
 
     def request(self, path,
-                args=[], opts={}, files=[],
-                decoder=None,
-                **kwargs):
+                args=[], files=[], opts={},
+                decoder=None, **kwargs):
 
         url = self.base + path
 
