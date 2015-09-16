@@ -11,17 +11,36 @@ from . import encoding
 from .exceptions import ipfsApiError
 
 
+def pass_defaults(f):
+    """
+    Use instance default kwargs updated with those passed to function.
+    """
+    def wrapper(self, *args, **kwargs):
+        merged = {}
+        merged.update(self.defaults)
+        merged.update(kwargs)
+        return f(self, *args, **merged)
+    return wrapper
+
+
 class HTTPClient(object):
 
-    def __init__(self, host, port, base, default_enc):
+    def __init__(self, host, port, base, default_enc, **defaults):
         self.host = host
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
 
+        # default request keyword-args
+        if 'opts' in defaults:
+            defaults['opts'].update({'encoding': default_enc})
+        else:
+            defaults.update({'opts': {'encoding': default_enc}})
+
         self.default_enc  = encoding.get_encoding(default_enc)
-        self.default_opts = {'encoding': default_enc}
+        self.defaults = defaults
         self._session = None
 
+    @pass_defaults
     def request(self, path,
                 args=[], files=[], opts={},
                 decoder=None, **kwargs):
@@ -31,10 +50,7 @@ class HTTPClient(object):
         params = []
         params.append(('stream-channels', 'true'))
 
-        merged_opts = {}
-        merged_opts.update(self.default_opts)
-        merged_opts.update(opts)
-        for opt in merged_opts.items():
+        for opt in opts.items():
             params.append(opt)
         for arg in args:
             params.append(('arg', arg))

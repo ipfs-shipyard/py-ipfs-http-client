@@ -30,15 +30,8 @@ class Client(object):
         if base is None:
             base = default_base
 
-        self._client = self._clientfactory(host, port, base, default_enc)
-
-        # default request keyword-args
-        if 'opts' in defaults:
-            defaults['opts'].update({'encoding': default_enc})
-        else:
-            defaults.update({'opts': {'encoding': default_enc}})
-
-        self._defaults = defaults
+        self._client = self._clientfactory(host, port, base,
+                                           default_enc, **defaults)
 
     # BASIC COMMANDS
 
