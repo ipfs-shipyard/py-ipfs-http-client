@@ -11,25 +11,45 @@ from . import encoding
 from .exceptions import ipfsApiError
 
 
+def pass_defaults(f):
+    """
+    Use instance default kwargs updated with those passed to function.
+    """
+    def wrapper(self, *args, **kwargs):
+        merged = {}
+        merged.update(self.defaults)
+        merged.update(kwargs)
+        return f(self, *args, **merged)
+    return wrapper
+
+
 class HTTPClient(object):
 
-    def __init__(self, host, port, base, default_enc):
+    def __init__(self, host, port, base, default_enc, **defaults):
         self.host = host
         self.port = port
         self.base = 'http://%s:%s/%s' % (host, port, base)
 
-        self.default_enc = encoding.get_encoding(default_enc)
+        # default request keyword-args
+        if 'opts' in defaults:
+            defaults['opts'].update({'encoding': default_enc})
+        else:
+            defaults.update({'opts': {'encoding': default_enc}})
+
+        self.default_enc  = encoding.get_encoding(default_enc)
+        self.defaults = defaults
         self._session = None
 
+    @pass_defaults
     def request(self, path,
-                args=[], opts={}, files=[],
-                decoder=None, post_hook=None,
-                **kwargs):
+                args=[], files=[], opts={},
+                decoder=None, **kwargs):
 
         url = self.base + path
 
         params = []
         params.append(('stream-channels', 'true'))
+
         for opt in opts.items():
             params.append(opt)
         for arg in args:
@@ -66,9 +86,6 @@ class HTTPClient(object):
                 raise ipfsApiError(ret['Message'])
             else:
                 raise
-
-        if post_hook:
-            return post_hook(ret)
         return ret
 
     @contextlib.contextmanager
