@@ -85,6 +85,15 @@ class Client(object):
         """
         return req(multihash, **kwargs)
 
+    @ArgCommand('/object/new')
+    def object_new(req, template=None, **kwargs):
+        """
+        """
+        if template:
+            return req(template, **kwargs)
+        else:
+            return req(**kwargs)
+
     @ArgCommand('/object/links')
     def object_links(req, multihash, **kwargs):
         """
