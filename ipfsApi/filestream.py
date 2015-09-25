@@ -21,6 +21,16 @@ CRLF = '\r\n'
 
 
 def content_disposition(fn, disptype='file'):
+    """
+    Returns a dict containing the MIME content-disposition header for a
+    file
+
+    >>> content_disposition('example.txt')
+    {'Content-Disposition': 'file; filename="example.txt"'}
+
+    >>> content_disposition('example.txt', 'attachment')
+    {'Content-Disposition': 'attachment; filename="example.txt"'}
+    """
     disp = '%s; filename="%s"' % (
         disptype,
         quote(fn, safe='')
@@ -29,10 +39,33 @@ def content_disposition(fn, disptype='file'):
 
 
 def content_type(fn):
+    """
+    Guesses the mimetype associated with a filename and returns a dict
+    containing the content-type header
+
+    >>> content_type('example.txt')
+    {'Content-Type': 'text/plain'}
+
+    >>> content_type('example.jpeg')
+    {'Content-Type': 'image/jpeg'}
+
+    >>> content_type('example')
+    {'Content-Type': 'application/octet-stream'}
+    """
     return {'Content-Type': utils.guess_mimetype(fn)}
 
 
 def multipart_content_type(boundary, subtype='mixed'):
+    """
+    Returns a dict containing a MIME multipart header with the given
+    boundary
+
+    >>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg')
+    {'Content-Type': 'multipart/mixed; boundary="8K5rNKlLQVyreRNncx"'}
+
+    >>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg', 'alternative')
+    {'Content-Type': 'multipart/alternative; boundary="8K5rNKlLQVyreRNncx"'}
+    """
     ctype = 'multipart/%s; boundary="%s"' % (
         subtype,
         boundary

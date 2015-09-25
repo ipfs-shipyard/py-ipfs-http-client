@@ -6,6 +6,9 @@ from .exceptions import EncodingException
 
 
 class Encoding(object):
+    """
+    Abstract base for a data parser/encoder interface interface
+    """
 
     def parse(self, string):
         raise NotImplemented
@@ -15,6 +18,9 @@ class Encoding(object):
 
 
 class Json(Encoding):
+    """
+    JSON parser/encoder that handles concatenated JSON
+    """
     name = 'json'
 
     def __init__(self):
@@ -23,9 +29,15 @@ class Json(Encoding):
 
     def parse(self, raw):
         """
+        Returns a Python object decoded from JSON object(s) in raw
+
         Some responses from the IPFS api are a concatenated string of JSON
         objects, which crashes json.loads(), so we need to use this instead as
         a general approach.
+
+        >>> coder = Json()
+        >>> coder.parse("[0, 1, 2, 3][4, 5, 6, 7]")
+        [[0, 1, 2, 3], [4, 5, 6, 7]]
         """
         json_string = raw.strip()
         results = []
@@ -43,6 +55,13 @@ class Json(Encoding):
         return results
 
     def encode(self, obj):
+        """
+        Returns obj encoded as JSON in a binary string
+
+        >>> coder = Json()
+        >>> coder.encode([0, 1, 2, 3])
+        "[0, 1, 2, 3]"
+        """
         return json.dumps(obj)
 
 
@@ -62,6 +81,19 @@ __encodings = {
 
 
 def get_encoding(name):
+    """
+    Returns an Encoder object for the named encoding
+
+    >>> get_encoding('json') # doctest: +ELLIPSIS
+    <ipfsApi.encoding.Json object at 0x...>
+    >>> get_encoding('JSON').encode([0, 1, 2, 3])
+    "[0, 1, 2, 3]"
+
+    >>> encoding.get_encoding('foo')
+    Traceback (most recent call last):
+      ...
+    ipfsApi.exceptions.EncodingException: Invalid encoding: 'foo'
+    """
     try:
         return __encodings[name.lower()]()
     except KeyError:

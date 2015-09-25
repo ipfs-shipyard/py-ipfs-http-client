@@ -78,11 +78,23 @@ def parse_pyobj(pickled):
 
 
 def guess_mimetype(filename):
+    """
+    Guesses the mimetype of a file, based on the filename
+
+    >>> guess_mimetype('example.txt')
+    'text/plain'
+    >>> guess_mimetype('/foo/bar/example')
+    'application/octet-stream'
+    """
     fn = os.path.basename(filename)
     return mimetypes.guess_type(fn)[0] or 'application/octet-stream'
 
 
 def ls_dir(dirname):
+    """
+    Returns a pair of lists, containing the names of directories and files
+    in dirname
+    """
     ls = os.listdir(dirname)
     files = [p for p in ls if os.path.isfile(os.path.join(dirname, p))]
     dirs = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
