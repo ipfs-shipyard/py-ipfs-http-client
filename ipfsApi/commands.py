@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import os
 import fnmatch
 import mimetypes
-from functools import partial, wraps
 
 from . import filestream
 from .exceptions import InvalidArguments, FileCommandException
@@ -15,16 +14,6 @@ class Command(object):
 
     def __init__(self, path):
         self.path = path
-
-    def __call__(self, cmd):
-        @wraps(cmd)
-        def wrapper(api, *args, **kwargs):
-            """
-            Pass request function to api methods in order simplify method code
-            and maintenance.
-            """
-            return cmd(partial(self.request, api._client), *args, **kwargs)
-        return wrapper
 
     def request(self, client, *args, **kwargs):
         return client.request(self.path, **kwargs)
@@ -122,3 +111,9 @@ class FileCommand(Command):
 
         return client.request(self.path, data=raw_body,
                               headers=raw_headers, **kwargs)
+
+
+class DownloadCommand(Command):
+
+    def request(self, client, *args, **kwargs):
+        return client.download(self.path, args=args, **kwargs)
