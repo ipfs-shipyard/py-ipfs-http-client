@@ -61,10 +61,10 @@ def multipart_content_type(boundary, subtype='mixed'):
     boundary
 
     >>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg')
-    {'Content-Type': 'multipart/mixed; boundary="8K5rNKlLQVyreRNncx"'}
+    {'Content-Type': 'multipart/mixed; boundary="8K5rNKlLQVyreRNncxOTeg"'}
 
-    >>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg', 'alternative')
-    {'Content-Type': 'multipart/alternative; boundary="8K5rNKlLQVyreRNncx"'}
+    >>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg', 'alt')
+    {'Content-Type': 'multipart/alt; boundary="8K5rNKlLQVyreRNncxOTeg"'}
     """
     ctype = 'multipart/%s; boundary="%s"' % (
         subtype,
