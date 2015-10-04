@@ -90,17 +90,16 @@ class HTTPClient(object):
         return ret
 
     @pass_defaults
-    def download(self, path, args=[], opts={}, **kwargs):
+    def download(self, path, filepath=None, args=[], opts={}, **kwargs):
         """
         Downloads a file or files from IPFS into the current working
-        directory.
+        directory, or the directory given by :filepath:.
         """
         url = self.base + path
 
         params = []
         params.append(('stream-channels', 'true'))
         params.append(('archive', 'true'))
-        params.append(('compress', 'true'))
 
         for opt in opts.items():
             params.append(opt)
@@ -118,8 +117,10 @@ class HTTPClient(object):
 
         res.raise_for_status()
 
-        with tarfile.open(fileobj=res.raw, mode='r|gz') as tf:
-            tf.extractall()
+        # try to download file as a gzipped tar file stream
+        wd = filepath or '.'
+        with tarfile.open(fileobj=res.raw, mode='r|') as tf:
+            tf.extractall(path=wd)
 
     @contextlib.contextmanager
     def session(self):

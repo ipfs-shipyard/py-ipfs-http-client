@@ -176,7 +176,7 @@ class Client(object):
         >> c.block_get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         u'\x121\n"\x12 \xdaW> ... \x11published-version\x187\n\x02\x08\x01'
         """
-        return self._block_get(self._client, multihash, **kwargs)
+        return self._block_get.request(self._client, multihash, **kwargs)
 
     def block_put(self, file, **kwargs):
         """
