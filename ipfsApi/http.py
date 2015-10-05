@@ -100,6 +100,7 @@ class HTTPClient(object):
         params = []
         params.append(('stream-channels', 'true'))
         params.append(('archive', 'true'))
+        params.append(('compress', 'true'))
 
         for opt in opts.items():
             params.append(opt)
@@ -117,9 +118,9 @@ class HTTPClient(object):
 
         res.raise_for_status()
 
-        # try to download file as a gzipped tar file stream
+        # try to stream download as a gzipped tar file stream
         wd = filepath or '.'
-        with tarfile.open(fileobj=res.raw, mode='r|') as tf:
+        with tarfile.open(fileobj=res.raw, mode='r|gz') as tf:
             tf.extractall(path=wd)
 
     @contextlib.contextmanager

@@ -1,14 +1,9 @@
 """
-Streaming Multipart Encoded Files
-=================================
-
-**NOTE: This is temporary until we can fork python-requests and/or urllib3 to
-        provide the same functionality.
+Multipart/form-data encoded file streaming.
 """
 from __future__ import absolute_import
 
 import os
-import fnmatch
 from uuid import uuid4
 
 from six.moves.urllib.parse import quote
@@ -73,10 +68,22 @@ def multipart_content_type(boundary, subtype='mixed'):
     return {'Content-Type': ctype}
 
 
-class MultipartWriter(object):
+def read_in_chunks(fp, chunk_size=1024):
+    """
+    Reads a file in chunks (defaults to 1kb chunks).
+    """
+    while True:
+        data = fp.read(chunk_size)
+        if not data:
+            break
+        yield data
 
-    def __init__(self, buf, headers={}, subtype='mixed', boundary=None):
-        self.buf = buf
+
+class MultipartGenerator(object):
+    """
+    Generators for multipart encoding.
+    """
+    def __init__(self, headers={}, subtype='mixed', boundary=None):
 
         if boundary is None:
             boundary = self._make_boundary()
@@ -91,104 +98,142 @@ class MultipartWriter(object):
     def _write_headers(self, headers):
         if headers:
             for name in sorted(headers.keys()):
-                self.buf.write(name)
-                self.buf.write(': ')
-                self.buf.write(headers[name])
-                self.buf.write(CRLF)
-        self.buf.write(CRLF)
+                yield name
+                yield ': '
+                yield headers[name]
+                yield CRLF
+        yield CRLF
 
     def write_headers(self):
-        self._write_headers(self.headers)
+        for c in self._write_headers(self.headers):
+            yield c
 
     def open(self, **kwargs):
-        self.buf.write('--')
-        self.buf.write(self.boundary)
-        self.buf.write(CRLF)
-        return MultipartWriter(self.buf, **kwargs)
+        yield '--'
+        yield self.boundary
+        yield CRLF
 
-    def add(self, fn, content, headers={}):
-        self.buf.write('--')
-        self.buf.write(self.boundary)
-        self.buf.write(CRLF)
+    def add(self, fn, fp, headers={}, chunk_size=1024):
+        yield '--'
+        yield self.boundary
+        yield CRLF
         headers.update(content_type(fn))
-        self._write_headers(headers)
-        if content:
-            if not isinstance(content, six.string_types):
-                content = content.decode('utf-8')
-            self.buf.write(content)
-            self.buf.write(CRLF)
+        for c in self._write_headers(headers):
+            yield c
+        for chunk in read_in_chunks(fp, chunk_size=chunk_size):
+            if not isinstance(chunk, six.string_types):
+                chunk = chunk.decode('utf-8')
+            yield chunk
+            yield CRLF
 
     def close(self):
-        self.buf.write('--')
-        self.buf.write(self.boundary)
-        self.buf.write('--')
-        self.buf.write(CRLF)
+        yield '--'
+        yield self.boundary
+        yield '--'
+        yield CRLF
 
 
-#
-# TURN THIS INTO A CLASS WHERE YOU OVERWRITE METHODS THAT ARE TRIGGERED WHEN
-# YOU ENTER AND EXIT A SUBDIRECTORY
-#
-def walk(dirname, fnpattern='*', recursive=False):
+class BufferedMultipartGenerator(object):
     """
-    Generator that walks a directory (optionally recursive).
+    A buffered generator which encodes a directory as multipart/form-data.
     """
-    yield dirname, False
+    def __init__(self, directory, recursive=False, chunk_size=1024):
+        self.directory = directory
+        self.recursive = recursive
+        self.chunk_size = chunk_size
 
-    files, subdirs = utils.ls_dir(dirname)
+        self.buf = StringIO()
+        self.cur = 0
 
-    for fn in files:
-        if not fnmatch.fnmatch(fn, fnpattern):
-            continue
-        yield os.path.join(dirname, fn), True
+        self.envelope = MultipartGenerator(
+            headers=content_disposition(directory, 'form-data'),
+            subtype='form-data')
 
-    if recursive:
-        for sd in subdirs:
-            for result in walk(os.path.join(dirname, sd), recursive=True):
-                yield result
+    def gen_chunks(self, gen):
+        """
+        Yields a chunk when the buffer is full or yields None.
+        """
+        for data in gen:
+            if len(data) < (self.chunk_size - self.cur):
+                self.buf.write(data)
+                self.cur += len(data)
+                yield
+            else:
+                seek = 0
+                while seek < len(data):
+                    nb = min((self.chunk_size - self.cur), len(data[seek:]))
+                    self.buf.write(data[seek:(seek + nb)])
+                    seek += nb
+                    self.cur += nb
+                    if self.cur == self.chunk_size:
+                        self.buf.seek(0)
+                        yield self.buf.read(self.chunk_size)
+                        self.cur = 0
+                        self.buf.seek(0)
+                yield
 
+    def generator(self, dirname, part):
+        """
+        Recursively traverses a directory and generates the multipart encoded
+        body.
+        """
+        for chunk in self.gen_chunks(part.open()):
+            if chunk:
+                yield chunk
 
-def recursive(dirname, fnpattern='*'):
-    """
-    Python-requests can supports chunked output by passing a generator to
-    the [data] keyword arg in the request api.  This should be a chunked
-    generator... eventually.
-
-    TODO: transform this into a generator for chunked file output
-    """
-
-    # this should really be a io.BufferedWriter or something
-    buf = StringIO()
-
-    def walk(dirname, part):
-        subpart = part.open(headers=content_disposition(dirname))
-        subpart.write_headers()
+        subpart = MultipartGenerator(headers=content_disposition(dirname))
+        for chunk in self.gen_chunks(subpart.write_headers()):
+            if chunk:
+                yield chunk
 
         files, subdirs = utils.ls_dir(dirname)
 
         for fn in files:
-            if not fnmatch.fnmatch(fn, fnpattern):
-                continue
             fullpath = os.path.join(dirname, fn)
             with open(fullpath, 'rb') as fp:
-                subpart.add(fullpath,
-                            fp.read(),
-                            headers=content_disposition(fullpath))
+                g = subpart.add(fullpath, fp,
+                                headers=content_disposition(fullpath),
+                                chunk_size=self.chunk_size)
+                for chunk in self.gen_chunks(g):
+                    if chunk:
+                        yield chunk
 
-        for subdir in subdirs:
-            fullpath = os.path.join(dirname, subdir)
-            walk(fullpath, subpart)
+        if self.recursive:
+            for subdir in subdirs:
+                fullpath = os.path.join(dirname, subdir)
+                for chunk in self.generator(fullpath, subpart):
+                    yield chunk
 
-        subpart.close()
-        return
+        for chunk in self.gen_chunks(subpart.close()):
+            if chunk:
+                yield chunk
 
-    envelope = MultipartWriter(
-        buf,
-        headers=content_disposition(dirname, 'form-data'),
-        subtype='form-data')
+    def close(self):
+        """
+        Yields anything left in the buffer and then the closing multipart
+        boundary.
+        """
+        for chunk in self.gen_chunks(self.envelope.close()):
+            if chunk:
+                yield chunk
+        if self.cur > 0:
+            self.buf.seek(0)
+            yield self.buf.read(self.cur)
 
-    walk(dirname, envelope)
 
-    envelope.close()
+def multipart(directory, recursive=False, chunk_size=1024):
+    """
+    Returns a buffered generator which encodes a directory as
+    multipart/form-data.  Also returns the corresponding headers.
+    """
+    g = BufferedMultipartGenerator(directory,
+                                   recursive=recursive,
+                                   chunk_size=chunk_size)
 
-    return buf.getvalue(), envelope.headers
+    def body(mp_gen, dirname, part):
+        for chunk in mp_gen.generator(dirname, part):
+            yield chunk
+        for chunk in mp_gen.close():
+            yield chunk
+
+    return body(g, directory, g.envelope), g.envelope.headers

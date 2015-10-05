@@ -105,9 +105,9 @@ class FileCommand(Command):
             raise FileCommandException(
                 "[%s] does not accept multiple files." % self.path)
 
-        fnpattern = kwargs.pop('match', '*')
+        # fnpattern = kwargs.pop('match', '*')
 
-        raw_body, raw_headers = filestream.recursive(dirname, fnpattern)
+        raw_body, raw_headers = filestream.multipart(dirname, recursive=True)
 
         return client.request(self.path, data=raw_body,
                               headers=raw_headers, **kwargs)

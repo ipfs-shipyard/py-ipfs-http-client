@@ -101,6 +101,26 @@ def ls_dir(dirname):
     return files, dirs
 
 
+def clean_file(f):
+    """
+    Returns a file object.
+    """
+    if isinstance(f, (six.string_types, six.text_type)):
+        return open(f, 'rb')
+    else:
+        return f
+
+
+def clean_files(files):
+    """
+    Returns a list of file objects.
+    """
+    if not isinstance(files, (six.string_types, six.text_type)):
+        return [clean_file(f) for f in files]
+    else:
+        return [clean_file(files)]
+
+
 class return_field(object):
     """
     Decorator that returns the given field of a json response.
