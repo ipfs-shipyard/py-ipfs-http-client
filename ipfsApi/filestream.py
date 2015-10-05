@@ -124,7 +124,7 @@ class MultipartGenerator(object):
             if not isinstance(chunk, six.string_types):
                 chunk = chunk.decode('utf-8')
             yield chunk
-            yield CRLF
+        yield CRLF
 
     def close(self):
         yield '--'
