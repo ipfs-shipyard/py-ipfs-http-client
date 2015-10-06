@@ -4,6 +4,7 @@ can/will eventually be supplemented with an asynchronous version.
 """
 from __future__ import absolute_import
 
+import re
 import requests
 import contextlib
 import tarfile
@@ -29,7 +30,10 @@ class HTTPClient(object):
     def __init__(self, host, port, base, default_enc, **defaults):
         self.host = host
         self.port = port
-        self.base = 'http://%s:%s/%s' % (host, port, base)
+        if not re.match('^https?://', host.lower()):
+            host = 'http://' + host
+
+        self.base = '%s:%s/%s' % (host, port, base)
 
         # default request keyword-args
         if 'opts' in defaults:
