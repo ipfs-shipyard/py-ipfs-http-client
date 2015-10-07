@@ -171,7 +171,6 @@ class BufferedGenerator(object):
                 if not isinstance(ch, six.binary_type):
                     ch = ch.encode('utf-8')
                 self._buf[self.cur:self.cur + nb] = ch
-            print("@ {}/{}: wrote {} bytes".format(offset, fsize, nb))
             offset += nb
             self.cur += nb
             if self.cur == self.chunk_size:
