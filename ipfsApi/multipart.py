@@ -13,10 +13,10 @@ import six
 
 from . import utils
 
-# Python 2.6
 try:
     memoryview
 except:
+    # Python 2.6
     locals()['memoryview'] = lambda x: x
 
 
@@ -170,7 +170,7 @@ class BufferedGenerator(object):
                 ch = fp.read(nb)
                 if not isinstance(ch, six.binary_type):
                     ch = ch.encode('utf-8')
-                self._buf[self.cur:self.cur + nb] = ch
+                self.buf[self.cur:self.cur + nb] = ch
             offset += nb
             self.cur += nb
             if self.cur == self.chunk_size:
@@ -187,9 +187,10 @@ class BufferedGenerator(object):
             if not isinstance(data, six.binary_type):
                 data = data.encode('utf-8')
             mv = memoryview(data)
+            size = len(mv)
             offset = 0
-            while offset < len(mv):
-                nb = min(self.chunk_size - self.cur, len(mv[offset:]))
+            while offset < size:
+                nb = min(self.chunk_size - self.cur, size - offset)
                 self.buf[self.cur:self.cur + nb] = mv[offset:offset + nb]
                 offset += nb
                 self.cur += nb

@@ -34,7 +34,16 @@ def cmd_with_arg(url, request):
 
 @urlmatch(netloc='localhost:5001', path=r'.*/file')
 def cmd_with_file(url, request):
-    body = ''.join([b.tobytes().decode('utf-8') for b in request.body])
+    # request.body is a byte generator
+    body = []
+    for b in request.body:
+        try:
+            body.append(b.tobytes().decode('utf-8'))
+        except AttributeError:
+            # Python 2.6
+            body.append(b.decode('utf-8'))
+    body = ''.join(body)
+
     return {
         'status_code': 200,
         'content': json.dumps({
