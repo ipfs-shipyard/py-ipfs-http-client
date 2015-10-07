@@ -1,5 +1,6 @@
 import unittest
 import json
+import six
 from six.moves.urllib import parse as urlparse
 from six.moves import cStringIO as StringIO
 import requests
@@ -33,11 +34,12 @@ def cmd_with_arg(url, request):
 
 @urlmatch(netloc='localhost:5001', path=r'.*/file')
 def cmd_with_file(url, request):
+    body = ''.join([b.tobytes().decode('utf-8') for b in request.body])
     return {
         'status_code': 200,
         'content': json.dumps({
             'Message': 'okay',
-            'Body': request.body.decode('utf-8'),
+            'Body': body,
         }).encode('utf-8'),
     }
 

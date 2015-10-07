@@ -106,9 +106,9 @@ def clean_file(f):
     Returns a file object.
     """
     if isinstance(f, (six.string_types, six.text_type)):
-        return open(f, 'rb')
+        return open(f, 'rb'), True
     else:
-        return f
+        return f, False
 
 
 def clean_files(files):

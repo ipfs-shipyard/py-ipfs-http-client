@@ -1,10 +1,8 @@
 from __future__ import absolute_import
 
 import os
-import fnmatch
-import mimetypes
 
-from . import filestream
+from . import multipart
 from .exceptions import InvalidArguments, FileCommandException
 
 import six
@@ -50,53 +48,24 @@ class FileCommand(Command):
         else:
             return self.single(client, f, **kwargs)
 
-    @staticmethod
-    def _multipart_field(_file):
-        try:
-            content = _file.read()
-            try:
-                fn = _file.name
-            except AttributeError:
-                fn = ''
-        except AttributeError:
-            fn = _file
-            if os.path.isdir(fn):
-                raise FileCommandException(
-                    "Use keyword argument [recursive=True] in "
-                    "order to add multiple directories.")
-            with open(_file, 'rb') as fp:
-                content = fp.read()
-        ft = mimetypes.guess_type(fn)[0] or 'application/octet-stream'
-
-        return ('file', (os.path.basename(fn), content, ft))
-
     def single(self, client, _file, **kwargs):
         """
         Adds a single file-like object to IPFS.
         """
-        files = [self._multipart_field(_file)]
-        return client.request(self.path, files=files, **kwargs)
+        body, headers = multipart.stream_file(_file)
+        return client.request(self.path, data=body, headers=headers, **kwargs)
 
-    def multiple(self, client, _files, **kwargs):
+    def multiple(self, client, files, **kwargs):
         """
         Adds multiple file-like objects as a multipart request to IPFS.
         """
         if not self.accept_multiple:
             raise FileCommandException(
                 "[%s] does not accept multiple files." % self.path)
+        body, headers = multipart.stream_files(files)
+        return client.request(self.path, data=body, headers=headers, **kwargs)
 
-        fnpattern = kwargs.pop('match', '*')
-        files = []
-        for fn in _files:
-            if not fnmatch.fnmatch(fn, fnpattern):
-                continue
-            files.append(self._multipart_field(fn))
-        if not files:
-            raise FileCommandException(
-                "No files matching pattern: {}".format(fnpattern))
-        return client.request(self.path, files=files, **kwargs)
-
-    def recursive(self, client, dirname, **kwargs):
+    def recursive(self, client, dirname, fnpattern='*', **kwargs):
         """
         Loads a directory recursively into IPFS, files are matched against the
         given pattern.
@@ -104,13 +73,10 @@ class FileCommand(Command):
         if not self.accept_multiple:
             raise FileCommandException(
                 "[%s] does not accept multiple files." % self.path)
-
-        # fnpattern = kwargs.pop('match', '*')
-
-        raw_body, raw_headers = filestream.multipart(dirname, recursive=True)
-
-        return client.request(self.path, data=raw_body,
-                              headers=raw_headers, **kwargs)
+        body, headers = multipart.stream_directory(dirname,
+                                                   fnpattern=fnpattern,
+                                                   recursive=True)
+        return client.request(self.path, data=body, headers=headers, **kwargs)
 
 
 class DownloadCommand(Command):
