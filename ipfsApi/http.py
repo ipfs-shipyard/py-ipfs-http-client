@@ -7,6 +7,7 @@ from __future__ import absolute_import
 import re
 import requests
 import contextlib
+import tarfile
 
 from . import encoding
 from .exceptions import ipfsApiError
@@ -91,6 +92,40 @@ class HTTPClient(object):
             else:
                 raise
         return ret
+
+    @pass_defaults
+    def download(self, path, filepath=None, args=[], opts={}, **kwargs):
+        """
+        Downloads a file or files from IPFS into the current working
+        directory, or the directory given by :filepath:.
+        """
+        url = self.base + path
+
+        params = []
+        params.append(('stream-channels', 'true'))
+        params.append(('archive', 'true'))
+        params.append(('compress', 'true'))
+
+        for opt in opts.items():
+            params.append(opt)
+        for arg in args:
+            params.append(('arg', arg))
+
+        method = 'get'
+
+        if self._session:
+            res = self._session.request(method, url,
+                                        params=params, stream=True, **kwargs)
+        else:
+            res = requests.request(method, url,
+                                   params=params, stream=True, **kwargs)
+
+        res.raise_for_status()
+
+        # try to stream download as a gzipped tar file stream
+        wd = filepath or '.'
+        with tarfile.open(fileobj=res.raw, mode='r|gz') as tf:
+            tf.extractall(path=wd)
 
     @contextlib.contextmanager
     def session(self):
