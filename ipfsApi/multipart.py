@@ -13,11 +13,25 @@ import six
 
 from . import utils
 
-try:
-    memoryview = getattr(globals()['__builtins__'], 'memoryview')
-except:
-    # Python 2.6
+
+import sys
+
+if sys.version_info < (2, 7):
+    # We only support Python 2.6.9+ so any version less than 2.7 will be
+    # treated as 2.6 (for testing purposes).
+    PY26 = True
+else:
+    PY26 = False
+
+
+if PY26:
+    # In 2.6 there is no memoryview, so instead I'm just going to use the
+    # underlying bytearray, which will end up doing more copying when the
+    # bytearray gets sliced.
     memoryview = lambda x: x
+else:
+    # Trick the py26 pep8 lint tool
+    from __builtin__ import memoryview
 
 
 CRLF = '\r\n'
@@ -142,7 +156,9 @@ class BufferedGenerator(object):
         self.chunk_size = chunk_size
         self._buf = bytearray(chunk_size)
 
-        # handle manipulation of buffer throught a memoryview
+        # handle manipulation of buffer throught a memoryview.
+        #   This allows us to write from a file directly to a buffer at any
+        #   given offset.
         self.buf = memoryview(self._buf)
         self.cur = 0
 
@@ -164,6 +180,8 @@ class BufferedGenerator(object):
         offset = 0
         while offset < fsize:
             try:
+                if PY26:
+                    raise AttributeError
                 nb = fp.readinto(self.buf[self.cur:])
             except AttributeError:
                 nb = min(self.chunk_size - self.cur, fsize - offset)
