@@ -14,10 +14,10 @@ import six
 from . import utils
 
 try:
-    memoryview
+    memoryview = getattr(globals()['__builtins__'], 'memoryview')
 except:
     # Python 2.6
-    locals()['memoryview'] = lambda x: x
+    memoryview = lambda x: x
 
 
 CRLF = '\r\n'
