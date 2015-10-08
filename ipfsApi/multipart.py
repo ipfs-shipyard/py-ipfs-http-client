@@ -31,7 +31,12 @@ if PY26:
     memoryview = lambda x: x
 else:
     # Trick the py26 pep8 lint tool
-    from __builtin__ import memoryview
+    try:
+        import builtins
+    except ImportError:
+        import __builtin__ as builtins
+    finally:
+        memoryview = builtins.memoryview
 
 
 CRLF = '\r\n'
