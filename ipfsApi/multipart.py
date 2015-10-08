@@ -22,7 +22,7 @@ except:
 
 CRLF = '\r\n'
 
-default_chunk_size = 1024
+default_chunk_size = 4096
 
 
 def content_disposition(fn, disptype='file'):
