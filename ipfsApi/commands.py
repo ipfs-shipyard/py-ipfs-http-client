@@ -38,13 +38,11 @@ class FileCommand(Command):
 
     def request(self, client, f, **kwargs):
         if kwargs.pop('recursive', False):
-            return self.recursive(client, f, **kwargs)
+            return self.directory(client, f, recursive=True, **kwargs)
         if isinstance(f, (list, tuple)):
             return self.multiple(client, f, **kwargs)
         if isinstance(f, six.string_types) and os.path.isdir(f):
-            ls = [os.path.join(f, p) for p in os.listdir(f)]
-            fs = [p for p in ls if os.path.isfile(p)]
-            return self.multiple(client, fs, **kwargs)
+            return self.directory(client, f, **kwargs)
         else:
             return self.single(client, f, **kwargs)
 
@@ -65,7 +63,8 @@ class FileCommand(Command):
         body, headers = multipart.stream_files(files)
         return client.request(self.path, data=body, headers=headers, **kwargs)
 
-    def recursive(self, client, dirname, fnpattern='*', **kwargs):
+    def directory(self, client, dirname,
+                  fnpattern='*', recursive=False, **kwargs):
         """
         Loads a directory recursively into IPFS, files are matched against the
         given pattern.
@@ -75,7 +74,7 @@ class FileCommand(Command):
                 "[%s] does not accept multiple files." % self.path)
         body, headers = multipart.stream_directory(dirname,
                                                    fnpattern=fnpattern,
-                                                   recursive=True)
+                                                   recursive=recursive)
         return client.request(self.path, data=body, headers=headers, **kwargs)
 
 
