@@ -40,8 +40,8 @@ class FileCommand(Command):
     def request(self, client, f, **kwargs):
         """
         Takes either a file object, a filename, an iterable of filenames, an
-        iterable of file objects, or a homogenous iterable of file objects and
-        filenames.  Can only take one directory at a time, which will be
+        iterable of file objects, or a heterogeneous iterable of file objects
+        and filenames.  Can only take one directory at a time, which will be
         traversed (optionally recursive).
         """
         if kwargs.pop('recursive', False):
