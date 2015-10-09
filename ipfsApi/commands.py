@@ -5,7 +5,7 @@ import os
 import six
 
 from . import multipart
-from .exceptions import FileCommandException, InvalidArguments
+from .exceptions import InvalidArguments
 from .multipart import default_chunk_size
 
 

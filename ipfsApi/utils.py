@@ -114,7 +114,7 @@ def clean_file(f):
     """
     Returns a file object.
     """
-    if isinstance(f, (six.string_types, six.text_type)):
+    if not hasattr(f, 'read'):
         return open(f, 'rb'), True
     else:
         return f, False
@@ -126,7 +126,7 @@ def clean_files(files):
     the second element is a boolean which is True is this module opened the
     file (and thus should close it).
     """
-    if not isinstance(files, (six.string_types, six.text_type)):
+    if isinstance(files, (list, tuple)):
         return [clean_file(f) for f in files]
     else:
         return [clean_file(files)]
