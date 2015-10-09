@@ -304,7 +304,7 @@ class TextStream(BufferedGenerator):
     def body(self):
         for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
             yield chunk
-        for chunk in self.gen_chunks(self.text):
+        for chunk in self.gen_chunks([self.text]):
             yield chunk
         for chunk in self.gen_chunks(self.envelope.file_close()):
             yield chunk
