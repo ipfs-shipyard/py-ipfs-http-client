@@ -106,6 +106,7 @@ class HTTPClient(object):
 
         params = []
         params.append(('stream-channels', 'true'))
+        params.append(('archive', 'true'))
         if compress:
             params.append(('compress', 'true'))
 
