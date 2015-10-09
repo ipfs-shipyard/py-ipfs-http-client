@@ -34,14 +34,8 @@ def make_string_buffer(string):
     return buf
 
 
-def make_json_buffer(json_obj):
-    """Returns a file-like object containing json_obj serialized to JSON
-
-    >>> f = make_json_buffer([1, 2, 3, True, {u'distance': 4.5}])
-    >>> f.read()
-    '[1, 2, 3, true, {"distance": 4.5}]'
-    """
-    return make_string_buffer(json.dumps(json_obj))
+def encode_json(obj):
+    return json.dumps(obj)
 
 
 def parse_json(json_str):
@@ -53,14 +47,18 @@ def parse_json(json_str):
     return json.loads(json_str)
 
 
-def make_pyobj_buffer(py_obj):
-    """Returns a file-like object containing py_obj serialized to a pickle
+def make_json_buffer(json_obj):
+    """Returns a file-like object containing json_obj serialized to JSON
 
-    >>> f = make_pyobj_buffer([1, 2, 3, True, 4.5, None, 6e3])
-    >>> isinstance(f.read(), bytes)
-    True
+    >>> f = make_json_buffer([1, 2, 3, True, {u'distance': 4.5}])
+    >>> f.read()
+    '[1, 2, 3, true, {"distance": 4.5}]'
     """
-    return make_string_buffer(pickle.dumps(py_obj))
+    return make_string_buffer(json.dumps(json_obj))
+
+
+def encode_pyobj(py_obj):
+    return pickle.dumps(py_obj)
 
 
 def parse_pyobj(pickled):
@@ -75,6 +73,16 @@ def parse_pyobj(pickled):
     if isinstance(pickled, six.text_type):
         pickled = pickled.encode('ascii')
     return pickle.loads(pickled)
+
+
+def make_pyobj_buffer(py_obj):
+    """Returns a file-like object containing py_obj serialized to a pickle
+
+    >>> f = make_pyobj_buffer([1, 2, 3, True, 4.5, None, 6e3])
+    >>> isinstance(f.read(), bytes)
+    True
+    """
+    return make_string_buffer(pickle.dumps(py_obj))
 
 
 def guess_mimetype(filename):
@@ -119,6 +127,20 @@ def clean_files(files):
         return [clean_file(f) for f in files]
     else:
         return [clean_file(files)]
+
+
+def file_size(f):
+    """
+    Returns size of file in bytes.
+    """
+    if isinstance(f, (six.string_types, six.text_type)):
+        return os.path.getsize(f)
+    else:
+        cur = f.tell()
+        f.seek(0, 2)
+        size = f.tell()
+        f.seek(cur)
+        return size
 
 
 class return_field(object):

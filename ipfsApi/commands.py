@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 
 from . import multipart
+from .multipart import default_chunk_size
 from .exceptions import InvalidArguments, FileCommandException
 
 import six
@@ -37,6 +38,12 @@ class FileCommand(Command):
         self.accept_multiple = accept_multiple
 
     def request(self, client, f, **kwargs):
+        """
+        Takes either a file object, a filename, an iterable of filenames, an
+        iterable of file objects, or a homogenous iterable of file objects and
+        filenames.  Can only take one directory at a time, which will be
+        traversed (optionally recursive).
+        """
         if kwargs.pop('recursive', False):
             return self.directory(client, f, recursive=True, **kwargs)
         if isinstance(f, (list, tuple)):
@@ -46,25 +53,28 @@ class FileCommand(Command):
         else:
             return self.single(client, f, **kwargs)
 
-    def single(self, client, _file, **kwargs):
+    def single(self, client, _file, chunk_size=default_chunk_size, **kwargs):
         """
         Adds a single file-like object to IPFS.
         """
-        body, headers = multipart.stream_file(_file)
+        body, headers = multipart.stream_file(_file,
+                                              chunk_size=chunk_size)
         return client.request(self.path, data=body, headers=headers, **kwargs)
 
-    def multiple(self, client, files, **kwargs):
+    def multiple(self, client, files, chunk_size=default_chunk_size, **kwargs):
         """
         Adds multiple file-like objects as a multipart request to IPFS.
         """
         if not self.accept_multiple:
             raise FileCommandException(
                 "[%s] does not accept multiple files." % self.path)
-        body, headers = multipart.stream_files(files)
+        body, headers = multipart.stream_files(files,
+                                               chunk_size=chunk_size)
         return client.request(self.path, data=body, headers=headers, **kwargs)
 
     def directory(self, client, dirname,
-                  fnpattern='*', recursive=False, **kwargs):
+                  fnpattern='*', recursive=False,
+                  chunk_size=default_chunk_size, **kwargs):
         """
         Loads a directory recursively into IPFS, files are matched against the
         given pattern.
@@ -74,7 +84,8 @@ class FileCommand(Command):
                 "[%s] does not accept multiple files." % self.path)
         body, headers = multipart.stream_directory(dirname,
                                                    fnpattern=fnpattern,
-                                                   recursive=recursive)
+                                                   recursive=recursive,
+                                                   chunk_size=chunk_size)
         return client.request(self.path, data=body, headers=headers, **kwargs)
 
 

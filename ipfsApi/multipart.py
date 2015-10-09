@@ -5,7 +5,6 @@ from __future__ import absolute_import
 
 import os
 import fnmatch
-from itertools import chain
 from uuid import uuid4
 
 from six.moves.urllib.parse import quote
@@ -14,32 +13,13 @@ import six
 from . import utils
 
 
-import sys
+from sys import version_info
 
-if sys.version_info < (2, 7):
-    # We only support Python 2.6.9+ so any version less than 2.7 will be
-    # treated as 2.6 (for testing purposes).
-    PY26 = True
-else:
-    PY26 = False
+if version_info > (3,):
+    from builtins import memoryview as buffer
 
 
-if PY26:
-    # In 2.6 there is no memoryview, so instead I'm just going to use the
-    # underlying bytearray, which will end up doing more copying when the
-    # bytearray gets sliced.
-    memoryview = lambda x: x
-else:
-    # Trick the py26 pep8 lint tool
-    try:
-        import builtins
-    except ImportError:
-        import __builtin__ as builtins
-    finally:
-        memoryview = builtins.memoryview
-
-
-CRLF = '\r\n'
+CRLF = b'\r\n'
 
 default_chunk_size = 4096
 
@@ -118,7 +98,7 @@ class BodyGenerator(object):
         if headers:
             for name in sorted(headers.keys()):
                 yield name
-                yield ': '
+                yield b': '
                 yield headers[name]
                 yield CRLF
         yield CRLF
@@ -128,12 +108,12 @@ class BodyGenerator(object):
             yield c
 
     def open(self, **kwargs):
-        yield '--'
+        yield b'--'
         yield self.boundary
         yield CRLF
 
     def file_open(self, fn):
-        yield '--'
+        yield b'--'
         yield self.boundary
         yield CRLF
         headers = content_disposition(fn)
@@ -145,9 +125,9 @@ class BodyGenerator(object):
         yield CRLF
 
     def close(self):
-        yield '--'
+        yield b'--'
         yield self.boundary
-        yield '--'
+        yield b'--'
         yield CRLF
 
 
@@ -159,13 +139,7 @@ class BufferedGenerator(object):
         multipart/form-data.
         """
         self.chunk_size = chunk_size
-        self._buf = bytearray(chunk_size)
-
-        # handle manipulation of buffer throught a memoryview.
-        #   This allows us to write from a file directly to a buffer at any
-        #   given offset.
-        self.buf = memoryview(self._buf)
-        self.cur = 0
+        self.buf = bytearray(chunk_size)
 
         self.name = name
         self.envelope = BodyGenerator(self.name,
@@ -175,66 +149,55 @@ class BufferedGenerator(object):
 
     def file_chunks(self, fp):
         """
-        Yields chunks of a file when the buffer is full else yields None.
+        Yields chunks of a file.
         """
-        # get filesize from file object
-        fp.seek(0, 2)
-        fsize = fp.tell()
-        fp.seek(0)
-
+        fsize = utils.file_size(fp)
+        cur = 0
         offset = 0
-        while offset < fsize:
-            try:
-                if PY26:
-                    raise AttributeError
-                nb = fp.readinto(self.buf[self.cur:])
-            except AttributeError:
-                nb = min(self.chunk_size - self.cur, fsize - offset)
-                ch = fp.read(nb)
-                if not isinstance(ch, six.binary_type):
-                    ch = ch.encode('utf-8')
-                self.buf[self.cur:self.cur + nb] = ch
-            offset += nb
-            self.cur += nb
-            if self.cur == self.chunk_size:
-                yield self.buf
-                self.cur = 0
-        yield
+        if hasattr(fp, 'readinto'):
+            while offset < fsize:
+                nb = fp.readinto(self.buf)
+                offset += nb
+                cur += nb
+                if cur == self.chunk_size:
+                    yield self.buf
+                    cur = 0
+            if cur > 0:
+                yield self.buf[:cur]
+        else:
+            while offset < fsize:
+                nb = min(self.chunk_size, fsize - offset)
+                yield fp.read(nb)
+                offset += nb
 
     def gen_chunks(self, gen):
         """
-        Takes a bytes generator and feeds it into the internal buffer. Yields a
-        chunk when the buffer is full or yields None.
+        Takes a bytes generator and yields chunks of a maximum of [chunk_size]
+        bytes.
         """
         for data in gen:
             if not isinstance(data, six.binary_type):
                 data = data.encode('utf-8')
-            mv = memoryview(data)
-            size = len(mv)
-            offset = 0
-            while offset < size:
-                nb = min(self.chunk_size - self.cur, size - offset)
-                self.buf[self.cur:self.cur + nb] = mv[offset:offset + nb]
-                offset += nb
-                self.cur += nb
-                if self.cur == self.chunk_size:
-                    yield self.buf
-                    self.cur = 0
-            yield
+            size = len(data)
+            if size < self.chunk_size:
+                yield data
+            else:
+                mv = buffer(data)
+                offset = 0
+                while offset < size:
+                    nb = min(self.chunk_size, size - offset)
+                    yield mv[offset:offset + nb]
+                    offset += nb
 
     def body(self, *args, **kwargs):
         raise NotImplemented
 
     def close(self):
         """
-        Yields anything left in the buffer and then the closing multipart
-        boundary.
+        Closes the multipart envelope.
         """
         for chunk in self.gen_chunks(self.envelope.close()):
-            if chunk:
-                yield chunk
-        if self.cur > 0:
-            yield self.buf[:self.cur]
+            yield chunk
 
 
 class FileStream(BufferedGenerator):
@@ -253,14 +216,13 @@ class FileStream(BufferedGenerator):
 
     def body(self):
         for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
-            if chunk:
-                yield chunk
+            yield chunk
         for chunk in self.file_chunks(self.fileobj):
-            if chunk:
-                yield chunk
+            yield chunk
         for chunk in self.gen_chunks(self.envelope.file_close()):
-            if chunk:
-                yield chunk
+            yield chunk
+        for chunk in self.close():
+            yield chunk
         if self._need_close:
             self.fileobj.close()
 
@@ -287,16 +249,15 @@ class MultipleFileStream(BufferedGenerator):
             except AttributeError:
                 name = ''
             for chunk in self.gen_chunks(self.envelope.file_open(name)):
-                if chunk:
-                    yield chunk
+                yield chunk
             for chunk in self.file_chunks(fp):
-                if chunk:
-                    yield chunk
+                yield chunk
             for chunk in self.gen_chunks(self.envelope.file_close()):
-                if chunk:
-                    yield chunk
+                yield chunk
             if need_close:
                 fp.close()
+        for chunk in self.close():
+            yield chunk
 
 
 class DirectoryStream(BufferedGenerator):
@@ -322,19 +283,23 @@ class DirectoryStream(BufferedGenerator):
         body.
         """
         if part is None:
+            # this is the outer envelope
+            outer = True
             part = self.envelope
             dirname = self.directory
+        else:
+            # this is a an inner mixed part
+            outer = False
+
         if dirname is None:
-            dirname = ''
+            dirname = part.name
 
         for chunk in self.gen_chunks(part.open()):
-            if chunk:
-                yield chunk
+            yield chunk
 
         subpart = BodyGenerator(dirname)
         for chunk in self.gen_chunks(subpart.write_headers()):
-            if chunk:
-                yield chunk
+            yield chunk
 
         files, subdirs = utils.ls_dir(dirname)
 
@@ -343,15 +308,12 @@ class DirectoryStream(BufferedGenerator):
                 continue
             fullpath = os.path.join(dirname, fn)
             for chunk in self.gen_chunks(subpart.file_open(fullpath)):
-                if chunk:
-                    yield chunk
+                yield chunk
             with open(fullpath, 'rb') as fp:
                 for chunk in self.file_chunks(fp):
-                    if chunk:
-                        yield chunk
-            for chunk in self.gen_chunks(subpart.file_close()):
-                if chunk:
                     yield chunk
+            for chunk in self.gen_chunks(subpart.file_close()):
+                yield chunk
 
         if self.recursive:
             for subdir in subdirs:
@@ -360,8 +322,31 @@ class DirectoryStream(BufferedGenerator):
                     yield chunk
 
         for chunk in self.gen_chunks(subpart.close()):
-            if chunk:
+            yield chunk
+
+        if outer:
+            for chunk in self.close():
                 yield chunk
+
+
+class TextStream(BufferedGenerator):
+
+    def __init__(self, text, chunk_size=default_chunk_size):
+        """
+        A buffered generator that encodes a string as multipart/form-data.
+        """
+        BufferedGenerator.__init__(self, 'text', chunk_size=chunk_size)
+        self.text = text
+
+    def body(self):
+        for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
+            yield chunk
+        for chunk in self.gen_chunks(self.text):
+            yield chunk
+        for chunk in self.gen_chunks(self.envelope.file_close()):
+            yield chunk
+        for chunk in self.close():
+            yield chunk
 
 
 def stream_file(fileobj, chunk_size=default_chunk_size):
@@ -371,7 +356,7 @@ def stream_file(fileobj, chunk_size=default_chunk_size):
     """
     stream = FileStream(fileobj, chunk_size=chunk_size)
 
-    return chain(stream.body(), stream.close()), stream.headers
+    return stream.body(), stream.headers
 
 
 def stream_files(files, chunk_size=default_chunk_size):
@@ -381,7 +366,7 @@ def stream_files(files, chunk_size=default_chunk_size):
     """
     stream = MultipleFileStream(files, chunk_size=chunk_size)
 
-    return chain(stream.body(), stream.close()), stream.headers
+    return stream.body(), stream.headers
 
 
 def stream_directory(directory,
@@ -397,4 +382,14 @@ def stream_directory(directory,
                              fnpattern=fnpattern,
                              chunk_size=chunk_size)
 
-    return chain(stream.body(), stream.close()), stream.headers
+    return stream.body(), stream.headers
+
+
+def stream_text(text, chunk_size=default_chunk_size):
+    """
+    Returns a buffered generator which encodes a string as multipart/form-data.
+    Also retrns the corresponding headers.
+    """
+    stream = TextStream(text, chunk_size=chunk_size)
+
+    return stream.body(), stream.headers

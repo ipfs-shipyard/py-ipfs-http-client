@@ -38,10 +38,9 @@ def cmd_with_file(url, request):
     body = []
     for b in request.body:
         try:
-            body.append(b.tobytes().decode('utf-8'))
-        except AttributeError:
-            # Python 2.6
             body.append(b.decode('utf-8'))
+        except AttributeError:
+            body.append(b)
     body = ''.join(body)
 
     return {

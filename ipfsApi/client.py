@@ -4,6 +4,7 @@ IPFS API Bindings for Python
 from __future__ import absolute_import
 
 from . import http
+from . import multipart
 from . import utils
 from .commands import Command, ArgCommand, FileCommand, DownloadCommand
 
@@ -502,7 +503,14 @@ class Client(object):
         >> ipfs_client.add_str('Mary had a little lamb')
         u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
         """
-        return self.add(utils.make_string_buffer(string), **kwargs)
+        chunk_size = kwargs.pop('chunk_size',
+                                multipart.default_chunk_size)
+        body, headers = multipart.stream_text(string,
+                                              chunk_size=chunk_size)
+        return self._client.request('/add',
+                                    data=body,
+                                    headers=headers,
+                                    **kwargs)
 
     @utils.return_field('Hash')
     def add_json(self, json_obj, **kwargs):
@@ -512,7 +520,14 @@ class Client(object):
         >> ipfs_client.add_json({'one': 1, 'two': 2, 'three': 3})
         u'QmVz9g7m5u3oHiNKHj2CJX1dbG1gtismRS3g9NaPBBLbob'
         """
-        return self.add(utils.make_json_buffer(json_obj), **kwargs)
+        chunk_size = kwargs.pop('chunk_size',
+                                multipart.default_chunk_size)
+        body, headers = multipart.stream_text(utils.encode_json(json_obj),
+                                              chunk_size=chunk_size)
+        return self._client.request('/add',
+                                    data=body,
+                                    headers=headers,
+                                    **kwargs)
 
     def get_json(self, multihash, **kwargs):
         """
@@ -531,7 +546,14 @@ class Client(object):
         >> c.add_pyobj([0, 1.0, 2j, '3', 4e5])
         u'QmdCWFLDXqgdWQY9kVubbEHBbkieKd3uo7MtCm7nTZZE9K'
         """
-        return self.add(utils.make_pyobj_buffer(py_obj), **kwargs)
+        chunk_size = kwargs.pop('chunk_size',
+                                multipart.default_chunk_size)
+        body, headers = multipart.stream_text(utils.encode_pyobj(py_obj),
+                                              chunk_size=chunk_size)
+        return self._client.request('/add',
+                                    data=body,
+                                    headers=headers,
+                                    **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
         """
