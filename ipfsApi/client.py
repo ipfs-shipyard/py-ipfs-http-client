@@ -3,10 +3,9 @@ IPFS API Bindings for Python
 """
 from __future__ import absolute_import
 
-from . import http
-from . import multipart
-from . import utils
-from .commands import Command, ArgCommand, FileCommand, DownloadCommand
+from . import http, multipart, utils
+from .commands import ArgCommand, Command, DownloadCommand, FileCommand
+
 
 default_host = 'localhost'
 default_port = 5001

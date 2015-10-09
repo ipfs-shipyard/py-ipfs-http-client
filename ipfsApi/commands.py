@@ -2,11 +2,11 @@ from __future__ import absolute_import
 
 import os
 
-from . import multipart
-from .multipart import default_chunk_size
-from .exceptions import InvalidArguments, FileCommandException
-
 import six
+
+from . import multipart
+from .exceptions import FileCommandException, InvalidArguments
+from .multipart import default_chunk_size
 
 
 class Command(object):

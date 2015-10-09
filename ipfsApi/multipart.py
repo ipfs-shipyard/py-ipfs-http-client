@@ -3,17 +3,16 @@ Multipart/form-data encoded file streaming.
 """
 from __future__ import absolute_import
 
-import os
 import fnmatch
+import os
+from sys import version_info
 from uuid import uuid4
 
-from six.moves.urllib.parse import quote
 import six
 
+from six.moves.urllib.parse import quote
+
 from . import utils
-
-
-from sys import version_info
 
 if version_info > (3,):
     from builtins import memoryview as buffer

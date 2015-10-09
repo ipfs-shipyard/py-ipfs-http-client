@@ -1,12 +1,13 @@
 from __future__ import absolute_import
 
 import io
-import os
 import json
 import mimetypes
+import os
 from functools import wraps
 
 import six
+
 from six.moves import cPickle as pickle
 from six.moves import cStringIO as StringIO
 

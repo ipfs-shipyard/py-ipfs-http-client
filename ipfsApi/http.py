@@ -4,10 +4,11 @@ can/will eventually be supplemented with an asynchronous version.
 """
 from __future__ import absolute_import
 
-import re
-import requests
 import contextlib
+import re
 import tarfile
+
+import requests
 
 from . import encoding
 from .exceptions import ipfsApiError
