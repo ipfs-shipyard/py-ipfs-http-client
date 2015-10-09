@@ -139,7 +139,8 @@ class BufferedGenerator(object):
         multipart/form-data.
         """
         self.chunk_size = chunk_size
-        self.buf = bytearray(chunk_size)
+        self._internal = bytearray(chunk_size)
+        self.buf = buffer(self._internal)
 
         self.name = name
         self.envelope = BodyGenerator(self.name,
@@ -152,18 +153,12 @@ class BufferedGenerator(object):
         Yields chunks of a file.
         """
         fsize = utils.file_size(fp)
-        cur = 0
         offset = 0
         if hasattr(fp, 'readinto'):
             while offset < fsize:
-                nb = fp.readinto(self.buf)
+                nb = fp.readinto(self._internal)
+                yield self.buf[:nb]
                 offset += nb
-                cur += nb
-                if cur == self.chunk_size:
-                    yield self.buf
-                    cur = 0
-            if cur > 0:
-                yield self.buf[:cur]
         else:
             while offset < fsize:
                 nb = min(self.chunk_size, fsize - offset)
