@@ -122,14 +122,15 @@ def clean_file(f):
 
 def clean_files(files):
     """
-    This is a list of tuples, where the first element is the file object and
-    the second element is a boolean which is True is this module opened the
+    This is a generator of tuples, where the first element is the file object
+    and the second element is a boolean which is True is this module opened the
     file (and thus should close it).
     """
     if isinstance(files, (list, tuple)):
-        return [clean_file(f) for f in files]
+        for f in files:
+            yield clean_file(f)
     else:
-        return [clean_file(files)]
+        yield clean_file(files)
 
 
 def file_size(f):
