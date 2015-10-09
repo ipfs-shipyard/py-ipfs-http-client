@@ -122,7 +122,9 @@ def clean_file(f):
 
 def clean_files(files):
     """
-    Returns a list of file objects.
+    This is a list of tuples, where the first element is the file object and
+    the second element is a boolean which is True is this module opened the
+    file (and thus should close it).
     """
     if not isinstance(files, (six.string_types, six.text_type)):
         return [clean_file(f) for f in files]

@@ -49,8 +49,7 @@ class Client(object):
         # DATA STRUCTURE COMMANDS
         self._block_stat         = ArgCommand('/block/stat')
         self._block_get          = ArgCommand('/block/get')
-        self._block_put          = FileCommand('/block/put',
-                                               accept_multiple=False)
+        self._block_put          = FileCommand('/block/put')
         self._object_data        = ArgCommand('/object/data')
         self._object_links       = ArgCommand('/object/links')
         self._object_get         = ArgCommand('/object/get')
@@ -156,8 +155,6 @@ class Client(object):
          u'Err': u''}]
         """
         return self._refs.request(self._client, multihash, **kwargs)
-
-    # DATA STRUCTURE COMMANDS
 
     def block_stat(self, multihash, **kwargs):
         """
@@ -287,8 +284,6 @@ class Client(object):
         """
         return self._file_ls.request(self._client, multihash, **kwargs)
 
-    # ADVANCED COMMANDS
-
     def resolve(self, *args, **kwargs):
         """
         """
@@ -328,8 +323,6 @@ class Client(object):
         """
         """
         return self._repo_gc.request(self._client, *args, **kwargs)
-
-    # NETWORK COMMANDS
 
     def id(self, *args, **kwargs):
         """
@@ -455,8 +448,6 @@ class Client(object):
         """
         return self._ping.request(self._client, *args, **kwargs)
 
-    # TOOL COMMANDS
-
     def config(self, *args, **kwargs):
         """
         """
@@ -511,7 +502,6 @@ class Client(object):
                                     headers=headers,
                                     **kwargs)
 
-    @utils.return_field('Hash')
     def add_json(self, json_obj, **kwargs):
         """
         Adds a json-serializable Python dict as a json file to IPFS.
@@ -519,14 +509,7 @@ class Client(object):
         >> ipfs_client.add_json({'one': 1, 'two': 2, 'three': 3})
         u'QmVz9g7m5u3oHiNKHj2CJX1dbG1gtismRS3g9NaPBBLbob'
         """
-        chunk_size = kwargs.pop('chunk_size',
-                                multipart.default_chunk_size)
-        body, headers = multipart.stream_text(utils.encode_json(json_obj),
-                                              chunk_size=chunk_size)
-        return self._client.request('/add',
-                                    data=body,
-                                    headers=headers,
-                                    **kwargs)
+        return self.add_str(utils.encode_json(json_obj), **kwargs)
 
     def get_json(self, multihash, **kwargs):
         """
@@ -537,7 +520,6 @@ class Client(object):
         """
         return self.cat(multihash, decoder='json', **kwargs)
 
-    @utils.return_field('Hash')
     def add_pyobj(self, py_obj, **kwargs):
         """
         Adds a picklable Python object as a file to IPFS.
@@ -545,14 +527,7 @@ class Client(object):
         >> c.add_pyobj([0, 1.0, 2j, '3', 4e5])
         u'QmdCWFLDXqgdWQY9kVubbEHBbkieKd3uo7MtCm7nTZZE9K'
         """
-        chunk_size = kwargs.pop('chunk_size',
-                                multipart.default_chunk_size)
-        body, headers = multipart.stream_text(utils.encode_pyobj(py_obj),
-                                              chunk_size=chunk_size)
-        return self._client.request('/add',
-                                    data=body,
-                                    headers=headers,
-                                    **kwargs)
+        return self.add_str(utils.encode_pyobj(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
         """

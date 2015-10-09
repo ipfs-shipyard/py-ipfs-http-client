@@ -33,10 +33,6 @@ class ArgCommand(Command):
 
 class FileCommand(Command):
 
-    def __init__(self, path, accept_multiple=True):
-        Command.__init__(self, path)
-        self.accept_multiple = accept_multiple
-
     def request(self, client, f, **kwargs):
         """
         Takes either a file object, a filename, an iterable of filenames, an
@@ -46,28 +42,15 @@ class FileCommand(Command):
         """
         if kwargs.pop('recursive', False):
             return self.directory(client, f, recursive=True, **kwargs)
-        if isinstance(f, (list, tuple)):
-            return self.multiple(client, f, **kwargs)
         if isinstance(f, six.string_types) and os.path.isdir(f):
             return self.directory(client, f, **kwargs)
         else:
-            return self.single(client, f, **kwargs)
+            return self.files(client, f, **kwargs)
 
-    def single(self, client, _file, chunk_size=default_chunk_size, **kwargs):
+    def files(self, client, files, chunk_size=default_chunk_size, **kwargs):
         """
-        Adds a single file-like object to IPFS.
+        Adds file-like objects as a multipart request to IPFS.
         """
-        body, headers = multipart.stream_file(_file,
-                                              chunk_size=chunk_size)
-        return client.request(self.path, data=body, headers=headers, **kwargs)
-
-    def multiple(self, client, files, chunk_size=default_chunk_size, **kwargs):
-        """
-        Adds multiple file-like objects as a multipart request to IPFS.
-        """
-        if not self.accept_multiple:
-            raise FileCommandException(
-                "[%s] does not accept multiple files." % self.path)
         body, headers = multipart.stream_files(files,
                                                chunk_size=chunk_size)
         return client.request(self.path, data=body, headers=headers, **kwargs)
@@ -79,9 +62,6 @@ class FileCommand(Command):
         Loads a directory recursively into IPFS, files are matched against the
         given pattern.
         """
-        if not self.accept_multiple:
-            raise FileCommandException(
-                "[%s] does not accept multiple files." % self.path)
         body, headers = multipart.stream_directory(dirname,
                                                    fnpattern=fnpattern,
                                                    recursive=recursive,

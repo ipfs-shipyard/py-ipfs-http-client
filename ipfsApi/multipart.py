@@ -196,33 +196,6 @@ class BufferedGenerator(object):
 
 class FileStream(BufferedGenerator):
 
-    def __init__(self, _file, chunk_size=default_chunk_size):
-        """
-        A buffered generator that encodes a single file as
-        multipart/form-data.
-        """
-        self.fileobj, self._need_close = utils.clean_file(_file)
-        try:
-            name = self.fileobj.name
-        except AttributeError:
-            name = 'file'
-        BufferedGenerator.__init__(self, name, chunk_size=chunk_size)
-
-    def body(self):
-        for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
-            yield chunk
-        for chunk in self.file_chunks(self.fileobj):
-            yield chunk
-        for chunk in self.gen_chunks(self.envelope.file_close()):
-            yield chunk
-        for chunk in self.close():
-            yield chunk
-        if self._need_close:
-            self.fileobj.close()
-
-
-class MultipleFileStream(BufferedGenerator):
-
     def __init__(self, files, chunk_size=default_chunk_size):
         """
         A buffered generator that encodes an array of files as
@@ -230,14 +203,10 @@ class MultipleFileStream(BufferedGenerator):
         """
         BufferedGenerator.__init__(self, 'files', chunk_size=chunk_size)
 
-        # get clean list of file objects
-        #   This is a list of tuples, where the first element is the file
-        #   object and the second element is a boolean which is True is this
-        #   module opened the file (and thus should close it).
-        self.fileobjs = utils.clean_files(files)
+        self.files = utils.clean_files(files)
 
     def body(self):
-        for fp, need_close in self.fileobjs:
+        for fp, need_close in self.files:
             try:
                 name = fp.name
             except AttributeError:
@@ -343,22 +312,12 @@ class TextStream(BufferedGenerator):
             yield chunk
 
 
-def stream_file(fileobj, chunk_size=default_chunk_size):
-    """
-    Returns a buffered generator which encodes a file as multipart/form-data.
-    Also returns the corresponding headers.
-    """
-    stream = FileStream(fileobj, chunk_size=chunk_size)
-
-    return stream.body(), stream.headers
-
-
 def stream_files(files, chunk_size=default_chunk_size):
     """
-    Returns a buffered generator which encodes a list of files as
+    Returns a buffered generator which encodes a file or list of files as
     multipart/form-data.  Also returns the corresponding headers.
     """
-    stream = MultipleFileStream(files, chunk_size=chunk_size)
+    stream = FileStream(files, chunk_size=chunk_size)
 
     return stream.body(), stream.headers
 
