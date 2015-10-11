@@ -70,15 +70,16 @@ class HTTPClient(object):
             res = requests.request(method, url,
                                    params=params, files=files, **kwargs)
 
-        if path == '/cat':
-            # since <api>/cat only returns the raw data and not an encoded
-            # object, dont't try to parse it automatically.
-            ret = res.text
-        elif not decoder:
-            try:
-                ret = self.default_enc.parse(res.text)
-            except:
+        if not decoder:
+            if path == '/cat':
+                # since <api>/cat only returns the raw data and not an encoded
+                # object, dont't try to parse it automatically.
                 ret = res.text
+            else:
+                try:
+                    ret = self.default_enc.parse(res.text)
+                except:
+                    ret = res.text
         else:
             enc = encoding.get_encoding(decoder)
             try:
