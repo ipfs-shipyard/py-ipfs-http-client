@@ -300,7 +300,8 @@ class TextStream(BufferedGenerator):
         A buffered generator that encodes a string as multipart/form-data.
         """
         BufferedGenerator.__init__(self, 'text', chunk_size=chunk_size)
-        self.text = text
+
+        self.text = text if isgenerator(text) else (text,)
 
     def body(self):
         for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
@@ -344,8 +345,6 @@ def stream_text(text, chunk_size=default_chunk_size):
     Returns a buffered generator which encodes a string as multipart/form-data.
     Also retrns the corresponding headers.
     """
-    if not isgenerator(text):
-        text = (text,)
     stream = TextStream(text, chunk_size=chunk_size)
 
     return stream.body(), stream.headers
