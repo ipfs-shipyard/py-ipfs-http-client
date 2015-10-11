@@ -492,6 +492,8 @@ class Client(object):
 
         >> ipfs_client.add_str('Mary had a little lamb')
         u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
+
+        Also accepts and will stream generator objects.
         """
         chunk_size = kwargs.pop('chunk_size',
                                 multipart.default_chunk_size)

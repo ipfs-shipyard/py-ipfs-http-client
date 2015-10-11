@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import fnmatch
 import os
+from inspect import isgenerator
 from sys import version_info
 from uuid import uuid4
 
@@ -304,7 +305,7 @@ class TextStream(BufferedGenerator):
     def body(self):
         for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
             yield chunk
-        for chunk in self.gen_chunks([self.text]):
+        for chunk in self.gen_chunks(self.text):
             yield chunk
         for chunk in self.gen_chunks(self.envelope.file_close()):
             yield chunk
@@ -343,6 +344,8 @@ def stream_text(text, chunk_size=default_chunk_size):
     Returns a buffered generator which encodes a string as multipart/form-data.
     Also retrns the corresponding headers.
     """
+    if not isgenerator(text):
+        text = (text,)
     stream = TextStream(text, chunk_size=chunk_size)
 
     return stream.body(), stream.headers
