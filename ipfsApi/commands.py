@@ -56,14 +56,14 @@ class FileCommand(Command):
         return client.request(self.path, data=body, headers=headers, **kwargs)
 
     def directory(self, client, dirname,
-                  fnpattern='*', recursive=False,
+                  match='*', recursive=False,
                   chunk_size=default_chunk_size, **kwargs):
         """
         Loads a directory recursively into IPFS, files are matched against the
         given pattern.
         """
         body, headers = multipart.stream_directory(dirname,
-                                                   fnpattern=fnpattern,
+                                                   fnpattern=match,
                                                    recursive=recursive,
                                                    chunk_size=chunk_size)
         return client.request(self.path, data=body, headers=headers, **kwargs)
