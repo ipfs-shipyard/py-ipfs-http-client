@@ -71,6 +71,10 @@ class HTTPClient(object):
                                    params=params, files=files, **kwargs)
 
         if not decoder:
+            # return raw stream
+            if kwargs.get('stream'):
+                return res.raw
+
             if path == '/cat':
                 # since <api>/cat only returns the raw data and not an encoded
                 # object, dont't try to parse it automatically.
