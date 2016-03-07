@@ -25,6 +25,15 @@ class TestEncoding(unittest.TestCase):
         self.assertEqual(res[0]['key1'], 'value1')
         self.assertEqual(res[1]['key2'], 'value2')
 
+    def test_json_parse_chained_newlines(self):
+        data1 = {'key1': 'value1'}
+        data2 = {'key2': 'value2'}
+        res = self.encoder.parse(
+            json.dumps(data1) + '\n' + json.dumps(data2))
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0]['key1'], 'value1')
+        self.assertEqual(res[1]['key2'], 'value2')
+
     def test_json_encode(self):
         data = {'key': 'value'}
         self.assertEqual(
