@@ -42,6 +42,8 @@ class Json(Encoding):
         results.append(obj)
         cur = idx
         while cur < len(json_string) - 1:
+            if json_string[cur] == '\n':
+                cur += 1
             obj, idx = self.decoder.raw_decode(json_string[cur:])
             results.append(obj)
             cur += idx
