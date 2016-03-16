@@ -1,7 +1,7 @@
 .. image:: https://img.shields.io/pypi/v/ipfs-api.svg?style=flat-square
 
-.. image:: https://img.shields.io/travis/ipfs/python-ipfs-api.svg?style=flat-square
-    :target: https://travis-ci.org/ipfs/python-ipfs-api
+.. image:: https://img.shields.io/travis/ipfs/py-ipfs-api.svg?style=flat-square
+    :target: https://travis-ci.org/ipfs/py-ipfs-api
 
 
 IPFS API Bindings for Python
