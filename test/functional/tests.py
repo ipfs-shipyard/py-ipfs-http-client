@@ -1,3 +1,4 @@
+# _*_ coding: utf-8 -*-
 import os
 import unittest
 
@@ -5,6 +6,7 @@ import ipfsApi
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
 
 class IpfsApiTest(unittest.TestCase):
 
@@ -38,7 +40,7 @@ class IpfsApiTest(unittest.TestCase):
                        u'Name': u'popoiopiu'},
                       {u'Hash': u'QmVkNdzCBukBRdpyFiKPyL2R15qPExMr9rV9RFV2kf9eeV',
                        u'Name': u''}]
-    
+
     ## test_add_multiple_from_dirname
     fake_dir_test2 = 'fake_dir/test2'
     fake_dir_res = [{u'Hash': u'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
@@ -105,6 +107,12 @@ class IpfsApiTest(unittest.TestCase):
                                 key=lambda x: x['Name']),
                          sorted(self.fake_dir_recursive_res,
                                 key=lambda x: x['Name']))
+
+    def test_add_get_pyobject(self):
+        data = [-1, 3.14, u'Hän€', b'23' ]
+        res = self.api.add_pyobj(data)
+        self.assertEqual(data,
+                         self.api.get_pyobj(res))
 
 
 if __name__ == "__main__":

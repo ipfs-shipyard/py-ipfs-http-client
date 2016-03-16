@@ -72,7 +72,7 @@ def parse_pyobj(pickled):
     [1, 2, 3, True, 4.5, None, 6000.0]
     """
     if isinstance(pickled, six.text_type):
-        pickled = pickled.encode('ascii')
+        pickled = pickled.encode('latin_1')
     return pickle.loads(pickled)
 
 
