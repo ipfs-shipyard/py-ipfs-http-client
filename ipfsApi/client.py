@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 from . import http, multipart, utils
 from .commands import ArgCommand, Command, DownloadCommand, FileCommand
-
+from .exceptions import ipfsApiError
 
 default_host = 'localhost'
 default_port = 5001
@@ -432,16 +432,22 @@ class Client(object):
         """
         return self._dht_findpeer.request(self._client, *args, **kwargs)
 
-    @utils.return_field('Extra')
     def dht_get(self, *args, **kwargs):
         """
         """
-        return self._dht_get.request(self._client, *args, **kwargs)
+        res = self._dht_get.request(self._client, *args, **kwargs)
+        if isinstance(res, dict) and "Extra" in res:
+            return res["Extra"]
+        else:
+            for r in res:
+                if "Extra" in r and len(r["Extra"]) > 0:
+                    return r["Extra"]
+        raise ipfsApiError("empty response from DHT")
 
     def dht_put(self, key, value, **kwargs):
         """
         """
-        return self._dht_put.request(self._client, [key, value], **kwargs)
+        return self._dht_put.request(self._client, key, value, **kwargs)
 
     def ping(self, *args, **kwargs):
         """
