@@ -91,6 +91,17 @@ class Client(object):
         self._config_show        = Command('/config/show')
         self._config_replace     = ArgCommand('/config/replace')
         self._version            = Command('/version')
+        
+        # MFS COMMANDS
+        self._files_cp           = ArgCommand('/files/cp')
+        self._files_ls           = ArgCommand('/files/ls')
+        self._files_mkdir        = ArgCommand('/files/mkdir')
+        self._files_stat         = ArgCommand('/files/stat')
+        self._files_rm           = ArgCommand('/files/rm')
+        self._files_read         = ArgCommand('/files/read')
+        self._files_write        = FileCommand('/files/write')
+        self._files_mv           = ArgCommand('/files/mv')
+        
 
     def add(self, files, recursive=False, **kwargs):
         """
@@ -102,7 +113,7 @@ class Client(object):
         {u'Hash': u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab',
          u'Name': u'nurseryrhyme.txt'}
         """
-        return self._add.request(self._client, files,
+        return self._add.request(self._client, (), files,
                                  recursive=recursive, **kwargs)
 
     def get(self, multihash, **kwargs):
@@ -181,7 +192,7 @@ class Client(object):
         {u'Key': u'QmeV6C6XVt1wf7V7as7Yak3mxPma8jzpqyhtRtCvpKcfBb',
          u'Size': 22}
         """
-        return self._block_put.request(self._client, file, **kwargs)
+        return self._block_put.request(self._client, (), file, **kwargs)
 
     def object_data(self, multihash, **kwargs):
         r"""
@@ -240,7 +251,7 @@ class Client(object):
     def object_put(self, file, **kwargs):
         """
         """
-        return self._object_put.request(self._client, file, **kwargs)
+        return self._object_put.request(self._client, (), file, **kwargs)
 
     def object_stat(self, multihash, **kwargs):
         """
@@ -486,6 +497,55 @@ class Client(object):
         {u'Version': u'0.3...'}
         """
         return self._version.request(self._client, **kwargs)
+    
+    def files_cp(self, source, dest, **kwargs):
+        """
+        MFS - Copy files into mfs
+        """
+        return self._files_cp.request(self._client, source, dest, **kwargs)
+    
+    def files_ls(self, path, **kwargs):
+        """
+        MFS - List directory contents
+        """
+        return self._files_ls.request(self._client, path, **kwargs)
+    
+    def files_mkdir(self, path, **kwargs):
+        """
+        MFS - Create directory
+        """
+        return self._files_mkdir.request(self._client, path, **kwargs)
+    
+    def files_stat(self, path, **kwargs):
+        """
+        MFS - Display file status (including it's hash)
+        """
+        return self._files_stat.request(self._client, path, **kwargs)
+    
+    def files_rm(self, path, **kwargs):
+        """
+        MFS - Remove a file
+        """
+        return self._files_rm.request(self._client, path, **kwargs)
+    
+    def files_read(self, path, **kwargs):
+        """
+        MFS - Read a file stored in MFS
+        """
+        return self._files_read.request(self._client, path, **kwargs)
+    
+    def files_write(self, path, file, **kwargs):
+        """
+        MFS - Write to a mutable file
+        """
+        return self._files_write.request(self._client, (path,), file, **kwargs)
+    
+    def files_mv(self, source, dest, **kwargs):
+        """
+        MFS - Move MFS files
+        """
+        return self._files_mv.request(self._client, source, dest, **kwargs)
+    
 
     ###########
     # HELPERS #

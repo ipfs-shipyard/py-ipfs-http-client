@@ -114,6 +114,45 @@ class IpfsApiTest(unittest.TestCase):
         self.assertEqual(data,
                          self.api.get_pyobj(res))
 
+class IpfsApiMFSTest(unittest.TestCase):
+    
+    test_files = {
+        '/test_file1': {
+            u'Name': u'fake_dir/popoiopiu',
+            u'Stat': {u'Type': 'file',
+                      u'Hash': 'QmUvobKqcCE56brA8pGTRRRsGy2SsDEKSxFLZkBQFv7Vvv',
+                      u'Blocks': 1,
+                      u'CumulativeSize': 73,
+                      u'Size': 15}
+        }
+    }
+    
+    def setUp(self):
+        self.api = ipfsApi.Client()
+        self._olddir = os.getcwd()
+        os.chdir(HERE)
+
+    def tearDown(self):
+        os.chdir(self._olddir)
+    
+    def test_write_stat_read_delete(self):
+        for target, desc in self.test_files.items():
+            # Create target file
+            self.api.files_write(target, desc[u'Name'], opts={'create':True})
+            
+            # Verify stat information of file
+            stat = self.api.files_stat(target)
+            self.assertEqual(sorted(desc[u'Stat'].items()), sorted(stat.items()))
+            
+            # Read back (and compare file contents)
+            with open(desc[u'Name'], 'r') as file:
+                content = self.api.files_read(target)
+                self.assertEqual(content, file.read())
+            
+            # Delete file
+            self.api.files_rm(target)
+            
+    
 
 if __name__ == "__main__":
     unittest.main()

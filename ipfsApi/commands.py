@@ -33,7 +33,7 @@ class ArgCommand(Command):
 
 class FileCommand(Command):
 
-    def request(self, client, f, **kwargs):
+    def request(self, client, args, f, **kwargs):
         """
         Takes either a file object, a filename, an iterable of filenames, an
         iterable of file objects, or a heterogeneous iterable of file objects
@@ -41,21 +41,21 @@ class FileCommand(Command):
         traversed (optionally recursive).
         """
         if kwargs.pop('recursive', False):
-            return self.directory(client, f, recursive=True, **kwargs)
+            return self.directory(client, args, f, recursive=True, **kwargs)
         if isinstance(f, six.string_types) and os.path.isdir(f):
-            return self.directory(client, f, **kwargs)
+            return self.directory(client, args, f, **kwargs)
         else:
-            return self.files(client, f, **kwargs)
+            return self.files(client, args, f, **kwargs)
 
-    def files(self, client, files, chunk_size=default_chunk_size, **kwargs):
+    def files(self, client, args, files, chunk_size=default_chunk_size, **kwargs):
         """
         Adds file-like objects as a multipart request to IPFS.
         """
         body, headers = multipart.stream_files(files,
                                                chunk_size=chunk_size)
-        return client.request(self.path, data=body, headers=headers, **kwargs)
+        return client.request(self.path, args=args, data=body, headers=headers, **kwargs)
 
-    def directory(self, client, dirname,
+    def directory(self, client, args, dirname,
                   match='*', recursive=False,
                   chunk_size=default_chunk_size, **kwargs):
         """
@@ -66,7 +66,7 @@ class FileCommand(Command):
                                                    fnpattern=match,
                                                    recursive=recursive,
                                                    chunk_size=chunk_size)
-        return client.request(self.path, data=body, headers=headers, **kwargs)
+        return client.request(self.path, args=args, data=body, headers=headers, **kwargs)
 
 
 class DownloadCommand(Command):
