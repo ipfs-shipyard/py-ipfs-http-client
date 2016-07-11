@@ -10,3 +10,4 @@ htmlcov*
 **/__pycache__/
 .cache
 docs/build/
+.python-version
