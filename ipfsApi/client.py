@@ -91,7 +91,9 @@ class Client(object):
         self._config_show        = Command('/config/show')
         self._config_replace     = ArgCommand('/config/replace')
         self._version            = Command('/version')
-        
+        self._log_level          = ArgCommand('/log/level')
+        self._log_tail           = Command('/log/tail')
+
         # MFS COMMANDS
         self._files_cp           = ArgCommand('/files/cp')
         self._files_ls           = ArgCommand('/files/ls')
@@ -497,6 +499,20 @@ class Client(object):
         {u'Version': u'0.3...'}
         """
         return self._version.request(self._client, **kwargs)
+
+    def log_level(self, subsystem, level, **kwargs):
+        """
+        Update the current logging level for the IPFS daemon.
+        """
+
+        return self._log_level.request(self._client, subsystem, level, **kwargs)
+
+    def log_tail(self, **kwargs):
+        """
+        Read the IPFS daemon log as it is written.
+        """
+
+        return self._log_tail.request(self._client, **kwargs)
     
     def files_cp(self, source, dest, **kwargs):
         """
