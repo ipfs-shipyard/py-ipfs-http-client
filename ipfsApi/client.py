@@ -74,6 +74,9 @@ class Client(object):
     config -- controls configuration variables
     config_show -- returns a dict containing the server's configuration
     config_replace -- replaces the existing config with a user-defined config
+    log_level -- changes the logging output of a running daemon
+    log_ls -- lists the logging subsystems of a running daemon
+    log_tail -- reads log outputs as they are written
     version -- returns the software version of the currently connected node
     files_cp -- copies files into MFS
     files_ls -- lists directory contents in MFS
@@ -166,6 +169,9 @@ class Client(object):
         self._config             = ArgCommand('/config')
         self._config_show        = Command('/config/show')
         self._config_replace     = ArgCommand('/config/replace')
+        self._log_level          = ArgCommand('/log/level')
+        self._log_ls             = Command('/log/ls')
+        self._log_tail           = Command('/log/tail')
         self._version            = Command('/version')
 
         # MFS COMMANDS
@@ -836,6 +842,41 @@ class Client(object):
         kwargs -- additional named arguments
         """
         return self._config_replace.request(self._client, *args, **kwargs)
+
+    def log_level(self, subsystem, level, **kwargs):
+        """Changes the logging output of a running daemon.
+
+        Keyword arguments:
+        subsystem -- the subsystem logging identifier
+                     (Use 'all' for all subsystems)
+        level -- one of: debug, info, warning, error, fatal, panic
+        kwargs -- additional named arguments
+        """
+        return self._log_level.request(self._client, subsystem,
+                                       level, **kwargs)
+
+    def log_ls(self, *args, **kwargs):
+        """Lists the logging subsystems of a running daemon.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
+        """
+        return self._log_ls.request(self._client, *args, **kwargs)
+
+    def log_tail(self, *args, **kwargs):
+        """Reads log outputs as they are written.
+
+        This function returns a reponse object that can be iterated over
+        by the user. The user should make sure to close the response object
+        when they are done reading from it.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
+        """
+        return self._log_tail.request(self._client, stream=True,
+                                      *args, **kwargs)
 
     def version(self, **kwargs):
         """Returns the software version of the currently connected node.

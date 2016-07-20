@@ -408,6 +408,8 @@ class DirectoryStream(BufferedGenerator):
     def _prepare(self):
         """Pre-formats the multipart HTTP request to transmit the directory."""
         names = []
+        if self.directory.endswith(os.sep):
+            self.directory = self.directory[:-1]
         # identify the unecessary portion of the relative path
         truncate = os.path.dirname(self.directory)
         # traverse the filesystem downward from the target directory's uri

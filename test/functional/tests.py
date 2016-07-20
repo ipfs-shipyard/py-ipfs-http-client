@@ -1,6 +1,7 @@
 # _*_ coding: utf-8 -*-
 import os
 import shutil
+import json
 import unittest
 
 import ipfsApi
@@ -84,6 +85,19 @@ class IpfsApiTest(unittest.TestCase):
     # TESTS #
     #########
 
+    def test_version(self):
+        expected = ['Repo', 'Commit', 'Version']
+        resp_version = self.api.version()
+        for key in expected:
+            self.assertTrue(key in resp_version)
+
+    def test_id(self):
+        expected = ['PublicKey', 'ProtocolVersion',
+                    'ID', 'AgentVersion', 'Addresses']
+        resp_id = self.api.id()
+        for key in expected:
+            self.assertTrue(key in resp_id)
+
     def test_add_single_from_str(self):
         res = self.api.add(self.fake_file)
         self.assertEqual(res, self.fake_file_only_res)
@@ -103,7 +117,6 @@ class IpfsApiTest(unittest.TestCase):
                                 key=lambda x: x['Name']),
                          sorted(self.fake_dir_res,
                                 key=lambda x: x['Name']))
-
 
     def test_add_recursive(self):
         res = self.api.add(self.fake_dir, recursive=True)
@@ -168,6 +181,117 @@ class IpfsApiTest(unittest.TestCase):
         self.api.add(self.fake_file)
         res = self.api.cat('QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX')
         self.assertEqual("dsadsad\n", res)
+
+
+class IpfsApiLogTest(unittest.TestCase):
+
+    def setUp(self):
+        self.api = ipfsApi.Client()
+
+    def test_log_ls_level(self):
+        """
+        Unfortunately there is no way of knowing the logging levels prior
+        to this test. This makes it impossible to guarantee that the logging
+        levels are the same as before the test was run.
+        """
+        # Retrieves the list of logging subsystems for a running daemon.
+        resp_ls = self.api.log_ls()
+        # The response should be a dictionary with only one key ('Strings').
+        self.assertTrue('Strings' in resp_ls)
+
+        # Sets the logging level to 'error' for the first subsystem found.
+        sub = resp_ls['Strings'][0]
+        resp_level = self.api.log_level(sub, 'error')
+        self.assertEqual(resp_level['Message'],
+                         "Changed log level of \'%s\' to 'error'\n" % sub)
+
+    def test_log_tail(self):
+        # Gets the response object.
+        tail = self.api.log_tail()
+
+        # Takes the first log received.
+        line = tail.readline()
+        log = json.loads(line.decode())
+
+        # Closes the response object.
+        tail.close()
+
+        # The log should have been parsed into a dictionary object with
+        # various keys depending on the event that occured.
+        self.assertTrue(type(log) is dict)
+
+
+class IpfsApiPinTest(unittest.TestCase):
+
+    fake_dir_hash = 'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY'
+
+    def setUp(self):
+        self.api = ipfsApi.Client()
+        # Add resources to be pinned.
+        self.resource = self.api.add_str(u'Mary had a little lamb')
+        resp_add = self.api.add('fake_dir', recursive=True)
+        self.fake_dir_hashes = [el['Hash'] for el in resp_add if 'Hash' in el]
+
+    def test_pin_ls_add_rm_single(self):
+        # Get pinned objects at start.
+        pins_begin = self.api.pin_ls()['Keys']
+
+        # Unpin the resource if already pinned.
+        if self.resource in pins_begin.keys():
+            self.api.pin_rm(self.resource)
+
+        # No matter what, the resource should not be pinned at this point.
+        self.assertFalse(self.resource in self.api.pin_ls()['Keys'])
+
+        for option in [True, False]:
+            # Pin the resource.
+            resp_add = self.api.pin_add(self.resource,
+                                        opts={"recursive":str(option)})
+            pins_afer_add = self.api.pin_ls()['Keys']
+            self.assertEqual(resp_add['Pins'], [self.resource])
+            self.assertTrue(self.resource in pins_afer_add)
+            self.assertEqual(pins_afer_add[self.resource]['Type'] == 'recursive',
+                             option)
+
+            # Unpin the resource.
+            resp_rm = self.api.pin_rm(self.resource)
+            pins_afer_rm = self.api.pin_ls()['Keys']
+            self.assertEqual(resp_rm['Pins'], [self.resource])
+            self.assertFalse(self.resource in pins_afer_rm)
+
+        # Get pinned objects at end.
+        pins_end = self.api.pin_ls()['Keys']
+
+        # Compare pinned items from start to finish of test.
+        self.assertFalse(self.resource in pins_end.keys())
+
+    def test_pin_ls_add_rm_directory(self):
+        # Get pinned objects at start.
+        pins_begin = self.api.pin_ls()['Keys']
+
+        # Remove fake_dir if it had previously been pinned.
+        if self.fake_dir_hash in pins_begin.keys() and \
+           pins_begin[self.fake_dir_hash]['Type'] == 'recursive':
+            self.api.pin_rm(self.fake_dir_hash)
+
+        # Make sure I removed it
+        pins_after_rm = self.api.pin_ls()['Keys']
+        self.assertFalse(self.fake_dir_hash in pins_after_rm.keys() and \
+                        pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
+
+        # Add 'fake_dir' recursively.
+        self.api.pin_add(self.fake_dir_hash)
+
+        # Make sure all appear on the list of pinned objects.
+        pins_after_add = self.api.pin_ls()['Keys'].keys()
+        for el in self.fake_dir_hashes:
+            self.assertTrue(el in pins_after_add)
+
+        # Clean up.
+        self.api.pin_rm(self.fake_dir_hash)
+        pins_end = self.api.pin_ls()['Keys'].keys()
+        self.assertFalse(self.fake_dir_hash in pins_end and \
+                        pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
 
 
 class IpfsApiMFSTest(unittest.TestCase):
@@ -269,6 +393,8 @@ class IpfsApiObjectTest(unittest.TestCase):
         self.api = ipfsApi.Client()
         self._olddir = os.getcwd()
         os.chdir(HERE)
+        # Add a resource to get the stats for.
+        self.resource = self.api.add_str(u'Mary had a little lamb')
 
     def tearDown(self):
         os.chdir(self._olddir)
@@ -278,6 +404,13 @@ class IpfsApiObjectTest(unittest.TestCase):
         res = self.api.object_new()
         for key in expected_keys:
             self.assertTrue(key in res)
+
+    def test_object_stat(self):
+        expected = ['Hash', 'CumulativeSize', 'DataSize',
+                    'NumLinks', 'LinksSize', 'BlockSize']
+        resp_stat = self.api.object_stat(self.resource)
+        for key in expected:
+            self.assertTrue(key in resp_stat)
 
     def test_object_put_get(self):
         # Set paths to test json files
