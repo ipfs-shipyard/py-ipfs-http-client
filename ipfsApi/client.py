@@ -34,7 +34,14 @@ class Client(object):
     object_get -- get and serialize the DAG node named by multihash
     object_put -- stores input as a DAG object and returns its key
     object_stat -- get stats for the DAG node named by multihash
-    object_patch -- create a new merkledag object based on an existing one
+    object_patch_append_data -- create a new merkledag object based on an existing one
+                                by appending to the object's data
+    object_patch_add_link -- create a new merkledag object based on an existing one
+                                by adding a link to another merkledag object
+    object_patch_rm_link -- create a new merkledag object based on an existing one
+                                by removing a link to another merkledag object
+    object_patch_set_data -- create a new merkledag object based on an existing one
+                                by replacing the object's data
     file_ls -- lists directory contents for Unix filesystem objects
     resolve -- accepts an identifier and resolves it to the referenced item
     name_publish -- publishes an object to IPNS
@@ -109,12 +116,16 @@ class Client(object):
         self._block_stat         = ArgCommand('/block/stat')
         self._block_get          = ArgCommand('/block/get')
         self._block_put          = FileCommand('/block/put')
+        self._object_new         = ArgCommand('/object/new')
         self._object_data        = ArgCommand('/object/data')
         self._object_links       = ArgCommand('/object/links')
         self._object_get         = ArgCommand('/object/get')
         self._object_put         = FileCommand('/object/put')
         self._object_stat        = ArgCommand('/object/stat')
-        self._object_patch       = ArgCommand('/object/patch')
+        self._object_patch_append_data = ArgCommand('/object/patch/append-data', 2)
+        self._object_patch_add_link    = ArgCommand('/object/patch/add-link')
+        self._object_patch_rm_link     = ArgCommand('/object/patch/rm-link')
+        self._object_patch_set_link    = ArgCommand('/object/patch/set-data')
         self._file_ls            = ArgCommand('/file/ls')
 
         # ADVANCED COMMANDS
@@ -380,14 +391,52 @@ class Client(object):
         """
         return self._object_stat.request(self._client, multihash, **kwargs)
 
-    def object_patch(self, multihash, **kwargs):
+    def object_patch_append_data(self, multihash, new_data, **kwargs):
         """Creates a new merkledag object based on an existing one.
+
+        The new object will have the provided data appended to it,
+        and will thus have a new Hash.
+
+        Keyword arguments:
+        multihash -- the hash of an ipfs object to modify
+        new_data -- the data to append to the object's data section
+        kwargs -- additional named arguments
+        """
+        return self._object_patch_append_data.request(self._client, multihash, new_data, **kwargs)
+
+    def object_patch_add_link(self, multihash, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will have a link to the provided object.
 
         Keyword arguments:
         multihash -- unique checksum used to identify IPFS resources
         kwargs -- additional named arguments
         """
-        return self._object_patch.request(self._client, multihash, **kwargs)
+        return self._object_patch_add_link.request(self._client, multihash, **kwargs)
+
+    def object_patch_rm_link(self, multihash, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will lack a link to the specified object.
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
+        """
+        return self._object_patch_rm_link.request(self._client, multihash, **kwargs)
+
+    def object_patch_set_data(self, multihash, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will have hte same links as the old object but
+        with the provided data instead of the old object's data contents.
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
+        """
+        return self._object_patch_set_data.request(self._client, multihash, **kwargs)
 
     def file_ls(self, multihash, **kwargs):
         """Lists directory contents for Unix filesystem objects.
@@ -848,7 +897,7 @@ class Client(object):
         body, headers = multipart.stream_text(string,
                                               chunk_size=chunk_size)
         return self._client.request('/add', data=body,
-                                    headers=headers, **kwargs)
+                                    headers=headers, **kwargs)[1]
 
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS.

@@ -21,6 +21,8 @@ stream_text -- gets a buffered generator for streaming text
 from __future__ import absolute_import
 
 import fnmatch
+import requests
+import io
 import os
 from inspect import isgenerator
 from sys import version_info
@@ -342,7 +344,7 @@ class FileStream(BufferedGenerator):
         """Returns the body of the buffered file."""
         for fp, need_close in self.files:
             try:
-                name = fp.name
+                name = os.path.basename(fp.name)
             except AttributeError:
                 name = ''
             for chunk in self.gen_chunks(self.envelope.file_open(name)):
@@ -367,10 +369,13 @@ class DirectoryStream(BufferedGenerator):
     directory -- the directory being encoded
     recursive -- whether or not to recursively encode directory contents
     fnpattern -- a pattern to match filenames (if no match, file is excluded)
+    headers -- the HTTP headers for uploading self.directory (included for
+                external API consistency)
 
     Public methods:
     __init__ -- creates a new FileStream
-    body -- generate the HTTP multipart-encoded body
+    body -- returns the HTTP body for this directory upload request
+    headers -- returns the HTTP headers for this directory upload request
     """
 
     def __init__(self,
@@ -389,63 +394,51 @@ class DirectoryStream(BufferedGenerator):
         self.directory = directory
         self.recursive = recursive
         self.fnpattern = fnpattern
+        self._request = self._prepare()
+        self.headers = self._request.headers
 
-    def body(self, dirname=None, part=None):
-        """Encodes the directory as HTTP multipart.
+    def body(self):
+        """Returns the HTTP headers for this directory upload request."""
+        return self._request.body
 
-        Recursively traverses a directory and generates the multipart encoded
-        body.
+    def headers(self):
+        """Returns the HTTP body for this directory upload request."""
+        return self._request.headers
 
-        Keyword arguments:
-        dirname -- name of directory to encode, defaults to self.dirname if
-                    None
-        part -- if not None, this is an inner content section
-        """
-        if part is None:
-            # this is the outer envelope
-            outer = True
-            part = self.envelope
-            dirname = self.directory
-        else:
-            # this is a an inner mixed part
-            outer = False
-
-        if dirname is None:
-            dirname = part.name
-
-        for chunk in self.gen_chunks(part.open()):
-            yield chunk
-
-        subpart = BodyGenerator(dirname)
-        for chunk in self.gen_chunks(subpart.write_headers()):
-            yield chunk
-
-        files, subdirs = utils.ls_dir(dirname)
-
-        for fn in files:
-            if not fnmatch.fnmatch(fn, self.fnpattern):
-                continue
-            fullpath = os.path.join(dirname, fn)
-            for chunk in self.gen_chunks(subpart.file_open(fullpath)):
-                yield chunk
-            with open(fullpath, 'rb') as fp:
-                for chunk in self.file_chunks(fp):
-                    yield chunk
-            for chunk in self.gen_chunks(subpart.file_close()):
-                yield chunk
-
-        if self.recursive:
-            for subdir in subdirs:
-                fullpath = os.path.join(dirname, subdir)
-                for chunk in self.body(fullpath, subpart):
-                    yield chunk
-
-        for chunk in self.gen_chunks(subpart.close()):
-            yield chunk
-
-        if outer:
-            for chunk in self.close():
-                yield chunk
+    def _prepare(self):
+        """Pre-formats the multipart HTTP request to transmit the directory."""
+        names = []
+        # identify the unecessary portion of the relative path
+        truncate = os.path.dirname(self.directory)
+        # traverse the filesystem downward from the target directory's uri
+        for curr_dir, _, files in os.walk(self.directory):
+            # find the path relative to the directory being added
+            if len(truncate) > 0:
+                _, _, short_path = curr_dir.partition(truncate)
+            else:
+                short_path = curr_dir
+            # remove leading / or \ if it is present
+            if short_path.startswith(os.sep):
+                short_path = short_path[1:]
+            # create an empty, fake file to represent the directory
+            mock_file = io.StringIO()
+            mock_file.write(u'')
+            # add this file to those that will be sent
+            names.append(('files', (short_path, mock_file, 'application/x-directory')))
+            # iterate across the files in the current directory
+            for filename in files:
+                # find the name of the file relative to the directory being added
+                short_name = os.path.join(short_path, filename)
+                filepath = os.path.join(curr_dir, filename)
+                # remove leading / or \ if it is present
+                if short_name.startswith(os.sep):
+                    short_name = short_name[1:]
+                # add the file to those being sent
+                names.append(('files', (short_name, open(filepath, 'rb'), 'application/octet-stream')))
+        # send the request and present the response body to the user
+        req = requests.Request("POST", 'http://localhost', files=names)
+        prep = req.prepare()
+        return prep
 
 
 class TextStream(BufferedGenerator):

@@ -365,54 +365,18 @@ class TestDirectoryStream(unittest.TestCase):
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
                             "functional", "fake_dir")
         instance = ipfsApi.multipart.DirectoryStream(path)
-        envelope = "^--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-            + "\r\nContent-Type: multipart/mixed; boundary=\"\S+\"\r\n\r\n"\
-            + "%s--\S+--\r\n$"
-        interior = "(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-            + "\r\nContent-Type: application/\S+\r\n"\
-            + "\r\n(.|\n)*\r\n)+--\S+--\r\n"
-        expected = envelope % interior
-        actual = ""
-        for i in instance.body():
-            if type(i) is not str and type(i) is not memoryview:
-                i = i.decode()
-            elif six.PY3 and type(i) is memoryview:
-                i = i.tobytes().decode()
-            actual += i
-        if six.PY2:
-            if not re.match(expected, actual):
-                self.fail('Body malformed. Expected %s\n\nbut got:\n\n %s'
-                          % (expected, actual))
-        else:
-            self.assertRegexpMatches(actual, expected)
-
-    def test_body_recursive(self):
-        """Check the multipart HTTP body for recursively streamed directory.
-
-        TODO: This test currently uses RegEx, but really needs the power of
-        a context-free grammar to properly parse the content. Currently,
-        this test passes because the RegEx isn't (and can't be) complex
-        enough to test arbitrary levels of nested envelopes. This needs
-        to be redone.
+        expected = b"^(--\S+\r\nContent-Disposition: form-data; name=\"\S+\"; filename=\"\S+\""\
+            + b"\r\nContent-Type: application/\S+\r\n\r\n(.|\n)*"\
+            + b"\r\n)+--\S+--\r\n$"
+        actual = instance.body()
         """
-        # Get OS-agnostic path to test files
-        path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                            "functional", "fake_dir")
-        instance = ipfsApi.multipart.DirectoryStream(path, recursive=True)
-        envelope = "^--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-            + "\r\nContent-Type: multipart/mixed; boundary=\"\S+\"\r\n\r\n"\
-            + "%s--\S+--\r\n$"
-        interior = "(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-            + "\r\nContent-Type: application/\S+\r\n"\
-            + "\r\n(.|\n)*\r\n)+--\S+--\r\n"
-        expected = envelope % interior
-        actual = ""
         for i in instance.body():
             if type(i) is not str and type(i) is not memoryview:
                 i = i.decode()
             elif six.PY3 and type(i) is memoryview:
                 i = i.tobytes().decode()
             actual += i
+        """
         if six.PY2:
             if not re.match(expected, actual):
                 self.fail('Body malformed. Expected %s\n\nbut got:\n\n %s'
