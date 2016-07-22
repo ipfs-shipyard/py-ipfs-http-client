@@ -164,6 +164,12 @@ class IpfsApiTest(unittest.TestCase):
 
         self.assertEqual(sorted(refs[0].keys()), ['Err', 'Ref'])
 
+    def test_cat_single_file_str(self):
+        self.api.add(self.fake_file)
+        res = self.api.cat('QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX')
+        self.assertEqual("dsadsad\n", res)
+
+
 class IpfsApiMFSTest(unittest.TestCase):
 
     test_files = {
