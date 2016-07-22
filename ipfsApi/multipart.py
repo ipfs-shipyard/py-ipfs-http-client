@@ -20,7 +20,7 @@ stream_text -- gets a buffered generator for streaming text
 """
 from __future__ import absolute_import
 
-import fnmatch
+# import fnmatch
 import requests
 import io
 import os
@@ -424,17 +424,20 @@ class DirectoryStream(BufferedGenerator):
             mock_file = io.StringIO()
             mock_file.write(u'')
             # add this file to those that will be sent
-            names.append(('files', (short_path, mock_file, 'application/x-directory')))
+            names.append(('files',
+                         (short_path, mock_file, 'application/x-directory')))
             # iterate across the files in the current directory
             for filename in files:
-                # find the name of the file relative to the directory being added
+                # find the filename relative to the directory being added
                 short_name = os.path.join(short_path, filename)
                 filepath = os.path.join(curr_dir, filename)
                 # remove leading / or \ if it is present
                 if short_name.startswith(os.sep):
                     short_name = short_name[1:]
                 # add the file to those being sent
-                names.append(('files', (short_name, open(filepath, 'rb'), 'application/octet-stream')))
+                names.append(('files', (short_name,
+                                        open(filepath, 'rb'),
+                                        'application/octet-stream')))
         # send the request and present the response body to the user
         req = requests.Request("POST", 'http://localhost', files=names)
         prep = req.prepare()

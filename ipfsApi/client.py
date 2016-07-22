@@ -34,14 +34,14 @@ class Client(object):
     object_get -- get and serialize the DAG node named by multihash
     object_put -- stores input as a DAG object and returns its key
     object_stat -- get stats for the DAG node named by multihash
-    object_patch_append_data -- create a new merkledag object based on an existing one
-                                by appending to the object's data
-    object_patch_add_link -- create a new merkledag object based on an existing one
-                                by adding a link to another merkledag object
-    object_patch_rm_link -- create a new merkledag object based on an existing one
-                                by removing a link to another merkledag object
-    object_patch_set_data -- create a new merkledag object based on an existing one
-                                by replacing the object's data
+    object_patch_append_data -- create a new merkledag object based on an
+                                existing one by appending to the object's data
+    object_patch_add_link -- create a new merkledag object based on an existing
+                             one by adding a link to another merkledag object
+    object_patch_rm_link -- create a new merkledag object based on an existing
+                            one by removing a link to another merkledag object
+    object_patch_set_data -- create a new merkledag object based on an existing
+                                one by replacing the object's data
     file_ls -- lists directory contents for Unix filesystem objects
     resolve -- accepts an identifier and resolves it to the referenced item
     name_publish -- publishes an object to IPNS
@@ -123,7 +123,8 @@ class Client(object):
         self._object_get         = ArgCommand('/object/get')
         self._object_put         = FileCommand('/object/put')
         self._object_stat        = ArgCommand('/object/stat')
-        self._object_patch_append_data = FileCommand('/object/patch/append-data')
+        self._object_patch_append_data = FileCommand(
+            '/object/patch/append-data')
         self._object_patch_add_link    = ArgCommand('/object/patch/add-link')
         self._object_patch_rm_link     = ArgCommand('/object/patch/rm-link')
         self._object_patch_set_data    = FileCommand('/object/patch/set-data')
@@ -422,7 +423,10 @@ class Client(object):
         new_data -- the data to append to the object's data section
         kwargs -- additional named arguments
         """
-        return self._object_patch_append_data.request(self._client, [multihash], new_data, **kwargs)
+        return self._object_patch_append_data.request(self._client,
+                                                      [multihash],
+                                                      new_data,
+                                                      **kwargs)
 
     def object_patch_add_link(self, root, name, ref, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -435,7 +439,9 @@ class Client(object):
         ref -- IPFS hash for the object being linked to
         kwargs -- additional named arguments
         """
-        return self._object_patch_add_link.request(self._client, (root, name, ref), **kwargs)
+        return self._object_patch_add_link.request(self._client,
+                                                   (root, name, ref),
+                                                   **kwargs)
 
     def object_patch_rm_link(self, root, link, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -447,7 +453,9 @@ class Client(object):
         link -- name of the link to remove
         kwargs -- additional named arguments
         """
-        return self._object_patch_rm_link.request(self._client, (root, link), **kwargs)
+        return self._object_patch_rm_link.request(self._client,
+                                                  (root, link),
+                                                  **kwargs)
 
     def object_patch_set_data(self, root, data, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -460,7 +468,10 @@ class Client(object):
         data -- the new data to store in root
         kwargs -- additional named arguments
         """
-        return self._object_patch_set_data.request(self._client, [root], data, **kwargs)
+        return self._object_patch_set_data.request(self._client,
+                                                   [root],
+                                                   data,
+                                                   **kwargs)
 
     def file_ls(self, multihash, **kwargs):
         """Lists directory contents for Unix filesystem objects.
