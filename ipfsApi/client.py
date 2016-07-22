@@ -123,10 +123,10 @@ class Client(object):
         self._object_get         = ArgCommand('/object/get')
         self._object_put         = FileCommand('/object/put')
         self._object_stat        = ArgCommand('/object/stat')
-        self._object_patch_append_data = ArgCommand('/object/patch/append-data', 2)
+        self._object_patch_append_data = FileCommand('/object/patch/append-data')
         self._object_patch_add_link    = ArgCommand('/object/patch/add-link')
         self._object_patch_rm_link     = ArgCommand('/object/patch/rm-link')
-        self._object_patch_set_link    = ArgCommand('/object/patch/set-data')
+        self._object_patch_set_data    = FileCommand('/object/patch/set-data')
         self._file_ls            = ArgCommand('/file/ls')
 
         # ADVANCED COMMANDS
@@ -422,41 +422,45 @@ class Client(object):
         new_data -- the data to append to the object's data section
         kwargs -- additional named arguments
         """
-        return self._object_patch_append_data.request(self._client, multihash, new_data, **kwargs)
+        return self._object_patch_append_data.request(self._client, [multihash], new_data, **kwargs)
 
-    def object_patch_add_link(self, multihash, **kwargs):
+    def object_patch_add_link(self, root, name, ref, **kwargs):
         """Creates a new merkledag object based on an existing one.
 
         The new object will have a link to the provided object.
 
         Keyword arguments:
-        multihash -- unique checksum used to identify IPFS resources
+        root -- IPFS hash for the object being modified
+        name -- name for the new link
+        ref -- IPFS hash for the object being linked to
         kwargs -- additional named arguments
         """
-        return self._object_patch_add_link.request(self._client, multihash, **kwargs)
+        return self._object_patch_add_link.request(self._client, (root, name, ref), **kwargs)
 
-    def object_patch_rm_link(self, multihash, **kwargs):
+    def object_patch_rm_link(self, root, link, **kwargs):
         """Creates a new merkledag object based on an existing one.
 
         The new object will lack a link to the specified object.
 
         Keyword arguments:
-        multihash -- unique checksum used to identify IPFS resources
+        root -- IPFS hash of the object to modify
+        link -- name of the link to remove
         kwargs -- additional named arguments
         """
-        return self._object_patch_rm_link.request(self._client, multihash, **kwargs)
+        return self._object_patch_rm_link.request(self._client, (root, link), **kwargs)
 
-    def object_patch_set_data(self, multihash, **kwargs):
+    def object_patch_set_data(self, root, data, **kwargs):
         """Creates a new merkledag object based on an existing one.
 
-        The new object will have hte same links as the old object but
+        The new object will have the same links as the old object but
         with the provided data instead of the old object's data contents.
 
         Keyword arguments:
-        multihash -- unique checksum used to identify IPFS resources
+        root -- IPFS hash of the object to modify
+        data -- the new data to store in root
         kwargs -- additional named arguments
         """
-        return self._object_patch_set_data.request(self._client, multihash, **kwargs)
+        return self._object_patch_set_data.request(self._client, [root], data, **kwargs)
 
     def file_ls(self, multihash, **kwargs):
         """Lists directory contents for Unix filesystem objects.

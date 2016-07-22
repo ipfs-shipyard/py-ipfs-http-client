@@ -310,7 +310,7 @@ class IpfsApiObjectTest(unittest.TestCase):
         # Verify the correct link has been gotten
         self.assertEqual(links['Links'][0]['Hash'], 'QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V')
 
-    def test_onject_data(self):
+    def test_object_data(self):
         # Set paths to test json files
         path_links = os.path.join(os.path.dirname(__file__),
                                   "fake_json", "links.json")
@@ -322,6 +322,42 @@ class IpfsApiObjectTest(unittest.TestCase):
         # Verify the correct bytes have been gotten
         self.assertEqual(data, 'another')
 
+    def test_object_patch_append_data(self):
+        """Warning, this test depends on the contents of
+            test/functional/fake_dir/fsdfgh
+        """
+        result = self.api.object_patch_append_data(
+                'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n', 'fake_dir/fsdfgh')
+        self.assertEqual(result,
+                {'Hash': 'QmcUsyoGVxWoQgYKgmLaDBGm8J3eHWfchMh3oDUD5FrrtN'})
+
+    def test_object_patch_add_link(self):
+        """Warning, this test depends on the contents of
+            test/functional/fake_dir/fsdfgh
+        """
+        result = self.api.object_patch_add_link(
+                'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n', 'self',
+                'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n')
+        self.assertEqual(result,
+                {'Hash': 'QmbWSr7YXBLcF23VVb7yPvUuogUPn46GD7gXftXC6mmsNM'})
+
+    def test_object_patch_rm_link(self):
+        """Warning, this test depends on the contents of
+            test/functional/fake_dir/fsdfgh
+        """
+        result = self.api.object_patch_rm_link(
+                'QmbWSr7YXBLcF23VVb7yPvUuogUPn46GD7gXftXC6mmsNM', 'self')
+        self.assertEqual(result,
+                {'Hash': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'})
+
+    def test_object_patch_set_data(self):
+        """Warning, this test depends on the contents of
+            test/functional/fake_dir/popoiopiu
+        """
+        result = self.api.object_patch_set_data(
+                'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n', 'fake_dir/popoiopiu')
+        self.assertEqual(result,
+                {'Hash': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'})
 
 if __name__ == "__main__":
     unittest.main()
