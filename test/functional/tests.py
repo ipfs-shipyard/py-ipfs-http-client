@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 class IpfsApiTest(unittest.TestCase):
 
     api = ipfsApi.Client()
-    
+
     fake = [{'Hash': u'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
              'Name': 'fake_dir/fsdfgh'},
             {'Hash': u'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv',
@@ -78,12 +78,12 @@ class IpfsApiTest(unittest.TestCase):
     def test_add_single_from_str(self):
         res = self.api.add(self.fake_file)
         self.assertEqual(res, self.fake_file_only_res)
-    
+
     def test_add_single_from_fp(self):
         with open(self.fake_file, 'rb') as fp:
             res = self.api.add(fp)
             self.assertEqual(res, self.fake_file_only_res)
-    
+
     def test_add_multiple_from_list(self):
         res = self.api.add([self.fake_file, self.fake_file2])
         self.assertEqual(res, self.fake_files_res)
@@ -110,7 +110,7 @@ class IpfsApiTest(unittest.TestCase):
                          self.api.get_pyobj(res))
 
 class IpfsApiMFSTest(unittest.TestCase):
-    
+
     test_files = {
         '/test_file1': {
             u'Name': u'fake_dir/popoiopiu',
@@ -121,7 +121,7 @@ class IpfsApiMFSTest(unittest.TestCase):
                       u'Size': 15}
         }
     }
-    
+
     def setUp(self):
         self.api = ipfsApi.Client()
         self._olddir = os.getcwd()
@@ -129,25 +129,26 @@ class IpfsApiMFSTest(unittest.TestCase):
 
     def tearDown(self):
         os.chdir(self._olddir)
-    
+
     def test_write_stat_read_delete(self):
         for target, desc in self.test_files.items():
             # Create target file
             self.api.files_write(target, desc[u'Name'], opts={'create':True})
-            
+
             # Verify stat information of file
             stat = self.api.files_stat(target)
-            self.assertEqual(sorted(desc[u'Stat'].items()), sorted(stat.items()))
-            
+            self.assertEqual(sorted(desc[u'Stat'].items()),
+                             sorted(stat.items()))
+
             # Read back (and compare file contents)
             with open(desc[u'Name'], 'r') as file:
                 content = self.api.files_read(target)
                 self.assertEqual(content, file.read())
-            
+
             # Delete file
             self.api.files_rm(target)
 
-            
+
 class TestBlockFunctions(unittest.TestCase):
     def setUp(self):
         self.api = ipfsApi.Client()
@@ -173,9 +174,43 @@ class TestBlockFunctions(unittest.TestCase):
             self.assertTrue(key in res)
         self.assertEqual(res['Key'], expected_block_multihash)
 
-class TestObjectFunctions(unittest.TestCase):
+
+class IpfsApiRepoTest(unittest.TestCase):
+
     def setUp(self):
         self.api = ipfsApi.Client()
+
+    def test_repo_stat(self):
+        # Verify that the correct key-value pairs are returned
+        stat = self.api.repo_stat()
+        self.assertEqual(sorted(stat.keys()), ['NumObjects', 'RepoPath',
+                                               'RepoSize', 'Version'])
+
+    def test_repo_gc(self):
+        # Add and unpin an object to be garbage collected
+        garbage = self.api.add_str('Test String')
+        self.api.pin_rm(garbage)
+
+        # Collect the garbage object with object count before and after
+        orig_objs = self.api.repo_stat()['NumObjects']
+        gc = self.api.repo_gc()
+        cur_objs = self.api.repo_stat()['NumObjects']
+
+        # Verify the garbage object was collected
+        self.assertGreater(orig_objs, cur_objs)
+        keys = [el['Key'] for el in gc]
+        self.assertTrue(garbage in keys)
+
+
+class IpfsApiObjectTest(unittest.TestCase):
+
+    def setUp(self):
+        self.api = ipfsApi.Client()
+        self._olddir = os.getcwd()
+        os.chdir(HERE)
+
+    def tearDown(self):
+        os.chdir(self._olddir)
 
     def test_object_new(self):
         expected_keys = ['Hash']
@@ -183,6 +218,54 @@ class TestObjectFunctions(unittest.TestCase):
         for key in expected_keys:
             self.assertTrue(key in res)
 
+    def test_object_put_get(self):
+        # Set paths to test json files
+        path_no_links = os.path.join(os.path.dirname(__file__),
+                                     "fake_json", "no_links.json")
+        path_links = os.path.join(os.path.dirname(__file__),
+                                  "fake_json", "links.json")
+
+        # Put the json objects on the DAG
+        no_links = self.api.object_put(path_no_links)
+        links = self.api.object_put(path_links)
+
+        # Verify the correct content was put
+        self.assertEqual(no_links['Hash'], 'QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V')
+        self.assertEqual(links['Hash'], 'QmZZmY4KCu9r3e7M2Pcn46Fc5qbn6NpzaAGaYb22kbfTqm')
+        self.assertEqual(links['Links'][0]['Hash'], 'QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V')
+
+        # Get the objects from the DAG
+        get_no_links = self.api.object_get('QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V')
+        get_links = self.api.object_get('QmZZmY4KCu9r3e7M2Pcn46Fc5qbn6NpzaAGaYb22kbfTqm')
+
+        # Verify the objects we put have been gotten
+        self.assertEqual(get_no_links['Data'], 'abc')
+        self.assertEqual(get_links['Data'], 'another')
+        self.assertEqual(get_links['Links'][0]['Name'], 'some link')
+
+    def test_object_links(self):
+        # Set paths to test json files
+        path_links = os.path.join(os.path.dirname(__file__),
+                                  "fake_json", "links.json")
+
+        # Put json object on the DAG and get its links
+        self.api.object_put(path_links)
+        links = self.api.object_links('QmZZmY4KCu9r3e7M2Pcn46Fc5qbn6NpzaAGaYb22kbfTqm')
+
+        # Verify the correct link has been gotten
+        self.assertEqual(links['Links'][0]['Hash'], 'QmXg9Pp2ytZ14xgmQjYEiHjVjMFXzCVVEcRTWJBmLgR39V')
+
+    def test_onject_data(self):
+        # Set paths to test json files
+        path_links = os.path.join(os.path.dirname(__file__),
+                                  "fake_json", "links.json")
+
+        # Put json objects on the DAG and get its data
+        self.api.object_put(path_links)
+        data = self.api.object_data('QmZZmY4KCu9r3e7M2Pcn46Fc5qbn6NpzaAGaYb22kbfTqm')
+
+        # Verify the correct bytes have been gotten
+        self.assertEqual(data, 'another')
 
 
 if __name__ == "__main__":

@@ -137,6 +137,10 @@ class Client(object):
         self._pin_rm             = ArgCommand('/pin/rm')
         self._pin_ls             = Command('/pin/ls')
         self._repo_gc            = Command('/repo/gc')
+        self._repo_stat          = Command('/repo/stat')
+        self._repo_fsck          = Command('/repo/stat')
+        self._repo_version       = Command('/repo/version')
+        self._repo_verify        = Command('/repo/verify')
 
         # NETWORK COMMANDS
         self._id                 = Command('/id')
@@ -544,13 +548,26 @@ class Client(object):
 
         Performs a garbage collection sweep of the local set of
         stored objects and remove ones that are not pinned in order
-        to reclaim hard disk space.
+        to reclaim hard disk space. Returns the hashes of all collected
+        objects.
 
         Keyword arguments:
         args -- additional unnamed arguments
         kwargs -- additional named arguments
         """
         return self._repo_gc.request(self._client, *args, **kwargs)
+
+    def repo_stat(self, *args, **kwargs):
+        """Displays the repo's status.
+
+        Returns the number of objects in the repo and the repo's size,
+        version, and path.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
+        """
+        return self._repo_stat.request(self._client, *args, **kwargs)
 
     def id(self, *args, **kwargs):
         """Shows IPFS Node ID info.
