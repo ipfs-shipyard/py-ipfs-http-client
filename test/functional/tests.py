@@ -1,5 +1,6 @@
 # _*_ coding: utf-8 -*-
 import os
+import shutil
 import unittest
 
 import ipfsApi
@@ -25,7 +26,9 @@ class IpfsApiTest(unittest.TestCase):
              'Name': 'fake_dir/test2/fssdf'},
             {'Hash': u'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ',
              'Name': 'fake_dir/test2'},
-            {'Hash': u'QmbZuss6aAizLEAt2Jt2BD29oq4XfMieGezi6mN4vz9g9A',
+            {'Hash': u'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q',
+             'Name': 'fake_dir/test3'},
+            {'Hash': u'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY',
              'Name': 'fake_dir'}]
 
     fake_lookup = dict((i['Name'], i['Hash']) for i in fake)
@@ -63,6 +66,12 @@ class IpfsApiTest(unittest.TestCase):
             {'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ', 'Name': 'fake_dir/test2'},
             {'Hash': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q', 'Name': 'fake_dir/test3'},
             {'Hash': 'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY', 'Name': 'fake_dir'}]
+
+    ## test_refs
+    refs_res = [{'Err': '', 'Ref': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
+                {'Err': '', 'Ref': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv'},
+                {'Err': '', 'Ref': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ'},
+                {'Err': '', 'Ref': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q'}]
 
     def setUp(self):
         self._olddir = os.getcwd()
@@ -108,6 +117,52 @@ class IpfsApiTest(unittest.TestCase):
         res = self.api.add_pyobj(data)
         self.assertEqual(data,
                          self.api.get_pyobj(res))
+
+    def test_get_file(self):
+        self.api.add(self.fake_file)
+
+        test_hash = self.fake[0]['Hash']
+
+        self.api.get(test_hash)
+        self.assertIn(test_hash, os.listdir(os.getcwd()))
+
+        os.remove(test_hash)
+        self.assertNotIn(test_hash, os.listdir(os.getcwd()))
+
+    def test_get_dir(self):
+        self.api.add(self.fake_dir, recursive=True)
+
+        test_hash = self.fake[8]['Hash']
+
+        self.api.get(test_hash)
+        self.assertIn(test_hash, os.listdir(os.getcwd()))
+
+        shutil.rmtree(test_hash)
+        self.assertNotIn(test_hash, os.listdir(os.getcwd()))
+
+    def test_get_path(self):
+        self.api.add(self.fake_file)
+
+        test_hash = self.fake[8]['Hash'] + '/fsdfgh'
+
+        self.api.get(test_hash)
+        self.assertIn('fsdfgh', os.listdir(os.getcwd()))
+
+        os.remove('fsdfgh')
+        self.assertNotIn('fsdfgh', os.listdir(os.getcwd()))
+
+    def test_refs(self):
+        self.api.add(self.fake_dir, recursive=True)
+
+        refs = self.api.refs(self.fake[8]['Hash'])
+
+        self.assertEqual(sorted(refs, key=lambda x: x['Ref']),
+                         sorted(self.refs_res, key=lambda x: x['Ref']))
+
+    def test_refs_local(self):
+        refs = self.api.refs_local()
+
+        self.assertEqual(sorted(refs[0].keys()), ['Err', 'Ref'])
 
 class IpfsApiMFSTest(unittest.TestCase):
 

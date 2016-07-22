@@ -111,6 +111,7 @@ class Client(object):
         self._cat                = ArgCommand('/cat')
         self._ls                 = ArgCommand('/ls')
         self._refs               = ArgCommand('/refs')
+        self._refs_local         = Command('/refs/local')
 
         # DATA STRUCTURE COMMANDS
         self._block_stat         = ArgCommand('/block/stat')
@@ -256,6 +257,21 @@ class Client(object):
         kwargs -- additional named arguments
         """
         return self._refs.request(self._client, multihash, **kwargs)
+
+    def refs_local(self, **kwargs):
+        """Displays the hashes of all local objects.
+
+        >> c.refs()
+        [{u'Ref': u'Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7dtPNFkcNMV',
+          u'Err': u''},
+         ...
+         {u'Ref': u'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
+         u'Err': u''}]
+
+        Keyword arguments:
+        kwargs -- additional named arguments
+        """
+        return self._refs_local.request(self._client, **kwargs)
 
     def block_stat(self, multihash, **kwargs):
         """Returns a dict with the size of the block with the given hash.
