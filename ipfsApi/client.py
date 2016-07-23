@@ -50,6 +50,10 @@ class Client(object):
         self._block_stat         = ArgCommand('/block/stat')
         self._block_get          = ArgCommand('/block/get')
         self._block_put          = FileCommand('/block/put')
+        self._bitswap_wantlist   = Command('/bitswap/wantlist')
+        self._bitswap_stat       = Command('/bitswap/stat')
+        self._bitswap_unwant     = ArgCommand('/bitswap/unwant')
+
         self._object_data        = ArgCommand('/object/data')
         self._object_links       = ArgCommand('/object/links')
         self._object_get         = ArgCommand('/object/get')
@@ -103,7 +107,7 @@ class Client(object):
         self._files_read         = ArgCommand('/files/read')
         self._files_write        = FileCommand('/files/write')
         self._files_mv           = ArgCommand('/files/mv')
-        
+
 
     def add(self, files, recursive=False, **kwargs):
         """
@@ -195,6 +199,30 @@ class Client(object):
          u'Size': 22}
         """
         return self._block_put.request(self._client, (), file, **kwargs)
+
+    def bitswap_wantlist(self, peer=None, **kwargs):
+        """
+        Show blocks currently on the wantlist.
+
+        :param peer: Peer to show wantlist for.
+        """
+        return self._bitswap_wantlist.request(self._client, peer, **kwargs)
+
+    def bitswap_stat(self, **kwargs):
+        """
+        Show some diagnostic information on the bitswap agent.
+        """
+
+        return self._bitswap_stat.request(self._client, **kwargs)
+
+    def bitswap_unwant(self, key, **kwargs):
+        """
+        Remove a given block from wantlist.
+
+        :param key: Key to remove from wantlist.
+        """
+
+        return self._bitswap_unwant.request(self._client, key, **kwargs)
 
     def object_data(self, multihash, **kwargs):
         r"""
