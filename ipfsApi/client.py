@@ -50,6 +50,10 @@ class Client(object):
         self._block_stat         = ArgCommand('/block/stat')
         self._block_get          = ArgCommand('/block/get')
         self._block_put          = FileCommand('/block/put')
+        self._bitswap_wantlist   = Command('/bitswap/wantlist')
+        self._bitswap_stat       = Command('/bitswap/stat')
+        self._bitswap_unwant     = ArgCommand('/bitswap/unwant')
+
         self._object_data        = ArgCommand('/object/data')
         self._object_links       = ArgCommand('/object/links')
         self._object_get         = ArgCommand('/object/get')
@@ -91,7 +95,9 @@ class Client(object):
         self._config_show        = Command('/config/show')
         self._config_replace     = ArgCommand('/config/replace')
         self._version            = Command('/version')
-        
+        self._log_level          = ArgCommand('/log/level')
+        self._log_tail           = Command('/log/tail')
+
         # MFS COMMANDS
         self._files_cp           = ArgCommand('/files/cp')
         self._files_ls           = ArgCommand('/files/ls')
@@ -101,7 +107,7 @@ class Client(object):
         self._files_read         = ArgCommand('/files/read')
         self._files_write        = FileCommand('/files/write')
         self._files_mv           = ArgCommand('/files/mv')
-        
+
 
     def add(self, files, recursive=False, **kwargs):
         """
@@ -193,6 +199,30 @@ class Client(object):
          u'Size': 22}
         """
         return self._block_put.request(self._client, (), file, **kwargs)
+
+    def bitswap_wantlist(self, peer=None, **kwargs):
+        """
+        Show blocks currently on the wantlist.
+
+        :param peer: Peer to show wantlist for.
+        """
+        return self._bitswap_wantlist.request(self._client, peer, **kwargs)
+
+    def bitswap_stat(self, **kwargs):
+        """
+        Show some diagnostic information on the bitswap agent.
+        """
+
+        return self._bitswap_stat.request(self._client, **kwargs)
+
+    def bitswap_unwant(self, key, **kwargs):
+        """
+        Remove a given block from wantlist.
+
+        :param key: Key to remove from wantlist.
+        """
+
+        return self._bitswap_unwant.request(self._client, key, **kwargs)
 
     def object_data(self, multihash, **kwargs):
         r"""
@@ -497,6 +527,20 @@ class Client(object):
         {u'Version': u'0.3...'}
         """
         return self._version.request(self._client, **kwargs)
+
+    def log_level(self, subsystem, level, **kwargs):
+        """
+        Update the current logging level for the IPFS daemon.
+        """
+
+        return self._log_level.request(self._client, subsystem, level, **kwargs)
+
+    def log_tail(self, **kwargs):
+        """
+        Read the IPFS daemon log as it is written.
+        """
+
+        return self._log_tail.request(self._client, **kwargs)
     
     def files_cp(self, source, dest, **kwargs):
         """
