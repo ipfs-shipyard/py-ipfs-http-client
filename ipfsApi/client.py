@@ -1,5 +1,7 @@
-"""
-IPFS API Bindings for Python
+"""IPFS API Bindings for Python.
+
+Classes:
+Client -- a TCP client for interacting with an IPFS daemon
 """
 from __future__ import absolute_import
 
@@ -13,22 +15,89 @@ default_base = 'api/v0'
 
 
 class Client(object):
-    """
-    A TCP client for interacting with an IPFS daemon
+    """A TCP client for interacting with an IPFS daemon.
+
+    Public methods:
+    __init__ -- connects to the API port of an IPFS node
+    add -- add a file, or directory of files to IPFS
+    get -- downloads a file, or directory of files from IPFS to the current
+           working directory
+    cat -- returns the contents of a file identified by hash, as a string
+    ls -- returns a list of objects linked to the given hash
+    refs -- returns a list of hashes of objects referenced by the given hash
+    block_stat -- returns a dict with the size of the block with the given hash
+    block_get -- returns the raw contents of a block
+    block_put -- stores input as an IPFS block
+    object_data -- returns the raw bytes in an IPFS object
+    object_new -- creates a new object from an ipfs template
+    object_links -- returns the links pointed to by the specified object
+    object_get -- get and serialize the DAG node named by multihash
+    object_put -- stores input as a DAG object and returns its key
+    object_stat -- get stats for the DAG node named by multihash
+    object_patch_append_data -- create a new merkledag object based on an
+                                existing one by appending to the object's data
+    object_patch_add_link -- create a new merkledag object based on an existing
+                             one by adding a link to another merkledag object
+    object_patch_rm_link -- create a new merkledag object based on an existing
+                            one by removing a link to another merkledag object
+    object_patch_set_data -- create a new merkledag object based on an existing
+                                one by replacing the object's data
+    file_ls -- lists directory contents for Unix filesystem objects
+    resolve -- accepts an identifier and resolves it to the referenced item
+    name_publish -- publishes an object to IPNS
+    name_resolve -- gets the value currently published at an IPNS name
+    dns -- resolves DNS links to the referenced object
+    pin_add -- pins objects to local storage
+    pin_rm -- removes a pinned object from local storage
+    pin_ls -- lists objects pinned to local storage
+    repo_gc -- removes stored objects that are not pinned from the repo
+    id -- shows IPFS Node ID info
+    bootstrap -- shows peers in the bootstrap list
+    bootstrap_add -- adds peers to the bootstrap list
+    bootstrap_rm -- removes peers from the bootstrap list
+    swarm_peers -- returns the addresses & IDs of currently connected peers
+    swarm_addrs -- returns the addresses of currently connected peers
+                   by peer id
+    swarm_connect -- opens a connection to a given address
+    swarm_disconnect -- closes the connection to a given address
+    swarm_filters_add -- adds a given multiaddr filter to the filter list
+    swarm_filters_rm -- removes a given multiaddr filter from the filter list
+    dht_query -- finds the closest Peer IDs to a given Peer ID by
+                 querying the DHT
+    dht_findprovs -- finds peers in the DHT that can provide a specific value,
+                     given a key
+    dht_findpeer -- queries the DHT for all of the multiaddresses associated
+                    with a Peer ID
+    dht_get -- queries the DHT for its best value related to given key
+    dht_put -- writes a key/value pair to the DHT
+    ping -- provides round-trip latency information for the routing system
+    config -- controls configuration variables
+    config_show -- returns a dict containing the server's configuration
+    config_replace -- replaces the existing config with a user-defined config
+    log_level -- changes the logging output of a running daemon
+    log_ls -- lists the logging subsystems of a running daemon
+    log_tail -- reads log outputs as they are written
+    version -- returns the software version of the currently connected node
+    files_cp -- copies files into MFS
+    files_ls -- lists directory contents in MFS
+    files_mkdir -- creates a directory in MFS
+    files_stat -- displays a file's status (including it's hash) in MFS
+    files_rm -- removes a file from MFS
+    files_read -- reads a file stored in MFS
+    files_write -- writes to a mutable file in MFS
+    files_mv -- moves MFS files
+    add_str -- adds a Python string as a file to IPFS
+    add_json -- adds a json-serializable Python dict as a json file to IPFS
+    get_json -- loads a json object from IPFS
+    add_pyobj -- adds a picklable Python object as a file to IPFS
+    get_pyobj -- loads a pickled Python object from IPFS
     """
 
     _clientfactory = http.HTTPClient
 
-    def __init__(self,
-                 host=None,
-                 port=None,
-                 base=None,
-                 default_enc='json',
-                 **defaults):
-
-        """
-        Connect to the API port of an IPFS node
-        """
+    def __init__(self, host=None, port=None,
+                 base=None, default_enc='json', **defaults):
+        """Connects to the API port of an IPFS node."""
         if host is None:
             host = default_host
         if port is None:
@@ -45,17 +114,23 @@ class Client(object):
         self._cat                = ArgCommand('/cat')
         self._ls                 = ArgCommand('/ls')
         self._refs               = ArgCommand('/refs')
+        self._refs_local         = Command('/refs/local')
 
         # DATA STRUCTURE COMMANDS
         self._block_stat         = ArgCommand('/block/stat')
         self._block_get          = ArgCommand('/block/get')
         self._block_put          = FileCommand('/block/put')
+        self._object_new         = ArgCommand('/object/new')
         self._object_data        = ArgCommand('/object/data')
         self._object_links       = ArgCommand('/object/links')
         self._object_get         = ArgCommand('/object/get')
         self._object_put         = FileCommand('/object/put')
         self._object_stat        = ArgCommand('/object/stat')
-        self._object_patch       = ArgCommand('/object/patch')
+        self._object_patch_append_data = FileCommand(
+            '/object/patch/append-data')
+        self._object_patch_add_link    = ArgCommand('/object/patch/add-link')
+        self._object_patch_rm_link     = ArgCommand('/object/patch/rm-link')
+        self._object_patch_set_data    = FileCommand('/object/patch/set-data')
         self._file_ls            = ArgCommand('/file/ls')
 
         # ADVANCED COMMANDS
@@ -67,6 +142,10 @@ class Client(object):
         self._pin_rm             = ArgCommand('/pin/rm')
         self._pin_ls             = Command('/pin/ls')
         self._repo_gc            = Command('/repo/gc')
+        self._repo_stat          = Command('/repo/stat')
+        self._repo_fsck          = Command('/repo/stat')
+        self._repo_version       = Command('/repo/version')
+        self._repo_verify        = Command('/repo/verify')
 
         # NETWORK COMMANDS
         self._id                 = Command('/id')
@@ -90,8 +169,11 @@ class Client(object):
         self._config             = ArgCommand('/config')
         self._config_show        = Command('/config/show')
         self._config_replace     = ArgCommand('/config/replace')
+        self._log_level          = ArgCommand('/log/level')
+        self._log_ls             = Command('/log/ls')
+        self._log_tail           = Command('/log/tail')
         self._version            = Command('/version')
-        
+
         # MFS COMMANDS
         self._files_cp           = ArgCommand('/files/cp')
         self._files_ls           = ArgCommand('/files/ls')
@@ -101,31 +183,37 @@ class Client(object):
         self._files_read         = ArgCommand('/files/read')
         self._files_write        = FileCommand('/files/write')
         self._files_mv           = ArgCommand('/files/mv')
-        
 
     def add(self, files, recursive=False, **kwargs):
-        """
-        Add a file, or directory of files to IPFS
+        """Add a file, or directory of files to IPFS.
 
         >> with io.open('nurseryrhyme.txt', 'w', encoding='utf-8') as f:
         ...     numbytes = f.write(u'Mary had a little lamb')
         >> c.add('nurseryrhyme.txt')
         {u'Hash': u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab',
          u'Name': u'nurseryrhyme.txt'}
+
+         Keyword arguments:
+         files -- a filepath to either a file or directory
+         recursive -- controls if files in subdirectories are added or not
+         kwargs -- additional named arguments
         """
         return self._add.request(self._client, (), files,
                                  recursive=recursive, **kwargs)
 
     def get(self, multihash, **kwargs):
-        """
-        Downloads a file, or directory of files from IPFS to the current
-        working directory.
+        """Downloads a file, or directory of files from IPFS.
+
+        Files are placed in the current working directory.
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._get.request(self._client, multihash, **kwargs)
 
     def cat(self, multihash, **kwargs):
-        r"""
-        Returns the contents of a file identified by hash, as a string
+        r"""Returns the contents of a file identified by hash, as a string.
 
         >> c.cat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         Traceback (most recent call last):
@@ -133,12 +221,15 @@ class Client(object):
         ipfsApiError: this dag node is a directory
         >> c.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')[:60]
         u'<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</t'
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._cat.request(self._client, multihash, **kwargs)
 
     def ls(self, multihash, **kwargs):
-        """
-        Returns a list of objects linked to the given hash
+        """Returns a list of objects linked to the given hash.
 
         >> c.ls('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         {u'Objects': [
@@ -151,12 +242,15 @@ class Client(object):
                  u'Name': u'published-version', u'Size': 55, u'Type': 2}
                 ]}
             ]}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._ls.request(self._client, multihash, **kwargs)
 
     def refs(self, multihash, **kwargs):
-        """
-        Returns a list of hashes of objects referenced to the given hash
+        """Returns a list of hashes of objects referenced by the given hash.
 
         >> c.refs('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         [{u'Ref': u'Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7dtPNFkcNMV',
@@ -164,48 +258,91 @@ class Client(object):
          ...
          {u'Ref': u'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
          u'Err': u''}]
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._refs.request(self._client, multihash, **kwargs)
 
-    def block_stat(self, multihash, **kwargs):
+    def refs_local(self, **kwargs):
+        """Displays the hashes of all local objects.
+
+        >> c.refs()
+        [{u'Ref': u'Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7dtPNFkcNMV',
+          u'Err': u''},
+         ...
+         {u'Ref': u'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
+         u'Err': u''}]
+
+        Keyword arguments:
+        kwargs -- additional named arguments
         """
-        Returns a dict with the size of the block with the given hash
+        return self._refs_local.request(self._client, **kwargs)
+
+    def block_stat(self, multihash, **kwargs):
+        """Returns a dict with the size of the block with the given hash.
 
         >> c.block_stat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         {u'Key': u'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
          u'Size': 258}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._block_stat.request(self._client, multihash, **kwargs)
 
     def block_get(self, multihash, **kwargs):
-        r"""
-        Returns the raw contents of a block
+        r"""Returns the raw contents of a block.
 
         >> c.block_get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         u'\x121\n"\x12 \xdaW> ... \x11published-version\x187\n\x02\x08\x01'
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._block_get.request(self._client, multihash, **kwargs)
 
     def block_put(self, file, **kwargs):
-        """
+        """Stores input as an IPFS block.
+
         >> c.block_put(io.StringIO(u'Mary had a little lamb'))
         {u'Key': u'QmeV6C6XVt1wf7V7as7Yak3mxPma8jzpqyhtRtCvpKcfBb',
          u'Size': 22}
+
+        Keyword arguments:
+        file -- object to be stored
+        kwargs -- additional named arguments
         """
         return self._block_put.request(self._client, (), file, **kwargs)
 
     def object_data(self, multihash, **kwargs):
-        r"""
+        r"""Returns the raw bytes in an IPFS object.
+
         >> c.object_data('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         u'\x08\x01'
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._object_data.request(self._client, multihash, **kwargs)
 
     def object_new(self, template=None, **kwargs):
-        """
+        """Creates a new object from an IPFS template.
+
+        By default it creates and returns a new empty merkledag node, but you
+        may pass an optional template argument to create a preformatted node.
+
         >> c.object_new()
         {u'Hash': u'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n',
          u'Links': None}
+
+        Keyword arguments:
+        template -- blueprints from which to construct the new object
+        kwargs -- additional named arguments
         """
         if template:
             return self._object_new.request(self._client, template, **kwargs)
@@ -213,7 +350,8 @@ class Client(object):
             return self._object_new.request(self._client, **kwargs)
 
     def object_links(self, multihash, **kwargs):
-        """
+        """Returns the links pointed to by the specified object.
+
         >> c.object_links('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         {u'Hash': u'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
          u'Links': [
@@ -227,11 +365,16 @@ class Client(object):
              u'Name': u'lib', u'Size': 268261},
             {u'Hash': u'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
              u'Name': u'published-version', u'Size': 55}]}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._object_links.request(self._client, multihash, **kwargs)
 
     def object_get(self, multihash, **kwargs):
-        """
+        """Get and serialize the DAG node named by multihash.
+
         >> c.object_get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         {u'Data': u'\x08\x01',
          u'Links': [
@@ -245,31 +388,99 @@ class Client(object):
              u'Name': u'lib', u'Size': 268261},
             {u'Hash': u'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
              u'Name': u'published-version', u'Size': 55}]}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._object_get.request(self._client, multihash, **kwargs)
 
     def object_put(self, file, **kwargs):
-        """
+        """Stores input as a DAG object and returns its key.
+
+        Keyword arguments:
+        file -- object from which a DAG object will be created
+        kwargs -- additional named arguments
         """
         return self._object_put.request(self._client, (), file, **kwargs)
 
     def object_stat(self, multihash, **kwargs):
-        """
+        """Get stats for the DAG node named by multihash.
+
         >> c.object_stat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         {u'LinksSize': 256, u'NumLinks': 5,
          u'Hash': u'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
          u'BlockSize': 258, u'CumulativeSize': 274169, u'DataSize': 2}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._object_stat.request(self._client, multihash, **kwargs)
 
-    def object_patch(self, multihash, **kwargs):
+    def object_patch_append_data(self, multihash, new_data, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will have the provided data appended to it,
+        and will thus have a new Hash.
+
+        Keyword arguments:
+        multihash -- the hash of an ipfs object to modify
+        new_data -- the data to append to the object's data section
+        kwargs -- additional named arguments
         """
+        return self._object_patch_append_data.request(self._client,
+                                                      [multihash],
+                                                      new_data,
+                                                      **kwargs)
+
+    def object_patch_add_link(self, root, name, ref, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will have a link to the provided object.
+
+        Keyword arguments:
+        root -- IPFS hash for the object being modified
+        name -- name for the new link
+        ref -- IPFS hash for the object being linked to
+        kwargs -- additional named arguments
         """
-        return self._object_patch.request(self._client, multihash, **kwargs)
+        return self._object_patch_add_link.request(self._client,
+                                                   (root, name, ref),
+                                                   **kwargs)
+
+    def object_patch_rm_link(self, root, link, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will lack a link to the specified object.
+
+        Keyword arguments:
+        root -- IPFS hash of the object to modify
+        link -- name of the link to remove
+        kwargs -- additional named arguments
+        """
+        return self._object_patch_rm_link.request(self._client,
+                                                  (root, link),
+                                                  **kwargs)
+
+    def object_patch_set_data(self, root, data, **kwargs):
+        """Creates a new merkledag object based on an existing one.
+
+        The new object will have the same links as the old object but
+        with the provided data instead of the old object's data contents.
+
+        Keyword arguments:
+        root -- IPFS hash of the object to modify
+        data -- the new data to store in root
+        kwargs -- additional named arguments
+        """
+        return self._object_patch_set_data.request(self._client,
+                                                   [root],
+                                                   data,
+                                                   **kwargs)
 
     def file_ls(self, multihash, **kwargs):
-        """
-        List file and directory objects in the object identified by a hash
+        """Lists directory contents for Unix filesystem objects.
 
         >> c.file_ls('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
         {u'Arguments': {u'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D':
@@ -292,51 +503,112 @@ class Client(object):
              u'Size': 0, u'Type': u'Directory'
            }
         }}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self._file_ls.request(self._client, multihash, **kwargs)
 
     def resolve(self, *args, **kwargs):
-        """
+        """Accepts an identifier and resolves it to the referenced item.
+
+        There are a number of mutable name protocols that can link among
+        themselves and into IPNS. For example IPNS references can (currently)
+        point at an IPFS object, and DNS links can point at other DNS links,
+        IPNS entries, or IPFS objects. This command accepts any of these
+        identifiers.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._resolve.request(self._client, *args, **kwargs)
 
     def name_publish(self, *args, **kwargs):
-        """
+        """Publishes an object to IPNS.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._name_publish.request(self._client, *args, **kwargs)
 
     def name_resolve(self, *args, **kwargs):
-        """
+        """Gets the value currently published at an IPNS name.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._name_resolve.request(self._client, *args, **kwargs)
 
     def dns(self, *args, **kwargs):
-        """
+        """Resolves DNS links to the referenced object.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._dns.request(self._client, *args, **kwargs)
 
     def pin_add(self, *args, **kwargs):
-        """
+        """Pins objects to local storage.
+
+        Stores an IPFS object(s) from a given path locally to disk.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._pin_add.request(self._client, *args, **kwargs)
 
     def pin_rm(self, *args, **kwargs):
-        """
+        """Removes a pinned object from local storage.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._pin_rm.request(self._client, *args, **kwargs)
 
     def pin_ls(self, **kwargs):
-        """
+        """Lists objects pinned to local storage.
+
+        Keyword arguments:
+        kwargs -- additional named arguments
         """
         return self._pin_ls.request(self._client, **kwargs)
 
     def repo_gc(self, *args, **kwargs):
-        """
+        """Removes stored objects that are not pinned from the repo.
+
+        Performs a garbage collection sweep of the local set of
+        stored objects and remove ones that are not pinned in order
+        to reclaim hard disk space. Returns the hashes of all collected
+        objects.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._repo_gc.request(self._client, *args, **kwargs)
 
-    def id(self, *args, **kwargs):
+    def repo_stat(self, *args, **kwargs):
+        """Displays the repo's status.
+
+        Returns the number of objects in the repo and the repo's size,
+        version, and path.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
+        return self._repo_stat.request(self._client, *args, **kwargs)
+
+    def id(self, *args, **kwargs):
+        """Shows IPFS Node ID info.
+
         Returns the PublicKey, ProtocolVersion, ID, AgentVersion and
         Addresses of the connected daemon
 
@@ -352,11 +624,16 @@ class Client(object):
             u'/ip6/::1/tcp/4001/ipfs/QmRA9NuuaJ2GLVgCm ... 1VCn',
             u'/ip4/212.159.87.139/tcp/63203/ipfs/QmRA9NuuaJ2GLVgCm ... 1VCn',
             u'/ip4/212.159.87.139/tcp/63203/ipfs/QmRA9NuuaJ2GLVgCm ... 1VCn']}
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._id.request(self._client, *args, **kwargs)
 
     def bootstrap(self, *args, **kwargs):
-        """
+        """Shows peers in the bootstrap list.
+
         Reurns the the addresses of peers used during initial discovery of
         the IPFS network
 
@@ -366,22 +643,33 @@ class Client(object):
             u'/ip4/104.236.176.52/tcp/4001/ipfs/QmSoLnSGccFuZQJz ... ca9z',
             ...
             u'/ip4/104.236.151.122/tcp/4001/ipfs/QmSoLju6m7xTh3Du ... 36yx']}
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._bootstrap.request(self._client, *args, **kwargs)
 
     def bootstrap_add(self, *args, **kwargs):
-        """
+        """Adds peers to the bootstrap list.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._bootstrap_add.request(self._client, *args, **kwargs)
 
     def bootstrap_rm(self, *args, **kwargs):
-        """
+        """Removes peers from the bootstrap list.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._bootstrap_rm.request(self._client, *args, **kwargs)
 
     def swarm_peers(self, *args, **kwargs):
-        """
-        Returns the addresses & IDs of currently connected peers
+        """Returns the addresses & IDs of currently connected peers.
 
         >> c.swarm_peers()
         {u'Strings': [
@@ -390,12 +678,16 @@ class Client(object):
             ...
             u'/ip4/92.1.172.181/tcp/4001/ipfs/QmdPe9Xs5YGCoVN8nk ... 5cKD',
             u'/ip4/94.242.232.165/tcp/4001/ipfs/QmUdVdJs3dM6Qi6Tf ... Dgx9']}
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._swarm_peers.request(self._client, *args, **kwargs)
 
     def swarm_addrs(self, *args, **kwargs):
-        """
-        Returns the addresses of currently connected peers by peer id
+        """Returns the addresses of currently connected peers by peer id.
+
         >> pprint(c.swarm_addrs())
         {u'Addrs': {
             u'QmNd92Ndyccns8vTvdK66H1PC4qRXzKz3ewAqAzLbooEpB':
@@ -405,46 +697,82 @@ class Client(object):
                 [u'/ip4/127.0.0.1/tcp/4001', u'/ip4/178.62.206.163/tcp/4001'],
             ...
         }}
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._swarm_addrs.request(self._client, *args, **kwargs)
 
     def swarm_connect(self, *args, **kwargs):
-        """
+        """Opens a connection to a given address.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._swarm_connecti.request(self._client, *args, **kwargs)
 
     def swarm_disconnect(self, *args, **kwargs):
-        """
+        """Closes the connection to a given address.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._swarm_disconnect.request(self._client, *args, **kwargs)
 
     def swarm_filters_add(self, *args, **kwargs):
-        """
+        """Adds a given multiaddr filter to the filter list.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._swarm_filters_add.request(self._client, *args, **kwargs)
 
     def swarm_filters_rm(self, *args, **kwargs):
-        """
+        """Removes a given multiaddr filter from the filter list.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._swarm_filters_rm.request(self._client, *args, **kwargs)
 
     def dht_query(self, *args, **kwargs):
-        """
+        """Finds the closest Peer IDs to a given Peer ID by querying the DHT.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._dht_query.request(self._client, *args, **kwargs)
 
     def dht_findprovs(self, *args, **kwargs):
-        """
+        """Finds peers in the DHT that can provide an exact value, given a key.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._dht_findprovs.request(self._client, *args, **kwargs)
 
     def dht_findpeer(self, *args, **kwargs):
-        """
+        """Queries the DHT for all of the associated multiaddresses.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._dht_findpeer.request(self._client, *args, **kwargs)
 
     def dht_get(self, *args, **kwargs):
-        """
+        """Queries the DHT for its best value related to given key.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         res = self._dht_get.request(self._client, *args, **kwargs)
         if isinstance(res, dict) and "Extra" in res:
@@ -456,23 +784,38 @@ class Client(object):
         raise ipfsApiError("empty response from DHT")
 
     def dht_put(self, key, value, **kwargs):
-        """
+        """Writes a key/value pair to the DHT.
+
+        Keyword arguments:
+        key -- a unique identifier
+        value -- object to be associated with the given key
+        kwargs -- additional named arguments
         """
         return self._dht_put.request(self._client, key, value, **kwargs)
 
     def ping(self, *args, **kwargs):
-        """
+        """Provides round-trip latency information for the routing system.
+
+        Finds nodes via the routing system, sends pings, waits for pongs,
+        and prints out round-trip latency information.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._ping.request(self._client, *args, **kwargs)
 
     def config(self, *args, **kwargs):
-        """
+        """Controls configuration variables.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._config.request(self._client, *args, **kwargs)
 
     def config_show(self, *args, **kwargs):
-        """
-        Returns a dict containing the server's configuration
+        """Returns a dict containing the server's configuration.
 
         >> config = ipfs_client.config_show()
         >> pprint(config['Addresses']
@@ -481,71 +824,145 @@ class Client(object):
          u'Swarm': [u'/ip4/0.0.0.0/tcp/4001', u'/ip6/::/tcp/4001']},
         >> pprint(config['Discovery'])
         {u'MDNS': {u'Enabled': True, u'Interval': 10}}
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._config_show.request(self._client, *args, **kwargs)
 
     def config_replace(self, *args, **kwargs):
-        """
+        """Replaces the existing config with a user-defined config.
+
+        Make sure to back up the config file first if neccessary, as this
+        operation can't be undone.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
         """
         return self._config_replace.request(self._client, *args, **kwargs)
 
-    def version(self, **kwargs):
+    def log_level(self, subsystem, level, **kwargs):
+        """Changes the logging output of a running daemon.
+
+        Keyword arguments:
+        subsystem -- the subsystem logging identifier
+                     (Use 'all' for all subsystems)
+        level -- one of: debug, info, warning, error, fatal, panic
+        kwargs -- additional named arguments
         """
-        Returns the software version of the currently connected node
+        return self._log_level.request(self._client, subsystem,
+                                       level, **kwargs)
+
+    def log_ls(self, *args, **kwargs):
+        """Lists the logging subsystems of a running daemon.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
+        """
+        return self._log_ls.request(self._client, *args, **kwargs)
+
+    def log_tail(self, *args, **kwargs):
+        """Reads log outputs as they are written.
+
+        This function returns a reponse object that can be iterated over
+        by the user. The user should make sure to close the response object
+        when they are done reading from it.
+
+        Keyword arguments:
+        args -- additional unnamed arguments
+        kwargs -- additional named arguments
+        """
+        return self._log_tail.request(self._client, stream=True,
+                                      *args, **kwargs)
+
+    def version(self, **kwargs):
+        """Returns the software version of the currently connected node.
 
         >> c.version() # doctest: +ELLIPSIS
         {u'Version': u'0.3...'}
+
+        Keyword arguments:
+        kwargs -- additional named arguments
         """
         return self._version.request(self._client, **kwargs)
-    
+
     def files_cp(self, source, dest, **kwargs):
-        """
-        MFS - Copy files into mfs
+        """Copies files into MFS.
+
+        Keyword arguments:
+        source -- file to be copied
+        dest -- destination to which the file will be copied
+        kwargs -- additional named arguments
         """
         return self._files_cp.request(self._client, source, dest, **kwargs)
-    
+
     def files_ls(self, path, **kwargs):
-        """
-        MFS - List directory contents
+        """Lists directory contents in MFS.
+
+        Keyword arguments:
+        path -- filepath within the MFS
+        kwargs -- additional named arguments
         """
         return self._files_ls.request(self._client, path, **kwargs)
-    
+
     def files_mkdir(self, path, **kwargs):
-        """
-        MFS - Create directory
+        """Creates a directory in MFS.
+
+        Keyword arguments:
+        path -- filepath within the MFS
+        kwargs -- additional named arguments
         """
         return self._files_mkdir.request(self._client, path, **kwargs)
-    
+
     def files_stat(self, path, **kwargs):
-        """
-        MFS - Display file status (including it's hash)
+        """Displays a file's status (including it's hash) in MFS.
+
+        Keyword arguments:
+        path -- filepath within the MFS
+        kwargs -- additional named arguments
         """
         return self._files_stat.request(self._client, path, **kwargs)
-    
+
     def files_rm(self, path, **kwargs):
-        """
-        MFS - Remove a file
+        """Removes a file from MFS.
+
+        Keyword arguments:
+        path -- filepath within the MFS
+        kwargs -- additional named arguments
         """
         return self._files_rm.request(self._client, path, **kwargs)
-    
+
     def files_read(self, path, **kwargs):
-        """
-        MFS - Read a file stored in MFS
+        """Reads a file stored in MFS.
+
+        Keyword arguments:
+        path -- filepath within the MFS
+        kwargs -- additional named arguments
         """
         return self._files_read.request(self._client, path, **kwargs)
-    
+
     def files_write(self, path, file, **kwargs):
-        """
-        MFS - Write to a mutable file
+        """Writes to a mutable file in MFS.
+
+        Keyword arguments:
+        path -- filepath within the MFS
+        file -- object to be written
+        kwargs -- additional named arguments
         """
         return self._files_write.request(self._client, (path,), file, **kwargs)
-    
+
     def files_mv(self, source, dest, **kwargs):
-        """
-        MFS - Move MFS files
+        """Moves MFS files.
+
+        Keyword arguments:
+        source -- existing filepath within the MFS
+        dest -- destination to which the file will be moved in the MFS
+        kwargs -- additional named arguments
         """
         return self._files_mv.request(self._client, source, dest, **kwargs)
-    
 
     ###########
     # HELPERS #
@@ -553,55 +970,68 @@ class Client(object):
 
     @utils.return_field('Hash')
     def add_str(self, string, **kwargs):
-        """
-        Adds a Python string as a file to IPFS.
+        """Adds a Python string as a file to IPFS.
 
         >> ipfs_client.add_str('Mary had a little lamb')
         u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
 
         Also accepts and will stream generator objects.
+
+        Keyword arguments:
+        string -- content to be added as a file
+        kwargs -- additional named arguments
         """
         chunk_size = kwargs.pop('chunk_size',
                                 multipart.default_chunk_size)
         body, headers = multipart.stream_text(string,
                                               chunk_size=chunk_size)
-        return self._client.request('/add',
-                                    data=body,
-                                    headers=headers,
-                                    **kwargs)
+        return self._client.request('/add', data=body,
+                                    headers=headers, **kwargs)[1]
 
     def add_json(self, json_obj, **kwargs):
-        """
-        Adds a json-serializable Python dict as a json file to IPFS.
+        """Adds a json-serializable Python dict as a json file to IPFS.
 
         >> ipfs_client.add_json({'one': 1, 'two': 2, 'three': 3})
         u'QmVz9g7m5u3oHiNKHj2CJX1dbG1gtismRS3g9NaPBBLbob'
+
+        Keyword arguments:
+        string -- a json-serializable Python dict
+        kwargs -- additional named arguments
         """
         return self.add_str(utils.encode_json(json_obj), **kwargs)
 
     def get_json(self, multihash, **kwargs):
-        """
-        Loads a json object from IPFS.
+        """Loads a json object from IPFS.
 
         >> c.get_json('QmVz9g7m5u3oHiNKHj2CJX1dbG1gtismRS3g9NaPBBLbob')
         {u'one': 1, u'two': 2, u'three': 3}
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return self.cat(multihash, decoder='json', **kwargs)
 
     def add_pyobj(self, py_obj, **kwargs):
-        """
-        Adds a picklable Python object as a file to IPFS.
+        """Adds a picklable Python object as a file to IPFS.
 
         >> c.add_pyobj([0, 1.0, 2j, '3', 4e5])
         u'QmdCWFLDXqgdWQY9kVubbEHBbkieKd3uo7MtCm7nTZZE9K'
+
+        Keyword arguments:
+        string -- a picklable Python object
+        kwargs -- additional named arguments
         """
         return self.add_str(utils.encode_pyobj(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
-        """
-        Loads a pickled Python object from IPFS.
+        """Loads a pickled Python object from IPFS.
 
         >> c.get_pyobj('QmdCWFLDXqgdWQY9kVubbEHBbkieKd3uo7MtCm7nTZZE9K')
         [0, 1.0, 2j, '3', 400000.0]
+
+        Keyword arguments:
+        multihash -- unique checksum used to identify IPFS resources
+        kwargs -- additional named arguments
         """
         return utils.parse_pyobj(self.cat(multihash, **kwargs))
