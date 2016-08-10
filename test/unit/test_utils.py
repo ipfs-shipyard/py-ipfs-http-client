@@ -126,7 +126,14 @@ class TestUtils(unittest.TestCase):
         dirs = ['test2', 'test3']
         files = ['fsdfgh', 'popoiopiu']
         contents = (files, dirs)
-        self.assertEqual(utils.ls_dir(path), contents)
+        
+        # Sort items before comparing as the ordering of files returned by
+        # the file system is not stable
+        result = utils.ls_dir(path)
+        result[0].sort()
+        result[1].sort()
+        
+        self.assertEqual(result, contents)
 
     def test_clean_file_opened(self):
         """Tests utils.clean_file() with a stringIO object."""
