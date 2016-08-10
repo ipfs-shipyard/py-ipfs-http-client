@@ -11,6 +11,10 @@
 
 Check out [ipfs](http://ipfs.io/) and [the API command reference](http://ipfs.io/docs/commands/) for more information about the IPFS API.
 
+*Note:* This library constantly has to change to stay compatible with the IPFS HTTP API.
+Currently, this library is tested against [go-ipfs v0.4.3rc2](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3-rc2).
+You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
+
 ## Table of Contents
 
 - [Install](#install)
