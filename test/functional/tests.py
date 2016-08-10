@@ -36,33 +36,27 @@ class IpfsApiTest(unittest.TestCase):
 
     ## test_add_multiple_from_list
     fake_file  = 'fake_dir/fsdfgh'
-    fake_file_only_res = [{'Name': 'fsdfgh', 'Bytes': 8},
-            {'Name': 'fsdfgh', 'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'}]
+    fake_file_only_res = {'Name': 'fsdfgh',
+                          'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'}
     fake_file2 = 'fake_dir/popoiopiu'
-    fake_files_res = [{'Name': 'fsdfgh', 'Bytes': 8},
+    fake_files_res = [
             {'Name': 'fsdfgh', 'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
-            {'Name': 'popoiopiu', 'Bytes': 15},
             {'Name': 'popoiopiu', 'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv'}]
 
     ## test_add_multiple_from_dirname
     fake_dir_test2 = 'fake_dir/test2'
-    fake_dir_res = [{'Name': 'test2/fssdf', 'Bytes': 14},
+    fake_dir_res = [
             {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
-            {'Name': 'test2/llllg', 'Bytes': 9},
             {'Name': 'test2/llllg', 'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ'},
             {'Name': 'test2', 'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ'}]
 
     ## test_add_recursive
     fake_dir = 'fake_dir'
-    fake_dir_recursive_res = [{'Bytes': 8, 'Name': 'fake_dir/fsdfgh'},
+    fake_dir_recursive_res = [
             {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX', 'Name': 'fake_dir/fsdfgh'},
-            {'Bytes': 15, 'Name': 'fake_dir/popoiopiu'},
             {'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv', 'Name': 'fake_dir/popoiopiu'},
-            {'Bytes': 14, 'Name': 'fake_dir/test2/fssdf'},
             {'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD', 'Name': 'fake_dir/test2/fssdf'},
-            {'Bytes': 9, 'Name': 'fake_dir/test2/llllg'},
             {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ', 'Name': 'fake_dir/test2/llllg'},
-            {'Bytes': 8, 'Name': 'fake_dir/test3/ppppoooooooooo'},
             {'Hash': 'QmeMbJSHNCesAh7EeopackUdjutTJznum1Fn7knPm873Fe', 'Name': 'fake_dir/test3/ppppoooooooooo'},
             {'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ', 'Name': 'fake_dir/test2'},
             {'Hash': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q', 'Name': 'fake_dir/test3'},

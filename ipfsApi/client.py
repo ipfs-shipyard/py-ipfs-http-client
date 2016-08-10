@@ -986,7 +986,7 @@ class Client(object):
         body, headers = multipart.stream_text(string,
                                               chunk_size=chunk_size)
         return self._client.request('/add', data=body,
-                                    headers=headers, **kwargs)[1]
+                                    headers=headers, **kwargs)
 
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS.
