@@ -19,6 +19,7 @@ You may experience compatibility issues when attempting to use it with other ver
 
 - [Install](#install)
 - [Usage](#usage)
+- [Featured Projects](#featured-projects)
 - [Contribute](#contribute)
   - [IRC](#irc)
   - [Bug reports](#bug-reports)
@@ -105,6 +106,12 @@ This module also contains some helper functions for adding strings, json, and ev
 >>> api.get_pyobj(_)
 [1, 77, 'lol']
 ```
+
+## Featured Projects
+
+Projects that currently use py-ipfs-api. If your project isn't here, feel free to submit a PR to add it!
+
+- [git-remote-ipfs](https://github.com/larsks/git-remote-ipfs) allows users to push and pull git repositories from the IPFS network.
 
 ## Contribute
 
