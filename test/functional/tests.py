@@ -1,14 +1,52 @@
 # _*_ coding: utf-8 -*-
 import os
-import shutil
 import json
+import shutil
+import socket
+import sys
 import unittest
+import logging
 
 import ipfsApi
 
 
+__is_available = NotImplemented
+def is_available():
+    """
+    Return whether the IPFS daemon is reachable or not
+    """
+    global __is_available
+    
+    if not isinstance(__is_available, bool):
+        s = socket.socket()
+        try:
+            s.connect((ipfsApi.default_host, ipfsApi.default_port))
+        except IOError:
+            __is_available = False
+        else:
+            __is_available = True
+        finally:
+            s.close()
+    
+    return __is_available
+
+
+def skipIfOffline():
+    if is_available():
+        return lambda func: func
+    else:
+        return unittest.skip("IPFS node is not available")
+
+
+def test_ipfs_node_available():
+    addr = "[{0}]:{1}".format(ipfsApi.default_host, ipfsApi.default_port)
+    assert is_available(), "Functional tests require an IPFS node to be available at: " + addr
+
+
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+@skipIfOffline()
 class IpfsApiTest(unittest.TestCase):
 
     api = ipfsApi.Client()
@@ -177,6 +215,7 @@ class IpfsApiTest(unittest.TestCase):
         self.assertEqual("dsadsad\n", res)
 
 
+@skipIfOffline()
 class IpfsApiLogTest(unittest.TestCase):
 
     def setUp(self):
@@ -215,6 +254,7 @@ class IpfsApiLogTest(unittest.TestCase):
         self.assertTrue(type(log) is dict)
 
 
+@skipIfOffline()
 class IpfsApiPinTest(unittest.TestCase):
 
     fake_dir_hash = 'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY'
@@ -288,6 +328,7 @@ class IpfsApiPinTest(unittest.TestCase):
                         pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
 
 
+@skipIfOffline()
 class IpfsApiMFSTest(unittest.TestCase):
 
     test_files = {
@@ -328,6 +369,7 @@ class IpfsApiMFSTest(unittest.TestCase):
             self.api.files_rm(target)
 
 
+@skipIfOffline()
 class TestBlockFunctions(unittest.TestCase):
     def setUp(self):
         self.api = ipfsApi.Client()
@@ -354,6 +396,7 @@ class TestBlockFunctions(unittest.TestCase):
         self.assertEqual(res['Key'], expected_block_multihash)
 
 
+@skipIfOffline()
 class IpfsApiRepoTest(unittest.TestCase):
 
     def setUp(self):
@@ -381,6 +424,7 @@ class IpfsApiRepoTest(unittest.TestCase):
         self.assertTrue(garbage in keys)
 
 
+@skipIfOffline()
 class IpfsApiObjectTest(unittest.TestCase):
 
     def setUp(self):
