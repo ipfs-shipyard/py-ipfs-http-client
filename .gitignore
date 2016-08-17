@@ -11,3 +11,4 @@ htmlcov*
 .cache
 docs/build/
 .python-version
+.idea/
