@@ -8,6 +8,7 @@ from __future__ import absolute_import
 from . import http, multipart, utils
 from .commands import ArgCommand, Command, DownloadCommand, FileCommand
 from .exceptions import ipfsApiError
+import shutil
 
 default_host = 'localhost'
 default_port = 5001
@@ -201,16 +202,21 @@ class Client(object):
         return self._add.request(self._client, (), files,
                                  recursive=recursive, **kwargs)
 
-    def get(self, multihash, **kwargs):
+    def get(self, multihash, output_path='.', **kwargs):
         """Downloads a file, or directory of files from IPFS.
 
-        Files are placed in the current working directory.
+        Files are placed in the current working directory if
+        output_path is not specified. Otherwise, they are
+        moved to output_path.
 
         Keyword arguments:
         multihash -- unique checksum used to identify IPFS resources
+        output_path -- where to put the downloaded file
         kwargs -- additional named arguments
         """
-        return self._get.request(self._client, multihash, **kwargs)
+        self._get.request(self._client, multihash, **kwargs)
+        if output_path is not '.':
+            shutil.move(multihash, output_path)
 
     def cat(self, multihash, **kwargs):
         r"""Returns the contents of a file identified by hash, as a string.
