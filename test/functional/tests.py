@@ -174,6 +174,21 @@ class IpfsApiTest(unittest.TestCase):
         os.remove(test_hash)
         self.assertNotIn(test_hash, os.listdir(os.getcwd()))
 
+    def test_get_file_with_rename(self):
+        self.api.add(self.fake_file)
+
+        test_hash = self.fake[0]['Hash']
+        local_file_name = "test_file.txt"
+
+        # Download the file and save it to the current working
+        # directory with the given name
+        self.api.get(test_hash, output_path=local_file_name)
+        self.assertIn(local_file_name, os.listdir(os.getcwd()))
+
+        self.assertTrue(local_file_name in os.listdir(os.getcwd()))
+        os.remove(local_file_name)
+        self.assertNotIn(local_file_name, os.listdir(os.getcwd()))
+
     def test_get_dir(self):
         self.api.add(self.fake_dir, recursive=True)
 
@@ -184,6 +199,17 @@ class IpfsApiTest(unittest.TestCase):
 
         shutil.rmtree(test_hash)
         self.assertNotIn(test_hash, os.listdir(os.getcwd()))
+
+    def test_get_dir_with_rename(self):
+        self.api.add(self.fake_dir, recursive=True)
+
+        test_hash = self.fake[8]['Hash']
+        local_dir_name = "test_dir"
+        self.api.get(test_hash, output_path=local_dir_name)
+        self.assertIn(local_dir_name, os.listdir(os.getcwd()))
+
+        shutil.rmtree(local_dir_name)
+        self.assertNotIn(local_dir_name, os.listdir(os.getcwd()))
 
     def test_get_path(self):
         self.api.add(self.fake_file)
