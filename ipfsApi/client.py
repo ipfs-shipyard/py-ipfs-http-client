@@ -28,6 +28,9 @@ class Client(object):
     block_stat -- returns a dict with the size of the block with the given hash
     block_get -- returns the raw contents of a block
     block_put -- stores input as an IPFS block
+    bitswap_wantlist -- show blocks currently on the wantlist
+    bitswap_stat -- show some diagnostic information on the bitswap agent
+    bitswap_unwant -- remove a given block from wantlist
     object_data -- returns the raw bytes in an IPFS object
     object_new -- creates a new object from an ipfs template
     object_links -- returns the links pointed to by the specified object
@@ -121,6 +124,10 @@ class Client(object):
         self._block_get          = ArgCommand('/block/get')
         self._block_put          = FileCommand('/block/put')
         self._object_new         = ArgCommand('/object/new')
+        self._bitswap_wantlist   = ArgCommand('/bitswap/wantlist')
+        self._bitswap_stat       = Command('/bitswap/stat')
+        self._bitswap_unwant     = ArgCommand('/bitswap/unwant')
+
         self._object_data        = ArgCommand('/object/data')
         self._object_links       = ArgCommand('/object/links')
         self._object_get         = ArgCommand('/object/get')
@@ -317,6 +324,30 @@ class Client(object):
         kwargs -- additional named arguments
         """
         return self._block_put.request(self._client, (), file, **kwargs)
+
+    def bitswap_wantlist(self, peer=None, **kwargs):
+        """
+        Show blocks currently on the wantlist.
+
+        :param peer: Peer to show wantlist for.
+        """
+        return self._bitswap_wantlist.request(self._client, peer, **kwargs)
+
+    def bitswap_stat(self, **kwargs):
+        """
+        Show some diagnostic information on the bitswap agent.
+        """
+
+        return self._bitswap_stat.request(self._client, **kwargs)
+
+    def bitswap_unwant(self, key, **kwargs):
+        """
+        Remove a given block from wantlist.
+
+        :param key: Key to remove from wantlist.
+        """
+
+        return self._bitswap_unwant.request(self._client, key, **kwargs)
 
     def object_data(self, multihash, **kwargs):
         r"""Returns the raw bytes in an IPFS object.

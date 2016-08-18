@@ -536,5 +536,28 @@ class IpfsApiObjectTest(unittest.TestCase):
         self.assertEqual(result,
                 {'Hash': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'})
 
+@skipIfOffline()
+class IpfsApiBitswapTest(unittest.TestCase):
+
+    def setUp(self):
+        self.api = ipfsApi.Client()
+
+    def test_bitswap_wantlist(self):
+        result = self.api.bitswap_wantlist(peer='QmdkJZUWnVkEc6yfptVu4LWY8nHkEnGwsxqQ233QSGj8UP')
+        self.assertTrue(result and type(result) is dict and 'Keys' in result)
+
+    def test_bitswap_stat(self):
+        result = self.api.bitswap_stat()
+        self.assertTrue(result and type(result) is dict and 'Wantlist' in result)
+
+    def test_bitswap_unwant(self):
+        """
+        Cannot ensure what is present in the wantlist prior to execution, so just ensure
+        something comes back.
+        """
+
+        result = self.api.bitswap_unwant(key='QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V')
+        self.assertTrue(result is not None)
+
 if __name__ == "__main__":
     unittest.main()
