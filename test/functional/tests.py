@@ -492,7 +492,7 @@ class IpfsApiObjectTest(unittest.TestCase):
         self.assertEqual(result,
                 {'Hash': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'})
 
-
+@skipIfOffline()
 class IpfsApiBitswapTest(unittest.TestCase):
 
     def setUp(self):
