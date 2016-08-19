@@ -1,12 +1,4 @@
 """Defines the skeleton for exceptions.
-
-Classes:
-ipfsApiError - A base class for generic exceptions.
-InvalidCommand - An ipfsApiError subclass for invalid commands.
-InvalidArguments - An ipfsApiError subclass for invalid arguments.
-InvalidPath - An ipfsApiError subclass for invalid path.
-FileCommandException - An ipfsApiError subclass for file command exceptions.
-EncodingException - An ipfsApiError subclass for encoding exceptions.
 """
 
 

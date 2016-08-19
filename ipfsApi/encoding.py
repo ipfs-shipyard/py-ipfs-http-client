@@ -1,13 +1,8 @@
 """Defines encoding related classes.
 
-Classes:
-Encoding - An abstract based for a data parser/encoder interface.
-Json - A subclass of Encoding that handles JSON parsing and encoding.
-Protobuf - A subclass of Encoding to handle Protobuf parsing/encoding. TO DO
-Xml - A subclass of Encoding to handle Xml parsing and encoding. TO DO
+.. note::
 
-Functions:
-get_encoding(name) - Retrieves the Encoder object for the named encoding.
+    The XML and ProtoBuf encoders are currently not functional.
 """
 
 from __future__ import absolute_import
@@ -19,53 +14,49 @@ from .exceptions import EncodingException
 
 class Encoding(object):
     """Abstract base for a data parser/encoder interface.
-
-    Public methods:
-    parse -- parses string into corresponding encoding
-    encode - serialize a raw object into corresponding encoding
     """
 
     def parse(self, string):
         """Parses string into corresponding encoding.
 
-        Keyword arguments:
-            string - string to be parsed
+        Parameters
+        ----------
+        string : str
+            String to be parsed
         """
         raise NotImplemented
 
     def encode(self, obj):
         """Serialize a raw object into corresponding encoding.
 
-        Keyword arguments:
-            obj - object to be encoded.
+        Parameters
+        ----------
+        obj : object
+            Object to be encoded
         """
         raise NotImplemented
 
 
 class Json(Encoding):
     """JSON parser/encoder that handles concatenated JSON.
-
-    Public methods:
-    __init__ -- creates a Json encoder/decoder
-    parse --  returns a Python object decoded from JSON object(s) in raw
-    encode -- returns obj serialized as JSON formatted string
     """
     name = 'json'
 
     def __init__(self):
-        """Creates a JSON encoder/decoder"""
         self.encoder = json.JSONEncoder()
         self.decoder = json.JSONDecoder()
 
     def parse(self, raw):
-        """Returns a Python object decoded from JSON object(s) in raw
+        """Returns a Python object decoded from JSON object(s) in raw.
 
         Some responses from the IPFS api are a concatenated string of JSON
         objects, which crashes json.loads(), so we need to use this instead as
         a general approach.
 
-        Keyword arguments:
-        raw -- raw JSON object
+        Parameters
+        ----------
+        raw : str
+            Stringified JSON object
         """
         json_string = raw.strip()
         results = []
@@ -85,11 +76,12 @@ class Json(Encoding):
         return results
 
     def encode(self, obj):
-        """
-        Returns obj serialized as JSON formatted string
+        """Returns obj serialized as JSON formatted string.
 
-        Keyword arguments:
-        obj -- generic Python object
+        Parameters
+        ----------
+        obj : str | list | dict | int | None
+            JSON serializable Python object
         """
         return json.dumps(obj)
 
@@ -103,7 +95,7 @@ class Xml(Encoding):
     """XML parser/encoder that handles XML."""
     name = 'xml'
 
-# encodings supported by the IPFS api (default is json)
+# encodings supported by the IPFS api (default is JSON)
 __encodings = {
     Json.name: Json,
     Protobuf.name: Protobuf,
@@ -115,8 +107,14 @@ def get_encoding(name):
     """
     Returns an Encoder object for the named encoding
 
-    Keyword arguments:
-    name - named encoding. Supported options: Json, Protobuf, Xml
+    Parameters
+    ----------
+    name : str
+        Encoding name. Supported options:
+
+         * ``"json"``
+         * ``"protobuf"``
+         * ``"xml"``
     """
     try:
         return __encodings[name.lower()]()

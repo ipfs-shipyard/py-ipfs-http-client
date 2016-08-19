@@ -1,10 +1,7 @@
 """HTTP client for api requests.
 
-This is pluggable into the IPFS Api client and
-can/will eventually be supplemented with an asynchronous version.
-
-Classes:
-Client -- A TCP client for interacting with an IPFS daemon
+This is pluggable into the IPFS Api client and will hopefully be supplemented
+by an asynchronous version.
 """
 from __future__ import absolute_import
 
@@ -23,44 +20,41 @@ def pass_defaults(func):
 
     When invoked, wrapper invokes func with default kwargs appended.
 
-    Keyword arguments:
-    func -- the function to append the default kwargs to
+    Parameters
+    ----------
+    func : callable
+        The function to append the default kwargs to
     """
     def wrapper(self, *args, **kwargs):
         merged = {}
         merged.update(self.defaults)
         merged.update(kwargs)
         return func(self, *args, **merged)
+    wrapper.__doc__ = func.__doc__
     return wrapper
 
 
 class HTTPClient(object):
     """An HTTP client for interacting with the IPFS daemon.
 
-    Public methods:
-    __init__ -- initializes an instance of HTTPClient
-    request -- makes an HTTP request to the IPFS daemon
-    download -- makes a request to the IPFS daemon to download a file
-    session -- a context manager for this client's session
+    Parameters
+    ----------
+    host : str
+        The host the IPFS daemon is running on
+    port : int
+        The port the IPFS daemon is running at
+    base : str
+        The path prefix for API calls
+    default_enc : str
+        The default encoding of the HTTP client's response
 
-    Instance variables:
-    host -- the host the IPFS daemon is running on
-    port -- the port the IPFS daemon is running on
-    base -- the path at which the api calls are to be sent
-    default_enc -- the default encoding of the HTTP client's response
-    defaults -- the default options to be handled by pass_defaults
+        See :func:`ipfsApi.encoding.get_encoding` for possible values.
+    defaults : dict
+        The default parameters to be passed to
+        :meth:`~ipfsApi.http.HTTPClient.request`
     """
 
     def __init__(self, host, port, base, default_enc, **defaults):
-        """Initializes an instance of HTTPClient.
-
-        Keyword arguments:
-        host -- the host the IPFS daemon is running on
-        port -- the port the IPFS daemon is running on
-        base -- the path at which the api calls are to be sent
-        default_enc -- the default encoding of the HTTP client's response
-        defaults -- the default options to be handled by pass_defaults
-        """
         self.host = host
         self.port = port
         if not re.match('^https?://', host.lower()):
@@ -87,15 +81,20 @@ class HTTPClient(object):
         This function returns the contents of the HTTP response from the IPFS
         daemon.
 
-        Keyword Arguments:
-        path -- the url path of this request
-        args -- a list of parameters to be sent with the HTTP request
-        files -- a file object, a filename, an iterable of filenames, an
-                    iterable of file objects, or a heterogeneous iterable of
-                    file objects and filenames
-        opts -- a dictonary of parameters to be sent with the HTTP request
-        decoder -- the encoding of the HTTP response, defaults to None
-        kwargs -- additional arguments, used to determine HTTP request method
+        Parameters
+        ----------
+        path : str
+            The REST command path to send
+        args : list
+            Positional parameters to be sent along with the HTTP request
+        files : :class:`io.RawIOBase` | :obj:`str` | :obj:`list`
+            The file object(s) or path(s) to stream to the daemon
+        opts : dict
+            Query string paramters to be sent along with the HTTP request
+        decoder : str
+            The encoder to use to parse the HTTP response
+        kwargs : dict
+            Additional arguments to pass to :mod:`requests`
         """
         url = self.base + path
 
@@ -156,17 +155,25 @@ class HTTPClient(object):
         """Makes a request to the IPFS daemon to download a file.
 
         Downloads a file or files from IPFS into the current working
-        directory, or the directory given by :filepath:.
+        directory, or the directory given by ``filepath``.
 
-        Keyword Arguments:
-        path -- the url path of this request
-        filepath -- the local path to where IPFS will download the files,
-                    current working directory if None, defaults to None
-        args -- a list of parameters to be sent with the HTTP request
-        opts -- a dictonary of parameters to be sent with the HTTP request
-        compress -- a flag that when true indicates that the response file
-                    should be downloaded as a tar, defaults to True
-        kwargs -- additional arguments
+        Parameters
+        ----------
+        path : str
+            The REST command path to send
+        filepath : str
+            The local path where IPFS will store downloaded files
+
+            Defaults to the current working directory.
+        args : list
+            Positional parameters to be sent along with the HTTP request
+        opts : dict
+            Query string paramters to be sent along with the HTTP request
+        compress : bool
+            Whether the downloaded file should be GZip compressed by the
+            daemon before being sent to the client
+        kwargs : dict
+            Additional arguments to pass to :mod:`requests`
         """
         url = self.base + path
         wd = filepath or '.'
