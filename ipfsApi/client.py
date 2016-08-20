@@ -742,7 +742,7 @@ class Client(object):
         args -- additional unnamed arguments
         kwargs -- additional named arguments
         """
-        return self._swarm_connecti.request(self._client, *args, **kwargs)
+        return self._swarm_connect.request(self._client, *args, **kwargs)
 
     def swarm_disconnect(self, *args, **kwargs):
         """Closes the connection to a given address.
