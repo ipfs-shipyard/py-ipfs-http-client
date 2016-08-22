@@ -279,8 +279,7 @@ class IpfsApiPinTest(unittest.TestCase):
 
         for option in [True, False]:
             # Pin the resource.
-            resp_add = self.api.pin_add(self.resource,
-                                        opts={"recursive":str(option)})
+            resp_add = self.api.pin_add(self.resource, recursive=option)
             pins_afer_add = self.api.pin_ls()['Keys']
             self.assertEqual(resp_add['Pins'], [self.resource])
             self.assertTrue(self.resource in pins_afer_add)
@@ -332,7 +331,7 @@ class IpfsApiPinTest(unittest.TestCase):
 class IpfsApiMFSTest(unittest.TestCase):
 
     test_files = {
-        '/test_file1': {
+        'test_file1': {
             u'Name': u'fake_dir/popoiopiu',
             u'Stat': {u'Type': 'file',
                       u'Hash': 'QmUvobKqcCE56brA8pGTRRRsGy2SsDEKSxFLZkBQFv7Vvv',
@@ -342,6 +341,8 @@ class IpfsApiMFSTest(unittest.TestCase):
         }
     }
 
+    test_directory_path = '/test_dir'
+
     def setUp(self):
         self.api = ipfsApi.Client()
         self._olddir = os.getcwd()
@@ -350,23 +351,46 @@ class IpfsApiMFSTest(unittest.TestCase):
     def tearDown(self):
         os.chdir(self._olddir)
 
-    def test_write_stat_read_delete(self):
-        for target, desc in self.test_files.items():
+    def test_file_write_stat_read_delete(self):
+        for filename, desc in self.test_files.items():
+            filepath = "/" + filename
+
             # Create target file
-            self.api.files_write(target, desc[u'Name'], opts={'create':True})
+            self.api.files_write(filepath, desc[u'Name'], create=True)
 
             # Verify stat information of file
-            stat = self.api.files_stat(target)
+            stat = self.api.files_stat(filepath)
             self.assertEqual(sorted(desc[u'Stat'].items()),
                              sorted(stat.items()))
 
             # Read back (and compare file contents)
             with open(desc[u'Name'], 'r') as file:
-                content = self.api.files_read(target)
+                content = self.api.files_read(filepath)
                 self.assertEqual(content, file.read())
 
-            # Delete file
-            self.api.files_rm(target)
+            # Remove file
+            self.api.files_rm(filepath)
+
+    def test_dir_make_fill_list_delete(self):
+        self.api.files_mkdir(self.test_directory_path)
+        for filename, desc in self.test_files.items():
+            # Create target file in directory
+            self.api.files_write(
+                self.test_directory_path + "/" + filename,
+                desc[u'Name'], create=True
+            )
+
+        # Verify directory contents
+        contents = self.api.files_ls(self.test_directory_path)[u'Entries']
+        filenames1 = list(map(lambda d: d[u'Name'], contents))
+        filenames2 = list(self.test_files.keys())
+        self.assertEqual(filenames1, filenames2)
+
+        # Remove directory
+        self.api.files_rm(self.test_directory_path, recursive=True)
+
+        with self.assertRaises(ipfsApi.exceptions.ipfsApiError):
+            self.api.files_stat(self.test_directory_path)
 
 
 @skipIfOffline()

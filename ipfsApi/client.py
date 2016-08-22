@@ -558,7 +558,7 @@ class Client(object):
                                                       new_data,
                                                       **kwargs)
 
-    def object_patch_add_link(self, root, name, ref, **kwargs):
+    def object_patch_add_link(self, root, name, ref, create=False, **kwargs):
         """Creates a new merkledag object based on an existing one.
 
         The new object will have a link to the provided object.
@@ -587,6 +587,7 @@ class Client(object):
         -------
             dict : Hash of new object
         """
+        kwargs.setdefault("opts", {"create": create})
         return self._object_patch_add_link.request(self._client,
                                                    (root, name, ref),
                                                    **kwargs)
@@ -695,7 +696,7 @@ class Client(object):
         """
         return self._file_ls.request(self._client, multihash, **kwargs)
 
-    def resolve(self, name, **kwargs):
+    def resolve(self, name, recursive=False, **kwargs):
         """Accepts an identifier and resolves it to the referenced item.
 
         There are a number of mutable name protocols that can link among
@@ -722,9 +723,11 @@ class Client(object):
         -------
             dict : IPFS path of resource
         """
+        kwargs.setdefault("opts", {"recursive": recursive})
         return self._resolve.request(self._client, name, **kwargs)
 
-    def name_publish(self, ipfs_path, **kwargs):
+    def name_publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None,
+                     **kwargs):
         """Publishes an object to IPNS.
 
         IPNS is a PKI namespace, where names are the hashes of public keys, and
@@ -741,10 +744,20 @@ class Client(object):
         ----------
         ipfs_path : str
             IPFS path of the object to be published
-        lifetime : int
-            Time duration that the record will be valid for
         resolve : bool
             Resolve given path before publishing
+        lifetime : str
+            Time duration that the record will be valid for
+
+            Accepts durations such as ``"300s"``, ``"1.5h"`` or ``"2h45m"``.
+            Valid units are:
+
+             * ``"ns"``
+             * ``"us"`` (or ``"µs"``)
+             * ``"ms"``
+             * ``"s"``
+             * ``"m"``
+             * ``"h"``
         ttl : int
             Time duration this record should be cached for
 
@@ -752,6 +765,11 @@ class Client(object):
         -------
             dict : IPNS hash and the IPFS path it points at
         """
+        opts = {"lifetime": lifetime, "resolve": resolve}
+        if ttl:
+            opts["ttl"] = ttl
+
+        kwargs.setdefault("opts", opts)
         return self._name_publish.request(self._client, ipfs_path, **kwargs)
 
     def name_resolve(self, name=None, **kwargs):
@@ -778,7 +796,7 @@ class Client(object):
         args = [name] if name is not None else []
         return self._name_resolve.request(self._client, *args, **kwargs)
 
-    def dns(self, domain_name, **kwargs):
+    def dns(self, domain_name, recursive=False, **kwargs):
         """Resolves DNS links to the referenced object.
 
         Multihashes are hard to remember, but domain names are usually easy to
@@ -809,6 +827,7 @@ class Client(object):
         -------
             dict : Resource were a DNS entry points to
         """
+        kwargs.setdefault("opts", {"recursive": recursive})
         return self._dns.request(self._client, domain_name, **kwargs)
 
     def pin_add(self, path, *paths, **kwargs):
@@ -832,9 +851,14 @@ class Client(object):
         -------
             dict : List of IPFS objects that have been pinned
         """
+        # Python 2 does not support kw-only parameters after glob parameters
+        if "recursive" in kwargs:
+            kwargs.setdefault("opts", {"recursive": kwargs["recursive"]})
+            del kwargs["recursive"]
+
         return self._pin_add.request(self._client, path, *paths, **kwargs)
 
-    def pin_rm(self, path, *args, **kwargs):
+    def pin_rm(self, path, *paths, **kwargs):
         """Removes a pinned object from local storage.
 
         Removes the pin from the given object allowing it to be garbage
@@ -856,9 +880,14 @@ class Client(object):
         -------
             dict : List of IPFS objects that have been unpinned
         """
-        return self._pin_rm.request(self._client, path, *args, **kwargs)
+        # Python 2 does not support kw-only parameters after glob parameters
+        if "recursive" in kwargs:
+            kwargs.setdefault("opts", {"recursive": kwargs["recursive"]})
+            del kwargs["recursive"]
 
-    def pin_ls(self, **kwargs):
+        return self._pin_rm.request(self._client, path, *paths, **kwargs)
+
+    def pin_ls(self, type="all", **kwargs):
         """Lists objects pinned to local storage.
 
         By default, all pinned objects are returned, but the ``type`` flag or
@@ -883,12 +912,13 @@ class Client(object):
              * ``"direct"``
              * ``"indirect"``
              * ``"recursive"``
-             * ``"all"`` (default)
+             * ``"all"``
 
         Returns
         -------
             dict : Hashes of pinned IPFS objects and why they are pinned
         """
+        kwargs.setdefault("opts", {"type": type})
         return self._pin_ls.request(self._client, **kwargs)
 
     def repo_gc(self, **kwargs):
@@ -1397,6 +1427,11 @@ class Client(object):
         -------
             list : Progress reports from the ping
         """
+        # Python 2 does not support kw-only parameters after glob parameters
+        if "count" in kwargs:
+            kwargs.setdefault("opts", {"count": kwargs["count"]})
+            del kwargs["count"]
+
         return self._ping.request(self._client, peer, *peers, **kwargs)
 
     def config(self, key, value=None, *args, **kwargs):
@@ -1619,7 +1654,7 @@ class Client(object):
         """
         return self._files_ls.request(self._client, path, **kwargs)
 
-    def files_mkdir(self, path, **kwargs):
+    def files_mkdir(self, path, parents=False, **kwargs):
         """Creates a directory within the MFS.
 
         .. code-block:: python
@@ -1635,6 +1670,7 @@ class Client(object):
             Create parent directories as needed and do not raise an exception
             if the requested directory already exists
         """
+        kwargs.setdefault("opts", {"parents": parents})
         return self._files_mkdir.request(self._client, path, **kwargs)
 
     def files_stat(self, path, **kwargs):
@@ -1658,7 +1694,7 @@ class Client(object):
         """
         return self._files_stat.request(self._client, path, **kwargs)
 
-    def files_rm(self, path, **kwargs):
+    def files_rm(self, path, recursive=False, **kwargs):
         """Removes a file from the MFS.
 
         .. code-block:: python
@@ -1671,11 +1707,12 @@ class Client(object):
         path : str
             Filepath within the MFS
         recursive : bool
-            Recursively remove directories
+            Recursively remove directories?
         """
+        kwargs.setdefault("opts", {"recursive": recursive})
         return self._files_rm.request(self._client, path, **kwargs)
 
-    def files_read(self, path, **kwargs):
+    def files_read(self, path, offset=0, count=None, **kwargs):
         """Reads a file stored in the MFS.
 
         .. code-block:: python
@@ -1687,18 +1724,24 @@ class Client(object):
         ----------
         path : str
             Filepath within the MFS
-        count : int
-            Maximum number of bytes to read
         offset : int
             Byte offset at which to begin reading at
+        count : int
+            Maximum number of bytes to read
 
         Returns
         -------
             str : MFS file contents
         """
+        opts = {"offset": offset}
+        if count is not None:
+            opts["count"] = count
+
+        kwargs.setdefault("opts", opts)
         return self._files_read.request(self._client, path, **kwargs)
 
-    def files_write(self, path, file, **kwargs):
+    def files_write(self, path, file, offset=0, create=False, truncate=False,
+                    count=None, **kwargs):
         """Writes to a mutable file in the MFS.
 
         .. code-block:: python
@@ -1712,15 +1755,20 @@ class Client(object):
             Filepath within the MFS
         file : io.RawIOBase
             IO stream object with data that should be written
-        count : int
-            Maximum number of bytes to read from the source ``file``
-        create : bool
-            Create the file if it does not exist
         offset : int
             Byte offset at which to begin writing at
+        create : bool
+            Create the file if it does not exist
         truncate : bool
             Truncate the file to size zero before writing
+        count : int
+            Maximum number of bytes to read from the source ``file``
         """
+        opts = {"offset": offset, "create": create, truncate: truncate}
+        if count is not None:
+            opts["count"] = count
+
+        kwargs.setdefault("opts", opts)
         return self._files_write.request(self._client, (path,), file, **kwargs)
 
     def files_mv(self, source, dest, **kwargs):
