@@ -2,31 +2,31 @@
 """
 
 
-class ipfsApiError(Exception):
+class Error(Exception):
     """Base class for exceptions in this module."""
     pass
 
 
-class InvalidCommand(ipfsApiError):
+class InvalidCommand(Error):
     """Exception raised for an invalid command."""
     pass
 
 
-class InvalidArguments(ipfsApiError):
+class InvalidArguments(Error):
     """Exception raised for invalid arguments."""
     pass
 
 
-class InvalidPath(ipfsApiError):
+class InvalidPath(Error):
     """Exception raised for an invalid path."""
     pass
 
 
-class FileCommandException(ipfsApiError):
+class FileCommandException(Error):
     """Exception raised for file command exception."""
     pass
 
 
-class EncodingException(ipfsApiError):
+class EncodingException(Error):
     """Exception raised for invalid encoding."""
     pass

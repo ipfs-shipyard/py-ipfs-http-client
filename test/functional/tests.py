@@ -389,7 +389,7 @@ class IpfsApiMFSTest(unittest.TestCase):
         # Remove directory
         self.api.files_rm(self.test_directory_path, recursive=True)
 
-        with self.assertRaises(ipfsApi.exceptions.ipfsApiError):
+        with self.assertRaises(ipfsApi.exceptions.Error):
             self.api.files_stat(self.test_directory_path)
 
 

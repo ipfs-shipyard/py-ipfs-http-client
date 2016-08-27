@@ -7,9 +7,8 @@ Classes:
 """
 from __future__ import absolute_import
 
-from . import http, multipart, utils
+from . import http, multipart, utils, exceptions
 from .commands import ArgCommand, Command, DownloadCommand, FileCommand
-from .exceptions import ipfsApiError
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 5001
@@ -165,7 +164,7 @@ class Client(object):
             >>> c.cat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
             Traceback (most recent call last):
               ...
-            ipfsApiError: this dag node is a directory
+            ipfsApi.exceptions.Error: this dag node is a directory
             >>> c.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')
             '<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</ …'
 
@@ -1356,7 +1355,7 @@ class Client(object):
             for r in res:
                 if "Extra" in r and len(r["Extra"]) > 0:
                     return r["Extra"]
-        raise ipfsApiError("empty response from DHT")
+        raise exceptions.Error("empty response from DHT")
 
     def dht_put(self, key, value, **kwargs):
         """Writes a key/value pair to the DHT.

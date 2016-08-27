@@ -154,7 +154,7 @@ class TestHttp(unittest.TestCase):
     def test_api_failure(self):
         """Tests that an api failure raises an ispfApiError."""
         with HTTMock(api_fail):
-            self.assertRaises(ipfsApi.exceptions.ipfsApiError,
+            self.assertRaises(ipfsApi.exceptions.Error,
                               self.client.request, '/apifail')
 
     def test_stream(self):

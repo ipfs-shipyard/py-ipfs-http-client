@@ -12,7 +12,7 @@ import tarfile
 import requests
 
 from . import encoding
-from .exceptions import ipfsApiError
+from .exceptions import Error
 
 
 def pass_defaults(func):
@@ -143,7 +143,7 @@ class HTTPClient(object):
             # use that as the exception message; otherwise, just pass
             # the exception on to the caller.
             if 'Message' in ret:
-                raise ipfsApiError(ret['Message'])
+                raise Error(ret['Message'])
             else:
                 raise
         return ret

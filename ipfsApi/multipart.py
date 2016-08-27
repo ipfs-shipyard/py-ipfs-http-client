@@ -320,7 +320,7 @@ class FileStream(BufferedGenerator):
 
 
 class DirectoryStream(BufferedGenerator):
-    """Generator that encodes a director into HTTP multipart.
+    """Generator that encodes a directory into HTTP multipart.
 
     A buffered generator that encodes an array of files as
     :mimetype:`multipart/form-data`. This is a concrete implementation of
@@ -363,6 +363,8 @@ class DirectoryStream(BufferedGenerator):
         # identify the unecessary portion of the relative path
         truncate = os.path.dirname(self.directory)
         # traverse the filesystem downward from the target directory's uri
+        # Errors: `os.walk()` will simply return an empty generator if the
+        # target directory does not exist.
         for curr_dir, _, files in os.walk(self.directory):
             # find the path relative to the directory being added
             if len(truncate) > 0:
@@ -397,7 +399,8 @@ class DirectoryStream(BufferedGenerator):
 
 
 class TextStream(BufferedGenerator):
-    """A buffered generator that encodes a string as multipart/form-data.
+    """A buffered generator that encodes a string as
+    :mimetype:`multipart/form-data`.
 
     Parameters
     ----------
