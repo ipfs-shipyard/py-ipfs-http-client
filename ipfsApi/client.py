@@ -9,9 +9,9 @@ from . import http, multipart, utils
 from .commands import ArgCommand, Command, DownloadCommand, FileCommand
 from .exceptions import ipfsApiError
 
-default_host = 'localhost'
-default_port = 5001
-default_base = 'api/v0'
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 5001
+DEFAULT_BASE = 'api/v0'
 
 
 class Client(object):
@@ -98,15 +98,9 @@ class Client(object):
 
     _clientfactory = http.HTTPClient
 
-    def __init__(self, host=None, port=None,
-                 base=None, default_enc='json', **defaults):
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
+                 base=DEFAULT_BASE, default_enc='json', **defaults):
         """Connects to the API port of an IPFS node."""
-        if host is None:
-            host = default_host
-        if port is None:
-            port = default_port
-        if base is None:
-            base = default_base
 
         self._client = self._clientfactory(host, port, base,
                                            default_enc, **defaults)
