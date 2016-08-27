@@ -20,7 +20,7 @@ def is_available():
     if not isinstance(__is_available, bool):
         s = socket.socket()
         try:
-            s.connect((ipfsApi.default_host, ipfsApi.default_port))
+            s.connect((ipfsApi.DEFAULT_HOST, ipfsApi.DEFAULT_PORT))
         except IOError:
             __is_available = False
         else:
@@ -39,7 +39,7 @@ def skipIfOffline():
 
 
 def test_ipfs_node_available():
-    addr = "[{0}]:{1}".format(ipfsApi.default_host, ipfsApi.default_port)
+    addr = "[{0}]:{1}".format(ipfsApi.DEFAULT_HOST, ipfsApi.DEFAULT_PORT)
     assert is_available(), "Functional tests require an IPFS node to be available at: " + addr
 
 
