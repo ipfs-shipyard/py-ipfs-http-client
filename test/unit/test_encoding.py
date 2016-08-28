@@ -64,7 +64,7 @@ class TestEncoding(unittest.TestCase):
         data = {'key': 'value'}
         self.assertEqual(
             self.encoder_json.encode(data),
-            json.dumps(data))
+            b'{"key": "value"}')
 
     def test_encode_pickle(self):
         """Tests serilization of pickle formatted string into an object."""

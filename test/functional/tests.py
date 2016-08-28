@@ -212,7 +212,7 @@ class IpfsApiTest(unittest.TestCase):
     def test_cat_single_file_str(self):
         self.api.add(self.fake_file)
         res = self.api.cat('QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX')
-        self.assertEqual("dsadsad\n", res)
+        self.assertEqual(b"dsadsad\n", res)
 
 
 @skipIfOffline()
@@ -262,7 +262,7 @@ class IpfsApiPinTest(unittest.TestCase):
     def setUp(self):
         self.api = ipfsApi.Client()
         # Add resources to be pinned.
-        self.resource = self.api.add_str(u'Mary had a little lamb')
+        self.resource = self.api.add_str('Mary had a little lamb')
         resp_add = self.api.add('fake_dir', recursive=True)
         self.fake_dir_hashes = [el['Hash'] for el in resp_add if 'Hash' in el]
 
@@ -364,7 +364,7 @@ class IpfsApiMFSTest(unittest.TestCase):
                              sorted(stat.items()))
 
             # Read back (and compare file contents)
-            with open(desc[u'Name'], 'r') as file:
+            with open(desc[u'Name'], 'rb') as file:
                 content = self.api.files_read(filepath)
                 self.assertEqual(content, file.read())
 
@@ -456,7 +456,7 @@ class IpfsApiObjectTest(unittest.TestCase):
         self._olddir = os.getcwd()
         os.chdir(HERE)
         # Add a resource to get the stats for.
-        self.resource = self.api.add_str(u'Mary had a little lamb')
+        self.resource = self.api.add_str('Mary had a little lamb')
 
     def tearDown(self):
         os.chdir(self._olddir)
@@ -521,7 +521,7 @@ class IpfsApiObjectTest(unittest.TestCase):
         data = self.api.object_data('QmZZmY4KCu9r3e7M2Pcn46Fc5qbn6NpzaAGaYb22kbfTqm')
 
         # Verify the correct bytes have been gotten
-        self.assertEqual(data, 'another')
+        self.assertEqual(data, b'another')
 
     def test_object_patch_append_data(self):
         """Warning, this test depends on the contents of

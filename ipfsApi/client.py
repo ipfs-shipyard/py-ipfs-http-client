@@ -166,7 +166,7 @@ class Client(object):
               ...
             ipfsApi.exceptions.Error: this dag node is a directory
             >>> c.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')
-            '<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</ …'
+            b'<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</…'
 
         Parameters
         ----------
@@ -270,7 +270,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.block_get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
-            '\x121\n"\x12 ÚW>\x14åÁöä\x92ÑK\x1fR´\x85Fº\x93§!f\x7f»ü … ÀQÀ\x1'
+            b'\x121\n"\x12 \xdaW>\x14\xe5\xc1\xf6\xe4\x92\xd1 … \n\x02\x08\x01'
 
         Parameters
         ----------
@@ -288,7 +288,7 @@ class Client(object):
 
         .. code-block:: python
 
-            >>> c.block_put(io.BytesIO('Mary had a little lamb'))
+            >>> c.block_put(io.BytesIO(b'Mary had a little lamb'))
                 {'Key':  'QmeV6C6XVt1wf7V7as7Yak3mxPma8jzpqyhtRtCvpKcfBb',
                  'Size': 22}
 
@@ -374,7 +374,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.object_data('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
-            '\x08\x01'
+            b'\x08\x01'
 
         Parameters
         ----------
@@ -1659,7 +1659,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_mkdir("/test")
-            ''
+            b''
 
         Parameters
         ----------
@@ -1699,7 +1699,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_rm("/bla/file")
-            ''
+            b''
 
         Parameters
         ----------
@@ -1717,7 +1717,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_read("/bla/file")
-            'hi'
+            b'hi'
 
         Parameters
         ----------
@@ -1746,7 +1746,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_write("/test/file", io.BytesIO(b"hi"), create=True)
-            ''
+            b''
 
         Parameters
         ----------
@@ -1776,7 +1776,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_mv("/test/file", "/bla/file")
-            ''
+            b''
 
         Parameters
         ----------
@@ -1792,12 +1792,37 @@ class Client(object):
     ###########
 
     @utils.return_field('Hash')
+    def add_bytes(self, data, **kwargs):
+        """Adds a set of bytes as a file to IPFS.
+
+        .. code-block:: python
+
+            >>> c.add_bytes(b"Mary had a little lamb")
+            'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
+
+        Also accepts and will stream generator objects.
+
+        Parameters
+        ----------
+        data : bytes
+            Content to be added as a file
+
+        Returns
+        -------
+            str : Hash of the added IPFS object
+        """
+        chunk_size = kwargs.pop('chunk_size', multipart.default_chunk_size)
+        body, headers = multipart.stream_bytes(data, chunk_size=chunk_size)
+        return self._client.request('/add', data=body,
+                                    headers=headers, **kwargs)
+
+    @utils.return_field('Hash')
     def add_str(self, string, **kwargs):
         """Adds a Python string as a file to IPFS.
 
         .. code-block:: python
 
-            >>> c.add_str("Mary had a little lamb")
+            >>> c.add_str(u"Mary had a little lamb")
             'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
 
         Also accepts and will stream generator objects.
@@ -1811,10 +1836,8 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        chunk_size = kwargs.pop('chunk_size',
-                                multipart.default_chunk_size)
-        body, headers = multipart.stream_text(string,
-                                              chunk_size=chunk_size)
+        chunk_size = kwargs.pop('chunk_size', multipart.default_chunk_size)
+        body, headers = multipart.stream_text(string, chunk_size=chunk_size)
         return self._client.request('/add', data=body,
                                     headers=headers, **kwargs)
 
@@ -1835,7 +1858,7 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        return self.add_str(encoding.Json().encode(json_obj), **kwargs)
+        return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 
     def get_json(self, multihash, **kwargs):
         """Loads a json object from IPFS.
@@ -1873,7 +1896,7 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        return self.add_str(encoding.Pickle().encode(py_obj), **kwargs)
+        return self.add_bytes(encoding.Pickle().encode(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS.

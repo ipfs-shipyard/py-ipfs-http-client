@@ -156,18 +156,15 @@ class HTTPClient(object):
             if path == '/cat':
                 # since <api>/cat only returns the raw data and not an encoded
                 # object, dont't try to parse it automatically.
-                ret = res.text
+                ret = res.content
             else:
                 try:
-                    ret = self.default_enc.parse(res.text)
+                    ret = self.default_enc.parse(res.content)
                 except:
-                    ret = res.text
+                    ret = res.content
         else:
             enc = encoding.get_encoding(decoder)
-            try:
-                ret = enc.parse(res.text)
-            except:
-                ret = res.text
+            ret = enc.parse(res.content)
 
         self._do_raise_for_status(res, ret)
 

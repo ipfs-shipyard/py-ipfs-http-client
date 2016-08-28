@@ -28,8 +28,8 @@ class Encoding(object):
 
         Parameters
         ----------
-        string : str
-            String to be parsed
+        string : bytes
+            Data to be parsed
         """
         raise NotImplemented
 
@@ -111,10 +111,14 @@ class Json(Encoding):
 
         Returns
         -------
-            str
+            bytes
         """
         try:
-            return json.dumps(obj)
+            result = json.dumps(obj)
+            if isinstance(result, six.text_type):
+                return result.encode("utf-8")
+            else:
+                return result
         except (UnicodeEncodeError, TypeError) as error:
             raise exceptions.EncodingError('json', error)
 
@@ -147,8 +151,6 @@ class Pickle(Encoding):
             object
         """
         try:
-            if isinstance(raw, six.text_type):
-                raw = raw.encode('latin_1')
             return pickle.loads(raw)
         except pickle.UnpicklingError as error:
             raise exceptions.DecodingError('pickle', error)

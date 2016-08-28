@@ -143,7 +143,7 @@ class TestHttp(unittest.TestCase):
         """Tests that a successful http request returns the proper message."""
         with HTTMock(return_okay):
             res = self.client.request('/okay')
-            self.assertEqual(res, 'okay')
+            self.assertEqual(res, b'okay')
 
     def test_generic_failure(self):
         """Tests that a failed http request raises an HTTPError."""
@@ -167,7 +167,7 @@ class TestHttp(unittest.TestCase):
         """Tests that paths ending in /cat are not parsed."""
         with HTTMock(api_cat):
             res = self.client.request('/cat')
-            self.assertEquals(res, '{"Message": "do not parse"}')
+            self.assertEquals(res, b'{"Message": "do not parse"}')
 
     def test_default_decoder(self):
         """Tests that the default encoding is set to json."""
@@ -189,10 +189,10 @@ class TestHttp(unittest.TestCase):
                               self.client.request, '/apifail', decoder='xyz')
 
     def test_failed_decoder(self):
-        """Tests that a failed encoding parse returns response text."""
+        """Tests that a failed encoding parse raises an exception."""
         with HTTMock(return_okay):
-            res = self.client.request('/okay', decoder='json')
-            self.assertEquals(res, 'okay')
+            self.assertRaises(ipfsApi.exceptions.DecodingError,
+                              self.client.request, '/okay', decoder='json')
 
     """TODO: Test successful download
     Need to determine correct way to mock an http request that returns a tar
@@ -211,5 +211,5 @@ class TestHttp(unittest.TestCase):
         with HTTMock(return_okay):
             with self.client.session():
                 res = self.client.request('/okay')
-                self.assertEqual(res, 'okay')
+                self.assertEqual(res, b'okay')
             self.assertEqual(self.client._session, None)

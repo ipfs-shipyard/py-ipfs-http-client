@@ -149,9 +149,9 @@ class BodyGenerator(object):
         """
         if headers:
             for name in sorted(headers.keys()):
-                yield name
+                yield name.encode("ascii")
                 yield b': '
-                yield headers[name]
+                yield headers[name].encode("ascii")
                 yield CRLF
         yield CRLF
 
@@ -164,7 +164,7 @@ class BodyGenerator(object):
         """Yields the body section for the content.
         """
         yield b'--'
-        yield self.boundary
+        yield self.boundary.encode()
         yield CRLF
 
     def file_open(self, fn):
@@ -176,7 +176,7 @@ class BodyGenerator(object):
             Filename for the file being opened and added to the HTTP body
         """
         yield b'--'
-        yield self.boundary
+        yield self.boundary.encode()
         yield CRLF
         headers = content_disposition(fn)
         headers.update(content_type(fn))
@@ -190,7 +190,7 @@ class BodyGenerator(object):
     def close(self):
         """Yields the ends of the content area in a HTTP multipart body."""
         yield b'--'
-        yield self.boundary
+        yield self.boundary.encode()
         yield b'--'
         yield CRLF
 
@@ -254,8 +254,6 @@ class BufferedGenerator(object):
             The bytes generator that produces the bytes
         """
         for data in gen:
-            if not isinstance(data, six.binary_type):
-                data = data.encode('utf-8')
             size = len(data)
             if size < self.chunk_size:
                 yield data
@@ -403,28 +401,28 @@ class DirectoryStream(BufferedGenerator):
         return prep
 
 
-class TextStream(BufferedGenerator):
-    """A buffered generator that encodes a string as
+class BytesStream(BufferedGenerator):
+    """A buffered generator that encodes bytes as
     :mimetype:`multipart/form-data`.
 
     Parameters
     ----------
-    text : str
-        The text to stream to the daemon
+    data : bytes
+        The binary data to stream to the daemon
     chunk_size : int
         The maximum size of a single data chunk
     """
 
-    def __init__(self, text, chunk_size=default_chunk_size):
-        BufferedGenerator.__init__(self, 'text', chunk_size=chunk_size)
+    def __init__(self, data, chunk_size=default_chunk_size):
+        BufferedGenerator.__init__(self, 'bytes', chunk_size=chunk_size)
 
-        self.text = text if isgenerator(text) else (text,)
+        self.data = data if isgenerator(data) else (data,)
 
     def body(self):
         """Yields the encoded body."""
         for chunk in self.gen_chunks(self.envelope.file_open(self.name)):
             yield chunk
-        for chunk in self.gen_chunks(self.text):
+        for chunk in self.gen_chunks(self.data):
             yield chunk
         for chunk in self.gen_chunks(self.envelope.file_close()):
             yield chunk
@@ -478,6 +476,28 @@ def stream_directory(directory,
     return stream.body(), stream.headers
 
 
+def stream_bytes(data, chunk_size=default_chunk_size):
+    """Gets a buffered generator for streaming binary data.
+
+    Returns a buffered generator which encodes binary data as
+    :mimetype:`multipart/form-data` with the corresponding headers.
+
+    Parameters
+    ----------
+    data : bytes
+        The data bytes to stream
+    chunk_size : int
+        The maximum size of each stream chunk
+
+    Returns
+    -------
+        (generator, dict)
+    """
+    stream = BytesStream(data, chunk_size=chunk_size)
+
+    return stream.body(), stream.headers
+
+
 def stream_text(text, chunk_size=default_chunk_size):
     """Gets a buffered generator for streaming text.
 
@@ -487,10 +507,29 @@ def stream_text(text, chunk_size=default_chunk_size):
     Parameters
     ----------
     text : str
-        The text to stream
+        The data bytes to stream
     chunk_size : int
         The maximum size of each stream chunk
-    """
-    stream = TextStream(text, chunk_size=chunk_size)
 
-    return stream.body(), stream.headers
+    Returns
+    -------
+        (generator, dict)
+    """
+    if isgenerator(text):
+        def binary_stream():
+            for item in text:
+                if six.PY2 and isinstance(text, six.binary_type):
+                    #PY2: Allow binary strings under Python 2 since
+                    # Python 2 code is not expected to always get the
+                    # distinction between text and binary strings right.
+                    yield text
+                else:
+                    yield text.encode("utf-8")
+        data = binary_stream()
+    elif six.PY2 and isinstance(text, six.binary_type):
+        #PY2: See above.
+        data = text
+    else:
+        data = text.encode("utf-8")
+
+    return stream_bytes(data, chunk_size)
