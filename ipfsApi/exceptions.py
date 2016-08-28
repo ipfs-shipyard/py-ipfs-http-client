@@ -1,32 +1,126 @@
-"""Defines the skeleton for exceptions.
+"""
+The class hierachy for exceptions is::
+
+    Error
+     +-- CommandError
+     |    +-- InvalidArguments
+     +-- EncoderError
+     |    +-- EncoderMissingError
+     |    +-- EncodingError
+     |    +-- DecodingError
+     +-- CommunicationError
+          +-- ProtocolError
+          +-- StatusError
+          +-- ErrorResponse
+          +-- ConnectionError
+          +-- TimeoutError
+
 """
 
 
 class Error(Exception):
-    """Base class for exceptions in this module."""
+    """Base class for all exceptions in this module."""
     pass
 
 
-class InvalidCommand(Error):
-    """Exception raised for an invalid command."""
-    pass
+###############
+# commands.py #
+###############
+class CommandError(Error):
+    """Base class for all exception related to evaluating commands."""
 
 
 class InvalidArguments(Error):
-    """Exception raised for invalid arguments."""
-    pass
+    """Exception raised for an invalid number of arguments."""
+
+    def __init__(self, url, argc):
+        self.url  = url
+        self.argc = argc
+
+        msg = "[{}] command requires {} arguments.".format(url, argc)
+        CommandError.__init__(self, msg)
 
 
-class InvalidPath(Error):
-    """Exception raised for an invalid path."""
-    pass
+###############
+# encoding.py #
+###############
+class EncoderError(Error):
+    """Base class for all encoding and decoding related errors."""
+
+    def __init__(self, message, encoder_name):
+        self.encoder_name = encoder_name
+
+        Error.__init__(self, message)
 
 
-class FileCommandException(Error):
-    """Exception raised for file command exception."""
-    pass
+class EncoderMissingError(EncoderError):
+    """Raised when a requested encoder class does not actually exist."""
+
+    def __init__(self, encoder_name):
+        msg = "Unknown encoder: '{}'".format(encoder_name)
+        EncoderError.__init__(self, msg, encoder_name)
 
 
-class EncodingException(Error):
-    """Exception raised for invalid encoding."""
-    pass
+class EncodingError(EncoderError):
+    """Raised when encoding a Python object into a byte string has failed
+    due to some problem with the input data."""
+
+    def __init__(self, encoder_name, original):
+        self.original = original
+
+        msg = "Object encoding error: {}".format(original)
+        EncoderError.__init__(self, msg, encoder_name)
+
+
+class DecodingError(EncoderError):
+    """Raised when decoding a byte string to a Python object has failed due to
+    some problem with the input data."""
+
+    def __init__(self, encoder_name, original):
+        self.original = original
+
+        msg = "Object decoding error: {}".format(original)
+        EncoderError.__init__(self, msg, encoder_name)
+
+
+###########
+# http.py #
+###########
+class CommunicationError(Error):
+    """Base class for all network communication related errors."""
+
+    def __init__(self, original, _message=None):
+        self.original = original
+
+        if _message:
+            msg = _message
+        else:
+            msg = "{}: {}".format(original.__class__.__name__, str(original))
+        Error.__init__(self, msg)
+
+
+class ProtocolError(CommunicationError):
+    """Raised when parsing the response from the daemon has failed.
+
+    This can most likely occur if the service on the remote end isn't in fact
+    an IPFS daemon."""
+
+
+class StatusError(CommunicationError):
+    """Raised when the daemon responds with an error to our request."""
+
+
+class ErrorResponse(StatusError):
+    """Raised when the daemon has responded with an error message because the
+    requested operation could not be carried out."""
+
+    def __init__(self, message, original):
+        StatusError.__init__(self, original, message)
+
+
+class ConnectionError(CommunicationError):
+    """Raised when connecting to the service has failed on the socket layer."""
+
+
+class TimeoutError(CommunicationError):
+    """Raised when the daemon didn't respond in time."""

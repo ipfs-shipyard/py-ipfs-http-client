@@ -148,7 +148,7 @@ class TestHttp(unittest.TestCase):
     def test_generic_failure(self):
         """Tests that a failed http request raises an HTTPError."""
         with HTTMock(return_fail):
-            self.assertRaises(requests.HTTPError,
+            self.assertRaises(ipfsApi.exceptions.StatusError,
                               self.client.request, '/fail')
 
     def test_api_failure(self):
@@ -183,9 +183,9 @@ class TestHttp(unittest.TestCase):
             self.assertEquals(res['Message'], 'okay')
 
     def test_unsupported_decoder(self):
-        """Tests that unsupported encodings raise an EncodingException."""
+        """Tests that unsupported encodings raise an exception."""
         with HTTMock(api_fail):
-            self.assertRaises(ipfsApi.exceptions.EncodingException,
+            self.assertRaises(ipfsApi.exceptions.EncoderMissingError,
                               self.client.request, '/apifail', decoder='xyz')
 
     def test_failed_decoder(self):
@@ -203,7 +203,7 @@ class TestHttp(unittest.TestCase):
     def test_failed_download(self):
         """Tests that a failed download raises an HTTPError."""
         with HTTMock(return_fail):
-            self.assertRaises(requests.HTTPError,
+            self.assertRaises(ipfsApi.exceptions.StatusError,
                               self.client.download, '/fail')
 
     def test_session(self):

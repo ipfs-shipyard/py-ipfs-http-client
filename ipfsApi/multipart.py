@@ -388,10 +388,15 @@ class DirectoryStream(BufferedGenerator):
                 # remove leading / or \ if it is present
                 if short_name.startswith(os.sep):
                     short_name = short_name[1:]
-                # add the file to those being sent
-                names.append(('files', (short_name,
-                                        open(filepath, 'rb'),
-                                        'application/octet-stream')))
+                try:
+                    # add the file to those being sent
+                    names.append(('files', (short_name,
+                                            open(filepath, 'rb'),
+                                            'application/octet-stream')))
+                except OSError:
+                    # File might have disappeared between `os.walk()`
+                    # and `open()`
+                    pass
         # send the request and present the response body to the user
         req = requests.Request("POST", 'http://localhost', files=names)
         prep = req.prepare()

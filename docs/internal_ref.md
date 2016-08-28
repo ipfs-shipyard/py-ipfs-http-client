@@ -19,15 +19,6 @@ Internal API Reference
 
 ```
 
-### `exceptions`
-
-```eval_rst
-.. automodule:: ipfsApi.exceptions
-    :members:
-    :show-inheritance:
-
-```
-
 ### `http`
 
 ```eval_rst

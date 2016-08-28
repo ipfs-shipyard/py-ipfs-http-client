@@ -72,8 +72,7 @@ class ArgCommand(Command):
             Additional arguments for the HTTP client's request
         """
         if self.argc and len(args) != self.argc:
-            raise InvalidArguments("[%s] command requires %d arguments." % (
-                self.path, self.argc))
+            raise InvalidArguments(self.path, self.argc)
         return client.request(self.path, args=args, **kwargs)
 
 

@@ -6,13 +6,16 @@ by an asynchronous version.
 from __future__ import absolute_import
 
 import contextlib
+import functools
 import re
 import tarfile
+from six.moves import http_client
 
 import requests
+import six
 
 from . import encoding
-from .exceptions import Error
+from . import exceptions
 
 
 def pass_defaults(func):
@@ -25,12 +28,12 @@ def pass_defaults(func):
     func : callable
         The function to append the default kwargs to
     """
+    @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         merged = {}
         merged.update(self.defaults)
         merged.update(kwargs)
         return func(self, *args, **merged)
-    wrapper.__doc__ = func.__doc__
     return wrapper
 
 
@@ -72,6 +75,32 @@ class HTTPClient(object):
         self.defaults = defaults
         self._session = None
 
+    def _do_request(self, *args, **kwargs):
+        try:
+            if self._session:
+                return self._session.request(*args, **kwargs)
+            else:
+                return requests.request(*args, **kwargs)
+        except requests.ConnectionError as error:
+            six.raise_from(exceptions.ConnectionError(error), error)
+        except http_client.HTTPException as error:
+            six.raise_from(exceptions.ProtocolError(error), error)
+        except requests.Timeout as error:
+            six.raise_from(exceptions.TimeoutError(error), error)
+
+    def _do_raise_for_status(self, response, content=None):
+        try:
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as error:
+            # If we have decoded an error response from the server,
+            # use that as the exception message; otherwise, just pass
+            # the exception on to the caller.
+            if isinstance(content, dict) and 'Message' in content:
+                msg = content['Message']
+                six.raise_from(exceptions.ErrorResponse(msg, error), error)
+            else:
+                six.raise_from(exceptions.StatusError(error), error)
+
     @pass_defaults
     def request(self, path,
                 args=[], files=[], opts={},
@@ -80,6 +109,14 @@ class HTTPClient(object):
 
         This function returns the contents of the HTTP response from the IPFS
         daemon.
+
+        Raises
+        ------
+        ~ipfsApi.exceptions.ErrorResponse
+        ~ipfsApi.exceptions.ConnectionError
+        ~ipfsApi.exceptions.ProtocolError
+        ~ipfsApi.exceptions.StatusError
+        ~ipfsApi.exceptions.TimeoutError
 
         Parameters
         ----------
@@ -108,12 +145,8 @@ class HTTPClient(object):
 
         method = 'post' if (files or 'data' in kwargs) else 'get'
 
-        if self._session:
-            res = self._session.request(method, url,
-                                        params=params, files=files, **kwargs)
-        else:
-            res = requests.request(method, url,
-                                   params=params, files=files, **kwargs)
+        res = self._do_request(method, url, params=params, files=files,
+                               **kwargs)
 
         if not decoder:
             # return raw stream
@@ -136,16 +169,8 @@ class HTTPClient(object):
             except:
                 ret = res.text
 
-        try:
-            res.raise_for_status()
-        except requests.exceptions.HTTPError:
-            # If we have decoded an error response from the server,
-            # use that as the exception message; otherwise, just pass
-            # the exception on to the caller.
-            if 'Message' in ret:
-                raise Error(ret['Message'])
-            else:
-                raise
+        self._do_raise_for_status(res, ret)
+
         return ret
 
     @pass_defaults
@@ -156,6 +181,14 @@ class HTTPClient(object):
 
         Downloads a file or files from IPFS into the current working
         directory, or the directory given by ``filepath``.
+
+        Raises
+        ------
+        ~ipfsApi.exceptions.ErrorResponse
+        ~ipfsApi.exceptions.ConnectionError
+        ~ipfsApi.exceptions.ProtocolError
+        ~ipfsApi.exceptions.StatusError
+        ~ipfsApi.exceptions.TimeoutError
 
         Parameters
         ----------
@@ -191,14 +224,10 @@ class HTTPClient(object):
 
         method = 'get'
 
-        if self._session:
-            res = self._session.request(method, url,
-                                        params=params, stream=True, **kwargs)
-        else:
-            res = requests.request(method, url,
-                                   params=params, stream=True, **kwargs)
+        res = self._do_request(method, url, params=params, stream=True,
+                               **kwargs)
 
-        res.raise_for_status()
+        self._do_raise_for_status(res)
 
         # try to stream download as a tar file stream
         mode = 'r|gz' if compress else 'r|'

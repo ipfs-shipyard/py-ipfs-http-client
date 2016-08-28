@@ -7,7 +7,7 @@ Classes:
 """
 from __future__ import absolute_import
 
-from . import http, multipart, utils, exceptions
+from . import http, multipart, utils, exceptions, encoding
 from .commands import ArgCommand, Command, DownloadCommand, FileCommand
 
 DEFAULT_HOST = 'localhost'
@@ -1078,7 +1078,7 @@ class Client(object):
                 '/ip4/101.201.40.124/tcp/40001/ipfs/QmZDYAhmMDtnoC6XZ … kPZc',
                 '/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYER … uvuJ',
                 '/ip4/104.223.59.174/tcp/4001/ipfs/QmeWdgoZezpdHz1PX8 … 1jB6',
-                ...
+                …
                 '/ip6/fce3: … :f140/tcp/43901/ipfs/QmSoLnSGccFuZQJzRa … ca9z']}
 
         Returns
@@ -1835,7 +1835,7 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        return self.add_str(utils.encode_json(json_obj), **kwargs)
+        return self.add_str(encoding.Json().encode(json_obj), **kwargs)
 
     def get_json(self, multihash, **kwargs):
         """Loads a json object from IPFS.
@@ -1873,7 +1873,7 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        return self.add_str(utils.encode_pyobj(py_obj), **kwargs)
+        return self.add_str(encoding.Pickle().encode(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS.
@@ -1900,4 +1900,4 @@ class Client(object):
         -------
             object : Deserialized IPFS Python object
         """
-        return utils.parse_pyobj(self.cat(multihash, **kwargs))
+        return self.cat(multihash, decoder='pickle', **kwargs)
