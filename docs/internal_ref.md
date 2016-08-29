@@ -1,15 +1,6 @@
 Internal API Reference
 ----------------------
 
-### `commands`
-
-```eval_rst
-.. automodule:: ipfsApi.commands
-    :members:
-    :show-inheritance:
-
-```
-
 ### `encoding`
 
 ```eval_rst

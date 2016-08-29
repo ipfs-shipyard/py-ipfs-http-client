@@ -7,7 +7,6 @@ import requests
 import io
 import os
 from inspect import isgenerator
-from sys import version_info
 from uuid import uuid4
 
 import six
@@ -16,7 +15,7 @@ from six.moves.urllib.parse import quote
 
 from . import utils
 
-if version_info > (3,):
+if six.PY3:
     from builtins import memoryview as buffer
 
 
@@ -460,7 +459,7 @@ def stream_directory(directory,
     Parameters
     ----------
     directory : str
-        The filename of the directory to stream
+        The filepath of the directory to stream
     recursive : bool
         Stream all content within the directory recursively?
     fnpattern : str
@@ -474,6 +473,34 @@ def stream_directory(directory,
                              chunk_size=chunk_size)
 
     return stream.body(), stream.headers
+
+
+def stream_filesystem_node(path,
+                           recursive=False,
+                           fnpattern='*',
+                           chunk_size=default_chunk_size):
+    """Gets a buffered generator for streaming either files or directories.
+
+    Returns a buffered generator which encodes the file or directory at the
+    given path as :mimetype:`multipart/form-data` with the corresponding
+    headers.
+
+    Parameters
+    ----------
+    path : str
+        The filepath of the directory or file to stream
+    recursive : bool
+        Stream all content within the directory recursively?
+    fnpattern : str
+        *fnmatch* pattern of filenames to keep
+    chunk_size : int
+        Maximum size of each stream chunk
+    """
+    is_dir = isinstance(path, six.string_types) and os.path.isdir(path)
+    if recursive or is_dir:
+        return stream_directory(path, recursive, fnpattern, chunk_size)
+    else:
+        return stream_files(path, chunk_size)
 
 
 def stream_bytes(data, chunk_size=default_chunk_size):

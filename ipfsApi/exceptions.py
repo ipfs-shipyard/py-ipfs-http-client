@@ -2,8 +2,6 @@
 The class hierachy for exceptions is::
 
     Error
-     +-- CommandError
-     |    +-- InvalidArguments
      +-- EncoderError
      |    +-- EncoderMissingError
      |    +-- EncodingError
@@ -21,24 +19,6 @@ The class hierachy for exceptions is::
 class Error(Exception):
     """Base class for all exceptions in this module."""
     pass
-
-
-###############
-# commands.py #
-###############
-class CommandError(Error):
-    """Base class for all exception related to evaluating commands."""
-
-
-class InvalidArguments(Error):
-    """Exception raised for an invalid number of arguments."""
-
-    def __init__(self, url, argc):
-        self.url  = url
-        self.argc = argc
-
-        msg = "[{}] command requires {} arguments.".format(url, argc)
-        CommandError.__init__(self, msg)
 
 
 ###############

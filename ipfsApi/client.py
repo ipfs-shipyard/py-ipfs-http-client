@@ -8,7 +8,6 @@ Classes:
 from __future__ import absolute_import
 
 from . import http, multipart, utils, exceptions, encoding
-from .commands import ArgCommand, Command, DownloadCommand, FileCommand
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 5001
@@ -28,13 +27,18 @@ class Client(object):
     base : str
         Path of the deamon's API (currently always ``api/v0``)
     default_enc : str
+    chunk_size : int
+        The size of the chunks to break uploaded files and text content into
     """
 
     _clientfactory = http.HTTPClient
 
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 base=DEFAULT_BASE, default_enc='json', **defaults):
+                 base=DEFAULT_BASE, default_enc='json',
+                 chunk_size=multipart.default_chunk_size, **defaults):
         """Connects to the API port of an IPFS node."""
+
+        self.chunk_size = chunk_size
 
         self._client = self._clientfactory(host, port, base,
                                            default_enc, **defaults)
@@ -61,8 +65,11 @@ class Client(object):
         -------
             dict: File name and hash of the added file node
         """
-        return FileCommand('/add').request(self._client, (), files,
-                                           recursive=recursive, **kwargs)
+        body, headers = multipart.stream_filesystem_node(
+            files, recursive, self.chunk_size
+        )
+        return self._client.request('/add',
+                                    data=body, headers=headers, **kwargs)
 
     def get(self, multihash, **kwargs):
         """Downloads a file, or directory of files from IPFS.
@@ -74,7 +81,8 @@ class Client(object):
         multihash : str
             The path to the IPFS object(s) to be outputted
         """
-        return DownloadCommand('/get').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.download('/get', args=args, **kwargs)
 
     def cat(self, multihash, **kwargs):
         r"""Retrieves the contents of a file identified by hash.
@@ -97,7 +105,8 @@ class Client(object):
         -------
             str : File contents
         """
-        return ArgCommand('/cat').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/cat', args=args, **kwargs)
 
     def ls(self, multihash, **kwargs):
         """Returns a list of objects linked to by the given hash.
@@ -125,7 +134,8 @@ class Client(object):
         -------
             dict : Directory information and contents
         """
-        return ArgCommand('/ls').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/ls', args=args, **kwargs)
 
     def refs(self, multihash, **kwargs):
         """Returns a list of hashes of objects referenced by the given hash.
@@ -146,7 +156,8 @@ class Client(object):
         -------
             list
         """
-        return ArgCommand('/refs').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/refs', args=args, **kwargs)
 
     def refs_local(self, **kwargs):
         """Displays the hashes of all local objects.
@@ -162,7 +173,7 @@ class Client(object):
         -------
             list
         """
-        return Command('/refs/local').request(self._client, **kwargs)
+        return self._client.request('/refs/local', **kwargs)
 
     def block_stat(self, multihash, **kwargs):
         """Returns a dict with the size of the block with the given hash.
@@ -182,7 +193,8 @@ class Client(object):
         -------
             dict : Information about the requested block
         """
-        return ArgCommand('/block/stat').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/block/stat', args=args, **kwargs)
 
     def block_get(self, multihash, **kwargs):
         r"""Returns the raw contents of a block.
@@ -201,7 +213,8 @@ class Client(object):
         -------
             str : Value of the requested block
         """
-        return ArgCommand('/block/get').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/block/get', args=args, **kwargs)
 
     def block_put(self, file, **kwargs):
         """Stores the contents of the given file object as an IPFS block.
@@ -223,7 +236,9 @@ class Client(object):
 
                    See :meth:`~ipfsApi.Client.block_stat`
         """
-        return FileCommand('/block/put').request(self._client, (), file, **kwargs)
+        body, headers = multipart.stream_files(file, self.chunk_size)
+        return self._client.request('/block/put',
+                                    data=body, headers=headers, **kwargs)
 
     def bitswap_wantlist(self, peer=None, **kwargs):
         """Returns blocks currently on the bitswap wantlist.
@@ -246,7 +261,8 @@ class Client(object):
         -------
             dict : List of wanted blocks
         """
-        return ArgCommand('/bitswap/wantlist').request(self._client, peer, **kwargs)
+        args = (peer,)
+        return self._client.request('/bitswap/wantlist', args=args, **kwargs)
 
     def bitswap_stat(self, **kwargs):
         """Returns some diagnostic information from the bitswap agent.
@@ -275,7 +291,7 @@ class Client(object):
         -------
             dict : Statistics, peers and wanted blocks
         """
-        return Command('/bitswap/stat').request(self._client, **kwargs)
+        return self._client.request('/bitswap/stat', **kwargs)
 
     def bitswap_unwant(self, key, **kwargs):
         """
@@ -286,7 +302,8 @@ class Client(object):
         key : str
             Key to remove from wantlist.
         """
-        return ArgCommand('/bitswap/unwant').request(self._client, key, **kwargs)
+        args = (key,)
+        return self._client.request('/bitswap/unwant', args=args, **kwargs)
 
     def object_data(self, multihash, **kwargs):
         r"""Returns the raw bytes in an IPFS object.
@@ -305,7 +322,8 @@ class Client(object):
         -------
             str : Raw object data
         """
-        return ArgCommand('/object/data').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/object/data', args=args, **kwargs)
 
     def object_new(self, template=None, **kwargs):
         """Creates a new object from an IPFS template.
@@ -316,7 +334,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.object_new()
-            {u'Hash': u'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'}
+            {'Hash': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'}
 
         Parameters
         ----------
@@ -330,10 +348,8 @@ class Client(object):
         -------
             dict : Object hash
         """
-        if template:
-            return ArgCommand('/object/new').request(self._client, template, **kwargs)
-        else:
-            return ArgCommand('/object/new').request(self._client, **kwargs)
+        args = (template,) if template is not None else ()
+        return self._client.request('/object/new', args=args, **kwargs)
 
     def object_links(self, multihash, **kwargs):
         """Returns the links pointed to by the specified object.
@@ -363,7 +379,8 @@ class Client(object):
         -------
             dict : Object hash and merkedag links
         """
-        return ArgCommand('/object/links').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/object/links', args=args, **kwargs)
 
     def object_get(self, multihash, **kwargs):
         """Get and serialize the DAG node named by multihash.
@@ -393,7 +410,8 @@ class Client(object):
         -------
             dict : Object data and links
         """
-        return ArgCommand('/object/get').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/object/get', args=args, **kwargs)
 
     def object_put(self, file, **kwargs):
         """Stores input as a DAG object and returns its key.
@@ -427,7 +445,9 @@ class Client(object):
 
                    See :meth:`~ipfsApi.Object.object_links`
         """
-        return FileCommand('/object/put').request(self._client, (), file, **kwargs)
+        body, headers = multipart.stream_files(file, self.chunk_size)
+        return self._client.request('/object/put',
+                                    data=body, headers=headers, **kwargs)
 
     def object_stat(self, multihash, **kwargs):
         """Get stats for the DAG node named by multihash.
@@ -448,7 +468,8 @@ class Client(object):
         -------
             dict
         """
-        return ArgCommand('/object/stat').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/object/stat', args=args, **kwargs)
 
     def object_patch_append_data(self, multihash, new_data, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -472,11 +493,10 @@ class Client(object):
         -------
             dict : Hash of new object
         """
-        return FileCommand(
-            '/object/patch/append-data').request(self._client,
-                                                      [multihash],
-                                                      new_data,
-                                                      **kwargs)
+        args = (multihash,)
+        body, headers = multipart.stream_files(new_data, self.chunk_size)
+        return self._client.request('/object/patch/append-data', args=args,
+                                    data=body, headers=headers, **kwargs)
 
     def object_patch_add_link(self, root, name, ref, create=False, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -508,9 +528,10 @@ class Client(object):
             dict : Hash of new object
         """
         kwargs.setdefault("opts", {"create": create})
-        return ArgCommand('/object/patch/add-link').request(self._client,
-                                                   (root, name, ref),
-                                                   **kwargs)
+
+        args = ((root, name, ref),)
+        return self._client.request('/object/patch/add-link',
+                                    args=args, **kwargs)
 
     def object_patch_rm_link(self, root, link, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -536,9 +557,9 @@ class Client(object):
         -------
             dict : Hash of new object
         """
-        return ArgCommand('/object/patch/rm-link').request(self._client,
-                                                  (root, link),
-                                                  **kwargs)
+        args = ((root, link),)
+        return self._client.request('/object/patch/rm-link',
+                                    args=args, **kwargs)
 
     def object_patch_set_data(self, root, data, **kwargs):
         """Creates a new merkledag object based on an existing one.
@@ -565,10 +586,10 @@ class Client(object):
         -------
             dict : Hash of new object
         """
-        return FileCommand('/object/patch/set-data').request(self._client,
-                                                   [root],
-                                                   data,
-                                                   **kwargs)
+        args = (root,)
+        body, headers = multipart.stream_files(data, self.chunk_size)
+        return self._client.request('/object/patch/set-data', args=args,
+                                    data=body, headers=headers, **kwargs)
 
     def file_ls(self, multihash, **kwargs):
         """Lists directory contents for Unix filesystem objects.
@@ -614,7 +635,8 @@ class Client(object):
         -------
             dict
         """
-        return ArgCommand('/file/ls').request(self._client, multihash, **kwargs)
+        args = (multihash,)
+        return self._client.request('/file/ls', args=args, **kwargs)
 
     def resolve(self, name, recursive=False, **kwargs):
         """Accepts an identifier and resolves it to the referenced item.
@@ -644,7 +666,9 @@ class Client(object):
             dict : IPFS path of resource
         """
         kwargs.setdefault("opts", {"recursive": recursive})
-        return ArgCommand('/resolve').request(self._client, name, **kwargs)
+
+        args = (name,)
+        return self._client.request('/resolve', args=args, **kwargs)
 
     def name_publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None,
                      **kwargs):
@@ -688,9 +712,10 @@ class Client(object):
         opts = {"lifetime": lifetime, "resolve": resolve}
         if ttl:
             opts["ttl"] = ttl
-
         kwargs.setdefault("opts", opts)
-        return ArgCommand('/name/publish').request(self._client, ipfs_path, **kwargs)
+
+        args = (ipfs_path,)
+        return self._client.request('/name/publish', args=args, **kwargs)
 
     def name_resolve(self, name=None, **kwargs):
         """Gets the value currently published at an IPNS name.
@@ -713,8 +738,8 @@ class Client(object):
         -------
             dict : The IPFS path the IPNS hash points at
         """
-        args = [name] if name is not None else []
-        return ArgCommand('/name/resolve').request(self._client, *args, **kwargs)
+        args = (name,) if name is not None else ()
+        return self._client.request('/name/resolve', args=args, **kwargs)
 
     def dns(self, domain_name, recursive=False, **kwargs):
         """Resolves DNS links to the referenced object.
@@ -748,7 +773,9 @@ class Client(object):
             dict : Resource were a DNS entry points to
         """
         kwargs.setdefault("opts", {"recursive": recursive})
-        return ArgCommand('/dns').request(self._client, domain_name, **kwargs)
+
+        args = (domain_name,)
+        return self._client.request('/dns', args=args, **kwargs)
 
     def pin_add(self, path, *paths, **kwargs):
         """Pins objects to local storage.
@@ -771,12 +798,12 @@ class Client(object):
         -------
             dict : List of IPFS objects that have been pinned
         """
-        # Python 2 does not support kw-only parameters after glob parameters
+        #PY2: No support for kw-only parameters after glob parameters
         if "recursive" in kwargs:
-            kwargs.setdefault("opts", {"recursive": kwargs["recursive"]})
-            del kwargs["recursive"]
+            kwargs.setdefault("opts", {"recursive": kwargs.pop("recursive")})
 
-        return ArgCommand('/pin/add').request(self._client, path, *paths, **kwargs)
+        args = (path,) + paths
+        return self._client.request('/pin/add', args=args, **kwargs)
 
     def pin_rm(self, path, *paths, **kwargs):
         """Removes a pinned object from local storage.
@@ -800,12 +827,13 @@ class Client(object):
         -------
             dict : List of IPFS objects that have been unpinned
         """
-        # Python 2 does not support kw-only parameters after glob parameters
+        #PY2: No support for kw-only parameters after glob parameters
         if "recursive" in kwargs:
             kwargs.setdefault("opts", {"recursive": kwargs["recursive"]})
             del kwargs["recursive"]
 
-        return ArgCommand('/pin/rm').request(self._client, path, *paths, **kwargs)
+        args = (path,) + paths
+        return self._client.request('/pin/rm', args=args, **kwargs)
 
     def pin_ls(self, type="all", **kwargs):
         """Lists objects pinned to local storage.
@@ -839,7 +867,8 @@ class Client(object):
             dict : Hashes of pinned IPFS objects and why they are pinned
         """
         kwargs.setdefault("opts", {"type": type})
-        return Command('/pin/ls').request(self._client, **kwargs)
+
+        return self._client.request('/pin/ls', **kwargs)
 
     def repo_gc(self, **kwargs):
         """Removes stored objects that are not pinned from the repo.
@@ -862,7 +891,7 @@ class Client(object):
         -------
             dict : List of IPFS objects that have been removed
         """
-        return Command('/repo/gc').request(self._client, **kwargs)
+        return self._client.request('/repo/gc', **kwargs)
 
     def repo_stat(self, **kwargs):
         """Displays the repo's status.
@@ -892,7 +921,7 @@ class Client(object):
         | Version    | The repo version.                               |
         +------------+-------------------------------------------------+
         """
-        return Command('/repo/stat').request(self._client, **kwargs)
+        return self._client.request('/repo/stat', **kwargs)
 
     def id(self, peer=None, **kwargs):
         """Shows IPFS Node ID info.
@@ -928,8 +957,8 @@ class Client(object):
         -------
             dict : Information about the IPFS node
         """
-        peers = [peer] if peer is not None else []
-        return Command('/id').request(self._client, *peers, **kwargs)
+        args = (peer,) if peer is not None else ()
+        return self._client.request('/id', args=args, **kwargs)
 
     def bootstrap(self, **kwargs):
         """Compatiblity alias for :meth:`~ipfsApi.Client.bootstrap_list`."""
@@ -955,7 +984,7 @@ class Client(object):
         -------
             dict : List of known bootstrap peers
         """
-        return Command('/bootstrap').request(self._client, **kwargs)
+        return self._client.request('/bootstrap', **kwargs)
 
     def bootstrap_add(self, peer, *peers, **kwargs):
         """Adds peers to the bootstrap list.
@@ -969,9 +998,8 @@ class Client(object):
         -------
             dict
         """
-        return ArgCommand('/bootstrap/add').request(
-            self._client, peer, *peers, **kwargs
-        )
+        args = (peer,) + peers
+        return self._client.request('/bootstrap/add', args=args, **kwargs)
 
     def bootstrap_rm(self, peer, *peers, **kwargs):
         """Removes peers from the bootstrap list.
@@ -985,9 +1013,8 @@ class Client(object):
         -------
             dict
         """
-        return ArgCommand('/bootstrap/rm').request(
-            self._client, peer, *peers, **kwargs
-        )
+        args = (peer,) + peers
+        return self._client.request('/bootstrap/rm', args=args, **kwargs)
 
     def swarm_peers(self, **kwargs):
         """Returns the addresses & IDs of currently connected peers.
@@ -1006,7 +1033,7 @@ class Client(object):
         -------
             dict : List of multiaddrs of currently connected peers
         """
-        return Command('/swarm/peers').request(self._client, **kwargs)
+        return self._client.request('/swarm/peers', **kwargs)
 
     def swarm_addrs(self, **kwargs):
         """Returns the addresses of currently connected peers by peer id.
@@ -1039,7 +1066,7 @@ class Client(object):
         -------
             dict : Multiaddrs of peers by peer id
         """
-        return Command('/swarm/addrs').request(self._client, **kwargs)
+        return self._client.request('/swarm/addrs', **kwargs)
 
     def swarm_connect(self, address, *addresses, **kwargs):
         """Opens a connection to a given address.
@@ -1063,9 +1090,8 @@ class Client(object):
         -------
             dict : Textual connection status report
         """
-        return ArgCommand('/swarm/connect').request(
-            self._client, address, *addresses, **kwargs
-        )
+        args = (address,) + addresses
+        return self._client.request('/swarm/connect', args=args, **kwargs)
 
     def swarm_disconnect(self, address, *addresses, **kwargs):
         """Closes the connection to a given address.
@@ -1092,9 +1118,8 @@ class Client(object):
         -------
             dict : Textual connection status report
         """
-        return ArgCommand('/swarm/disconnect').request(
-            self._client, address, *addresses, **kwargs
-        )
+        args = (address,) + addresses
+        return self._client.request('/swarm/disconnect', args=args, **kwargs)
 
     def swarm_filters_add(self, address, *addresses, **kwargs):
         """Adds a given multiaddr filter to the filter list.
@@ -1117,9 +1142,8 @@ class Client(object):
         -------
             dict : List of swarm filters added
         """
-        return ArgCommand('/swarm/filters/add').request(
-            self._client, address, *addresses, **kwargs
-        )
+        args = (address,) + addresses
+        return self._client.request('/swarm/filters/add', args=args, **kwargs)
 
     def swarm_filters_rm(self, address, *addresses, **kwargs):
         """Removes a given multiaddr filter from the filter list.
@@ -1142,9 +1166,8 @@ class Client(object):
         -------
             dict : List of swarm filters removed
         """
-        return ArgCommand('/swarm/filters/rm').request(
-            self._client, address, *addresses, **kwargs
-        )
+        args = (address,) + addresses
+        return self._client.request('/swarm/filters/rm', args=args, **kwargs)
 
     def dht_query(self, peer_id, *peer_ids, **kwargs):
         """Finds the closest Peer IDs to a given Peer ID by querying the DHT.
@@ -1171,9 +1194,8 @@ class Client(object):
         -------
             dict : List of peers IDs
         """
-        return ArgCommand('/dht/query').request(
-            self._client, peer_id, *peer_ids, **kwargs
-        )
+        args = (peer_id,) + peer_ids
+        return self._client.request('/dht/query', args=args, **kwargs)
 
     def dht_findprovs(self, multihash, *multihashes, **kwargs):
         """Finds peers in the DHT that can provide a specific value.
@@ -1210,9 +1232,8 @@ class Client(object):
         -------
             dict : List of provider Peer IDs
         """
-        return ArgCommand('/dht/findprovs').request(
-            self._client, multihash, *multihashes, **kwargs
-        )
+        args = (multihash,) + multihashes
+        return self._client.request('/dht/findprovs', args=args, **kwargs)
 
     def dht_findpeer(self, peer_id, *peer_ids, **kwargs):
         """Queries the DHT for all of the associated multiaddresses.
@@ -1246,9 +1267,8 @@ class Client(object):
         -------
             dict : List of multiaddrs
         """
-        return ArgCommand('/dht/findpeer').request(
-            self._client, peer_id, *peer_ids, **kwargs
-        )
+        args = (peer_id,) + peer_ids
+        return self._client.request('/dht/findpeer', args=args, **kwargs)
 
     def dht_get(self, key, *keys, **kwargs):
         """Queries the DHT for its best value related to given key.
@@ -1269,7 +1289,9 @@ class Client(object):
         -------
             str
         """
-        res = ArgCommand('/dht/get').request(self._client, key, *keys, **kwargs)
+        args = (key,) + keys
+        res = self._client.request('/dht/get', args=args, **kwargs)
+
         if isinstance(res, dict) and "Extra" in res:
             return res["Extra"]
         else:
@@ -1320,7 +1342,8 @@ class Client(object):
         -------
             list
         """
-        return ArgCommand('/dht/put', argc=2).request(self._client, key, value, **kwargs)
+        args = (key, value)
+        return self._client.request('/dht/put', args=args, **kwargs)
 
     def ping(self, peer, *peers, **kwargs):
         """Provides round-trip latency information for the routing system.
@@ -1347,14 +1370,15 @@ class Client(object):
         -------
             list : Progress reports from the ping
         """
-        # Python 2 does not support kw-only parameters after glob parameters
+        #PY2: No support for kw-only parameters after glob parameters
         if "count" in kwargs:
             kwargs.setdefault("opts", {"count": kwargs["count"]})
             del kwargs["count"]
 
-        return ArgCommand('/ping').request(self._client, peer, *peers, **kwargs)
+        args = (peer,) + peers
+        return self._client.request('/ping', args=args, **kwargs)
 
-    def config(self, key, value=None, *args, **kwargs):
+    def config(self, key, value=None, **kwargs):
         """Controls configuration variables.
 
         .. code-block:: python
@@ -1375,7 +1399,8 @@ class Client(object):
         -------
             dict : Requested/updated key and its (new) value
         """
-        return ArgCommand('/config').request(self._client, key, value, *args, **kwargs)
+        args = (key, value)
+        return self._client.request('/config', args=args, **kwargs)
 
     def config_show(self, **kwargs):
         """Returns a dict containing the server's configuration.
@@ -1399,7 +1424,7 @@ class Client(object):
         -------
             dict : The entire IPFS daemon configuration
         """
-        return Command('/config/show').request(self._client, **kwargs)
+        return self._client.request('/config/show', **kwargs)
 
     def config_replace(self, *args, **kwargs):
         """Replaces the existing config with a user-defined config.
@@ -1407,7 +1432,7 @@ class Client(object):
         Make sure to back up the config file first if neccessary, as this
         operation can't be undone.
         """
-        return ArgCommand('/config/replace').request(self._client, *args, **kwargs)
+        return self._client.request('/config/replace', args=args, **kwargs)
 
     def log_level(self, subsystem, level, **kwargs):
         r"""Changes the logging output of a running daemon.
@@ -1435,8 +1460,8 @@ class Client(object):
         -------
             dict : Status message
         """
-        return ArgCommand('/log/level').request(self._client, subsystem,
-                                       level, **kwargs)
+        args = (subsystem, level)
+        return self._client.request('/log/level', args=args, **kwargs)
 
     def log_ls(self, **kwargs):
         """Lists the logging subsystems of a running daemon.
@@ -1467,7 +1492,7 @@ class Client(object):
         -------
             dict : List of daemon logging subsystems
         """
-        return Command('/log/ls').request(self._client, **kwargs)
+        return self._client.request('/log/ls', **kwargs)
 
     def log_tail(self, **kwargs):
         r"""Reads log outputs as they are written.
@@ -1504,7 +1529,7 @@ class Client(object):
         -------
             iterable
         """
-        return Command('/log/tail').request(self._client, stream=True, **kwargs)
+        return self._client.request('/log/tail', stream=True, **kwargs)
 
     def version(self, **kwargs):
         """Returns the software version of the currently connected node.
@@ -1519,7 +1544,7 @@ class Client(object):
         -------
             dict : Daemon and system version information
         """
-        return Command('/version').request(self._client, **kwargs)
+        return self._client.request('/version', **kwargs)
 
     def files_cp(self, source, dest, **kwargs):
         """Copies files within the MFS.
@@ -1551,7 +1576,8 @@ class Client(object):
             Destination filepath with the MFS to which the file will be
             copied to
         """
-        return ArgCommand('/files/cp').request(self._client, source, dest, **kwargs)
+        args = (source, dest)
+        return self._client.request('/files/cp', args=args, **kwargs)
 
     def files_ls(self, path, **kwargs):
         """Lists contents of a directory in the MFS.
@@ -1572,7 +1598,8 @@ class Client(object):
         -------
             dict : Directory entries
         """
-        return ArgCommand('/files/ls').request(self._client, path, **kwargs)
+        args = (path,)
+        return self._client.request('/files/ls', args=args, **kwargs)
 
     def files_mkdir(self, path, parents=False, **kwargs):
         """Creates a directory within the MFS.
@@ -1591,7 +1618,9 @@ class Client(object):
             if the requested directory already exists
         """
         kwargs.setdefault("opts", {"parents": parents})
-        return ArgCommand('/files/mkdir').request(self._client, path, **kwargs)
+
+        args = (path,)
+        return self._client.request('/files/mkdir', args=args, **kwargs)
 
     def files_stat(self, path, **kwargs):
         """Returns basic ``stat`` information for an MFS file
@@ -1612,7 +1641,8 @@ class Client(object):
         -------
             dict : MFS file information
         """
-        return ArgCommand('/files/stat').request(self._client, path, **kwargs)
+        args = (path,)
+        return self._client.request('/files/stat', args=args, **kwargs)
 
     def files_rm(self, path, recursive=False, **kwargs):
         """Removes a file from the MFS.
@@ -1630,7 +1660,9 @@ class Client(object):
             Recursively remove directories?
         """
         kwargs.setdefault("opts", {"recursive": recursive})
-        return ArgCommand('/files/rm').request(self._client, path, **kwargs)
+
+        args = (path,)
+        return self._client.request('/files/rm', args=args, **kwargs)
 
     def files_read(self, path, offset=0, count=None, **kwargs):
         """Reads a file stored in the MFS.
@@ -1656,9 +1688,10 @@ class Client(object):
         opts = {"offset": offset}
         if count is not None:
             opts["count"] = count
-
         kwargs.setdefault("opts", opts)
-        return ArgCommand('/files/read').request(self._client, path, **kwargs)
+
+        args = (path,)
+        return self._client.request('/files/read', args=args, **kwargs)
 
     def files_write(self, path, file, offset=0, create=False, truncate=False,
                     count=None, **kwargs):
@@ -1687,9 +1720,12 @@ class Client(object):
         opts = {"offset": offset, "create": create, truncate: truncate}
         if count is not None:
             opts["count"] = count
-
         kwargs.setdefault("opts", opts)
-        return FileCommand('/files/write').request(self._client, (path,), file, **kwargs)
+
+        args = (path,)
+        body, headers = multipart.stream_files(file, self.chunk_size)
+        return self._client.request('/files/write', args=args,
+                                    data=body, headers=headers, **kwargs)
 
     def files_mv(self, source, dest, **kwargs):
         """Moves files and directories within the MFS.
@@ -1706,7 +1742,8 @@ class Client(object):
         dest : str
             Destination to which the file will be moved in the MFS
         """
-        return ArgCommand('/files/mv').request(self._client, source, dest, **kwargs)
+        args = (source, dest)
+        return self._client.request('/files/mv', args=args, **kwargs)
 
     ###########
     # HELPERS #
@@ -1732,10 +1769,9 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        chunk_size = kwargs.pop('chunk_size', multipart.default_chunk_size)
-        body, headers = multipart.stream_bytes(data, chunk_size=chunk_size)
-        return self._client.request('/add', data=body,
-                                    headers=headers, **kwargs)
+        body, headers = multipart.stream_bytes(data, self.chunk_size)
+        return self._client.request('/add',
+                                    data=body, headers=headers, **kwargs)
 
     @utils.return_field('Hash')
     def add_str(self, string, **kwargs):
@@ -1757,10 +1793,9 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        chunk_size = kwargs.pop('chunk_size', multipart.default_chunk_size)
-        body, headers = multipart.stream_text(string, chunk_size=chunk_size)
-        return self._client.request('/add', data=body,
-                                    headers=headers, **kwargs)
+        body, headers = multipart.stream_text(string, self.chunk_size)
+        return self._client.request('/add',
+                                    data=body, headers=headers, **kwargs)
 
     def add_json(self, json_obj, **kwargs):
         """Adds a json-serializable Python dict as a json file to IPFS.
