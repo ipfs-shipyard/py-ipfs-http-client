@@ -12,7 +12,6 @@ TestStreamHelpers -- unimplemented
 
 import unittest
 import os
-import re
 import six
 import ipfsApi.multipart
 
@@ -95,18 +94,10 @@ class TestBodyGenerator(unittest.TestCase):
         generator = ipfsApi.multipart.BodyGenerator(name)
         self.assertEqual(generator.headers['Content-Disposition'],
                          expected_disposition)
-        if six.PY2:
-            if not re.match(expected_type, generator.headers['Content-Type']):
-                self.fail('Content-Type does not match "%s", got %s'
-                          % (expected_type, generator.headers['Content-Type']))
-            if not re.match(expected_boundary_pattern, generator.boundary):
-                self.fail('Boundary does not match "%s"'
-                          % expected_boundary_pattern)
-        else:
-            self.assertRegexpMatches(generator.headers['Content-Type'],
-                                     expected_type)
-            self.assertRegexpMatches(generator.boundary,
-                                     expected_boundary_pattern)
+        self.assertRegexpMatches(generator.headers['Content-Type'],
+                                 expected_type)
+        self.assertRegexpMatches(generator.boundary,
+                                 expected_boundary_pattern)
 
     def test_init_with_all(self):
         """Test the __init__ function for explicitly set parameter values."""
@@ -251,11 +242,7 @@ class TestBufferedGenerator(unittest.TestCase):
         for emitted in instance.file_chunks(open_file):
             if type(emitted) is not str:
                 emitted = emitted.decode()
-            if six.PY2:
-                if len(emitted) > chunk_size:
-                    self.fail("Generator emitted chunk above chunk size.")
-            else:
-                self.assertLessEqual(len(emitted), chunk_size)
+            self.assertLessEqual(len(emitted), chunk_size)
             output += emitted
         open_file.close()
         self.assertEqual(output, expected)
@@ -266,11 +253,7 @@ class TestBufferedGenerator(unittest.TestCase):
         chunk_size = 2
         instance = ipfsApi.multipart.BufferedGenerator(name, chunk_size)
         for i in instance.gen_chunks(_generate_test_chunks(5, 5)):
-            if six.PY2:
-                if len(i) > chunk_size:
-                    self.fail("Generator emitted chunk above chunk size.")
-            else:
-                self.assertLessEqual(len(i), chunk_size)
+            self.assertLessEqual(len(i), chunk_size)
 
     def test_body(self):
         """Ensure that body throws a NotImplemented exception."""
@@ -289,19 +272,10 @@ class TestBufferedGenerator(unittest.TestCase):
                 i = i.decode()
             elif six.PY3 and type(i) is memoryview:
                 i = i.tobytes().decode()
-            if six.PY2:
-                if len(i) > chunk_size:
-                    self.fail("Generator emitted chunk above chunk size.")
-            else:
-                self.assertLessEqual(len(i), chunk_size)
+            self.assertLessEqual(len(i), chunk_size)
             actual += i
 
-        if six.PY2:
-            if not re.match(expected, actual):
-                self.fail('Envelope end malformed. Expected %s, got %s'
-                          % (expected, actual))
-        else:
-            self.assertRegexpMatches(actual, expected)
+        self.assertRegexpMatches(actual, expected)
 
 
 class TestFileStream(unittest.TestCase):
@@ -342,12 +316,7 @@ class TestFileStream(unittest.TestCase):
             elif six.PY3 and type(i) is memoryview:
                 i = i.tobytes().decode()
             actual += i
-        if six.PY2:
-            if not re.match(expected, actual):
-                self.fail('Body malformed. Expected %s\n\nbut got:\n\n %s'
-                          % (expected, actual))
-        else:
-            self.assertRegexpMatches(actual, expected)
+        self.assertRegexpMatches(actual, expected)
 
 
 class TestDirectoryStream(unittest.TestCase):
@@ -377,12 +346,7 @@ class TestDirectoryStream(unittest.TestCase):
                 i = i.tobytes().decode()
             actual += i
         """
-        if six.PY2:
-            if not re.match(expected, actual):
-                self.fail('Body malformed. Expected %s\n\nbut got:\n\n %s'
-                          % (expected, actual))
-        else:
-            self.assertRegexpMatches(actual, expected)
+        self.assertRegexpMatches(actual, expected)
 
 
 class TestTextStream(unittest.TestCase):
@@ -407,12 +371,7 @@ class TestTextStream(unittest.TestCase):
             elif six.PY3 and type(i) is memoryview:
                 i = i.tobytes().decode()
             actual += i
-        if six.PY2:
-            if not re.match(expected, actual):
-                self.fail('Body malformed. Expected %s\n\nbut got:\n\n %s'
-                          % (expected, actual))
-        else:
-            self.assertRegexpMatches(actual, expected)
+        self.assertRegexpMatches(actual, expected)
 
 
 class TestStreamHelpers(unittest.TestCase):
