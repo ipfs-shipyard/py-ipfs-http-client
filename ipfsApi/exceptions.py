@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 """
 The class hierachy for exceptions is::
 
     Error
+     +-- VersionMismatch
      +-- EncoderError
      |    +-- EncoderMissingError
      |    +-- EncodingError
@@ -19,6 +21,20 @@ The class hierachy for exceptions is::
 class Error(Exception):
     """Base class for all exceptions in this module."""
     pass
+
+
+class VersionMismatch(Error):
+    """Raised when daemon version is not supported by this client version."""
+
+    def __init__(self, current, minimum, maximum):
+        self.current = current
+        self.minimum = minimum
+        self.maximum = maximum
+
+        msg = "Unsupported daemon version '{}' (not in range: {} – {})".format(
+            current, minimum, maximum
+        )
+        Error.__init__(self, msg)
 
 
 ###############

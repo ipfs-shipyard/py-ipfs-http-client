@@ -20,6 +20,10 @@ All methods accept the following parameters in their `kwargs`:
                        HTTP request
 
 ```eval_rst
+.. autofunction:: ipfsApi.connect
+
+.. autofunction:: ipfsApi.assert_version
+
 .. autoclass:: ipfsApi.Client
     :members:
     :show-inheritance:

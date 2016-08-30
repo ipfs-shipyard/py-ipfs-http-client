@@ -13,9 +13,73 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 5001
 DEFAULT_BASE = 'api/v0'
 
+VERSION_MINIMUM = "0.4.3"
+VERSION_MAXIMUM = "0.5.0"
+
+
+def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
+    """Make sure that the given daemon version is supported by this client
+    version.
+
+    Raises
+    ------
+    ~ipfsApi.exceptions.VersionMismatch
+
+    Parameters
+    ----------
+    version : str
+        The version of an IPFS daemon.
+    minimum : str
+        The minimal IPFS version to allow.
+    maximum : str
+        The maximum IPFS version to allow.
+    """
+    # Convert version strings to integer tuples
+    version = list(map(int, version.split('-', 1)[0].split('.')))
+    minimum = list(map(int, minimum.split('-', 1)[0].split('.')))
+    maximum = list(map(int, maximum.split('-', 1)[0].split('.')))
+
+    if minimum > version or version >= maximum:
+        raise exceptions.VersionMismatch(version, minimum, maximum)
+
+
+def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
+            default_enc='json', chunk_size=multipart.default_chunk_size,
+            **defaults):
+    """Create a new :class:`~ipfsApi.Client` instance and connect to the
+    daemon to validate that its version is supported.
+
+    Raises
+    ------
+    ~ipfsApi.exceptions.VersionMismatch
+    ~ipfsApi.exceptions.ErrorResponse
+    ~ipfsApi.exceptions.ConnectionError
+    ~ipfsApi.exceptions.ProtocolError
+    ~ipfsApi.exceptions.StatusError
+    ~ipfsApi.exceptions.TimeoutError
+
+
+    All parameters are identical to those passed to the constructor of the
+    :class:`~ipfsApi.Client` class.
+
+    Returns
+    -------
+        ~ipfsApi.Client
+    """
+    # Create client instance
+    client = Client(host, port, base, default_enc, chunk_size, **defaults)
+
+    # Query version number from daemon and validate it
+    assert_version(client.version()['Version'])
+
+    return client
+
 
 class Client(object):
     """A TCP client for interacting with an IPFS daemon.
+
+    A :class:`~ipfsApi.Client` instance will not actually establish a
+    connection to the daemon until at least one of it's methods is called.
 
     Parameters
     ----------
