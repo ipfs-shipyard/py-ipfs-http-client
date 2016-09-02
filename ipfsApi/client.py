@@ -7,9 +7,8 @@ Classes:
 """
 from __future__ import absolute_import
 
-from . import http, multipart, utils
+from . import http, multipart, utils, exceptions, encoding
 from .commands import ArgCommand, Command, DownloadCommand, FileCommand
-from .exceptions import ipfsApiError
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 5001
@@ -165,9 +164,9 @@ class Client(object):
             >>> c.cat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
             Traceback (most recent call last):
               ...
-            ipfsApiError: this dag node is a directory
+            ipfsApi.exceptions.Error: this dag node is a directory
             >>> c.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')
-            '<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</ …'
+            b'<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</…'
 
         Parameters
         ----------
@@ -271,7 +270,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.block_get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
-            '\x121\n"\x12 ÚW>\x14åÁöä\x92ÑK\x1fR´\x85Fº\x93§!f\x7f»ü … ÀQÀ\x1'
+            b'\x121\n"\x12 \xdaW>\x14\xe5\xc1\xf6\xe4\x92\xd1 … \n\x02\x08\x01'
 
         Parameters
         ----------
@@ -289,7 +288,7 @@ class Client(object):
 
         .. code-block:: python
 
-            >>> c.block_put(io.BytesIO('Mary had a little lamb'))
+            >>> c.block_put(io.BytesIO(b'Mary had a little lamb'))
                 {'Key':  'QmeV6C6XVt1wf7V7as7Yak3mxPma8jzpqyhtRtCvpKcfBb',
                  'Size': 22}
 
@@ -375,7 +374,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.object_data('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
-            '\x08\x01'
+            b'\x08\x01'
 
         Parameters
         ----------
@@ -1079,7 +1078,7 @@ class Client(object):
                 '/ip4/101.201.40.124/tcp/40001/ipfs/QmZDYAhmMDtnoC6XZ … kPZc',
                 '/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYER … uvuJ',
                 '/ip4/104.223.59.174/tcp/4001/ipfs/QmeWdgoZezpdHz1PX8 … 1jB6',
-                ...
+                …
                 '/ip6/fce3: … :f140/tcp/43901/ipfs/QmSoLnSGccFuZQJzRa … ca9z']}
 
         Returns
@@ -1356,7 +1355,7 @@ class Client(object):
             for r in res:
                 if "Extra" in r and len(r["Extra"]) > 0:
                     return r["Extra"]
-        raise ipfsApiError("empty response from DHT")
+        raise exceptions.Error("empty response from DHT")
 
     def dht_put(self, key, value, **kwargs):
         """Writes a key/value pair to the DHT.
@@ -1660,7 +1659,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_mkdir("/test")
-            ''
+            b''
 
         Parameters
         ----------
@@ -1700,7 +1699,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_rm("/bla/file")
-            ''
+            b''
 
         Parameters
         ----------
@@ -1718,7 +1717,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_read("/bla/file")
-            'hi'
+            b'hi'
 
         Parameters
         ----------
@@ -1747,7 +1746,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_write("/test/file", io.BytesIO(b"hi"), create=True)
-            ''
+            b''
 
         Parameters
         ----------
@@ -1777,7 +1776,7 @@ class Client(object):
         .. code-block:: python
 
             >>> c.files_mv("/test/file", "/bla/file")
-            ''
+            b''
 
         Parameters
         ----------
@@ -1793,12 +1792,37 @@ class Client(object):
     ###########
 
     @utils.return_field('Hash')
+    def add_bytes(self, data, **kwargs):
+        """Adds a set of bytes as a file to IPFS.
+
+        .. code-block:: python
+
+            >>> c.add_bytes(b"Mary had a little lamb")
+            'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
+
+        Also accepts and will stream generator objects.
+
+        Parameters
+        ----------
+        data : bytes
+            Content to be added as a file
+
+        Returns
+        -------
+            str : Hash of the added IPFS object
+        """
+        chunk_size = kwargs.pop('chunk_size', multipart.default_chunk_size)
+        body, headers = multipart.stream_bytes(data, chunk_size=chunk_size)
+        return self._client.request('/add', data=body,
+                                    headers=headers, **kwargs)
+
+    @utils.return_field('Hash')
     def add_str(self, string, **kwargs):
         """Adds a Python string as a file to IPFS.
 
         .. code-block:: python
 
-            >>> c.add_str("Mary had a little lamb")
+            >>> c.add_str(u"Mary had a little lamb")
             'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
 
         Also accepts and will stream generator objects.
@@ -1812,10 +1836,8 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        chunk_size = kwargs.pop('chunk_size',
-                                multipart.default_chunk_size)
-        body, headers = multipart.stream_text(string,
-                                              chunk_size=chunk_size)
+        chunk_size = kwargs.pop('chunk_size', multipart.default_chunk_size)
+        body, headers = multipart.stream_text(string, chunk_size=chunk_size)
         return self._client.request('/add', data=body,
                                     headers=headers, **kwargs)
 
@@ -1836,7 +1858,7 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        return self.add_str(utils.encode_json(json_obj), **kwargs)
+        return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 
     def get_json(self, multihash, **kwargs):
         """Loads a json object from IPFS.
@@ -1874,7 +1896,7 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
-        return self.add_str(utils.encode_pyobj(py_obj), **kwargs)
+        return self.add_bytes(encoding.Pickle().encode(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS.
@@ -1901,4 +1923,4 @@ class Client(object):
         -------
             object : Deserialized IPFS Python object
         """
-        return utils.parse_pyobj(self.cat(multihash, **kwargs))
+        return self.cat(multihash, decoder='pickle', **kwargs)

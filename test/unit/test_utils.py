@@ -16,13 +16,6 @@ class TestUtils(unittest.TestCase):
     """Contains unit tests for utils.py.
 
     Public methods:
-    test_make_string_buffer -- tests utils.make_string_buffer()
-    test_encode_json -- tests utils.encode_json()
-    test_parse_json -- tests utils.parse_json()
-    test_make_json_buffer -- tests utils.make_json_buffer()
-    test_encode_pyobj -- tests utils.encode_pyobj()
-    test_parse_pyobj -- tests utils.parse_pyobj()
-    test_make_pyobj_buffer -- tests utils.make_pyobj_buffer()
     test_guess_mimetype -- tests utils.guess_mimetype()
     test_ls_dir -- tests utils.ls_dir()
     test_clean_file_opened -- tests utils.clean_file() with a stringIO object
@@ -33,78 +26,6 @@ class TestUtils(unittest.TestCase):
     test_return_field_init -- tests utils.return_field.__init__()
     test_return_field_call -- tests utils.return_field.__call__()
     """
-    def test_make_string_buffer(self):
-        """Tests utils.make_string_buffer()."""
-        raw = u'Mary had a little lamb'
-        buff = utils.make_string_buffer(raw)
-        self.assertEqual(hasattr(buff, 'read'), True)
-        self.assertEqual(hasattr(buff, 'write'), True)
-        self.assertEqual(buff.read(), raw)
-        # Closing buffer after test assertions.
-        buff.close()
-
-    def test_encode_json(self):
-        """Tests utils.encode_json()."""
-        data = {'key': 'value'}
-        self.assertEqual(utils.encode_json(data), json.dumps(data))
-
-    def test_parse_json(self):
-        """Tests utils.parse_json()."""
-        data = {'key': 'value'}
-        raw = json.dumps(data)
-        res = utils.parse_json(raw)
-        self.assertEqual(res['key'], 'value')
-
-    def test_make_json_buffer(self):
-        """Tests utils.make_json_buffer()."""
-        data = {'key': 'value'}
-        raw = json.dumps(data)
-        buff = utils.make_json_buffer(data)
-        self.assertEqual(hasattr(buff, 'read'), True)
-        self.assertEqual(hasattr(buff, 'write'), True)
-        self.assertEqual(buff.read(), raw)
-        # Closing buffer after test assertions.
-        buff.close()
-
-    def test_encode_pyobj(self):
-        """Tests utils.encode_pyobj().
-
-        In Python 2, data appears to be encoded differently based on the
-        context from which pickle.dumps() is called. For this reason we are
-        encoding and then decoding data to ensure that the decoded values are
-        equivalent after the original data has been serialized.
-        """
-        data = {'key': 'value'}
-        utils_res = pickle.loads(utils.encode_pyobj(data))
-        pickle_res = pickle.loads(pickle.dumps(data))
-        self.assertEqual(utils_res, pickle_res)
-
-    def test_parse_pyobj(self):
-        """Tests utils.parse_pyobj()."""
-        data = {'key': 'value'}
-        raw = pickle.dumps(data)
-        res = utils.parse_pyobj(raw)
-        self.assertEqual(res['key'], 'value')
-
-    def test_make_pyobj_buffer(self):
-        """Tests utils.make_pyobj_buffer().
-
-        In Python 2, data appears to be encoded differently based on the
-        context from which pickle.dumps() is called. For this reason we are
-        encoding and then decoding data to ensure that the decoded values are
-        equivalent after the original data has been serialized.
-        """
-        data = {'key': 'value'}
-        raw = pickle.dumps(data)
-        buff = utils.make_pyobj_buffer(data)
-        self.assertEqual(hasattr(buff, 'read'), True)
-        self.assertEqual(hasattr(buff, 'write'), True)
-        utils_res = pickle.loads(buff.read())
-        pickle_res = pickle.loads(raw)
-        self.assertEqual(utils_res, pickle_res)
-        # Closing buffer after test assertions.
-        buff.close()
-
     def test_guess_mimetype(self):
         """Tests utils.guess_mimetype().
 

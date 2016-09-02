@@ -210,9 +210,9 @@ class TestBodyGenerator(unittest.TestCase):
 def _generate_test_chunks(chunk_size, interations):
     """Generates strings of chunk_size length until out of iterations."""
     for i in range(interations):
-        output = ""
+        output = b""
         for j in range(chunk_size):
-            output += "z"
+            output += b"z"
         yield output
 
 
@@ -396,7 +396,7 @@ class TestTextStream(unittest.TestCase):
         """Check the multipart HTTP body for the streamed directory."""
         # Get OS-agnostic path to test files
         text = "Here is some text for this test."
-        instance = ipfsApi.multipart.TextStream(text)
+        instance = ipfsApi.multipart.BytesStream(text)
         expected = "(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
             + "\r\nContent-Type: application/\S+\r\n"\
             + "\r\n(.|\n)*\r\n)+--\S+--\r\n"
