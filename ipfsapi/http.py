@@ -51,10 +51,10 @@ class HTTPClient(object):
     default_enc : str
         The default encoding of the HTTP client's response
 
-        See :func:`ipfsApi.encoding.get_encoding` for possible values.
+        See :func:`ipfsapi.encoding.get_encoding` for possible values.
     defaults : dict
         The default parameters to be passed to
-        :meth:`~ipfsApi.http.HTTPClient.request`
+        :meth:`~ipfsapi.http.HTTPClient.request`
     """
 
     def __init__(self, host, port, base, default_enc, **defaults):
@@ -112,11 +112,11 @@ class HTTPClient(object):
 
         Raises
         ------
-        ~ipfsApi.exceptions.ErrorResponse
-        ~ipfsApi.exceptions.ConnectionError
-        ~ipfsApi.exceptions.ProtocolError
-        ~ipfsApi.exceptions.StatusError
-        ~ipfsApi.exceptions.TimeoutError
+        ~ipfsapi.exceptions.ErrorResponse
+        ~ipfsapi.exceptions.ConnectionError
+        ~ipfsapi.exceptions.ProtocolError
+        ~ipfsapi.exceptions.StatusError
+        ~ipfsapi.exceptions.TimeoutError
 
         Parameters
         ----------
@@ -181,11 +181,11 @@ class HTTPClient(object):
 
         Raises
         ------
-        ~ipfsApi.exceptions.ErrorResponse
-        ~ipfsApi.exceptions.ConnectionError
-        ~ipfsApi.exceptions.ProtocolError
-        ~ipfsApi.exceptions.StatusError
-        ~ipfsApi.exceptions.TimeoutError
+        ~ipfsapi.exceptions.ErrorResponse
+        ~ipfsapi.exceptions.ConnectionError
+        ~ipfsapi.exceptions.ProtocolError
+        ~ipfsapi.exceptions.StatusError
+        ~ipfsapi.exceptions.TimeoutError
 
         Parameters
         ----------

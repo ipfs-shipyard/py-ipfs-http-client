@@ -7,7 +7,7 @@ import sys
 import unittest
 import logging
 
-import ipfsApi
+import ipfsapi
 
 
 __is_available = None
@@ -19,12 +19,12 @@ def is_available():
     
     if not isinstance(__is_available, bool):
         try:
-            ipfsApi.connect()
-        except ipfsApi.exceptions.Error as error:
+            ipfsapi.connect()
+        except ipfsapi.exceptions.Error as error:
             __is_available = False
 
             # Make sure version incompatiblity is displayed to the user
-            if isinstance(error, ipfsApi.exceptions.VersionMismatch):
+            if isinstance(error, ipfsapi.exceptions.VersionMismatch):
                 raise
         else:
             __is_available = True
@@ -40,7 +40,7 @@ def skipIfOffline():
 
 
 def test_ipfs_node_available():
-    addr = "[{0}]:{1}".format(ipfsApi.DEFAULT_HOST, ipfsApi.DEFAULT_PORT)
+    addr = "[{0}]:{1}".format(ipfsapi.DEFAULT_HOST, ipfsapi.DEFAULT_PORT)
     assert is_available(), "Functional tests require an IPFS node to be available at: " + addr
 
 
@@ -50,20 +50,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 class AssertVersionTest(unittest.TestCase):
     def test_assert_version(self):
         # Minimum required version
-        ipfsApi.assert_version("0.1.0", "0.1.0", "0.2.0")
+        ipfsapi.assert_version("0.1.0", "0.1.0", "0.2.0")
         
         # Too high version
-        with self.assertRaises(ipfsApi.exceptions.VersionMismatch):
-            ipfsApi.assert_version("0.2.0", "0.1.0", "0.2.0")
+        with self.assertRaises(ipfsapi.exceptions.VersionMismatch):
+            ipfsapi.assert_version("0.2.0", "0.1.0", "0.2.0")
         
         # Too low version
-        with self.assertRaises(ipfsApi.exceptions.VersionMismatch):
-            ipfsApi.assert_version("0.0.5", "0.1.0", "0.2.0")
+        with self.assertRaises(ipfsapi.exceptions.VersionMismatch):
+            ipfsapi.assert_version("0.0.5", "0.1.0", "0.2.0")
 
 @skipIfOffline()
 class IpfsApiTest(unittest.TestCase):
 
-    api = ipfsApi.Client()
+    api = ipfsapi.Client()
 
     fake = [{'Hash': u'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
              'Name': 'fake_dir/fsdfgh'},
@@ -233,7 +233,7 @@ class IpfsApiTest(unittest.TestCase):
 class IpfsApiLogTest(unittest.TestCase):
 
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
 
     def test_log_ls_level(self):
         """
@@ -274,7 +274,7 @@ class IpfsApiPinTest(unittest.TestCase):
     fake_dir_hash = 'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY'
 
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
         # Add resources to be pinned.
         self.resource = self.api.add_str('Mary had a little lamb')
         resp_add = self.api.add('fake_dir', recursive=True)
@@ -358,7 +358,7 @@ class IpfsApiMFSTest(unittest.TestCase):
     test_directory_path = '/test_dir'
 
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
         self._olddir = os.getcwd()
         os.chdir(HERE)
 
@@ -403,14 +403,14 @@ class IpfsApiMFSTest(unittest.TestCase):
         # Remove directory
         self.api.files_rm(self.test_directory_path, recursive=True)
 
-        with self.assertRaises(ipfsApi.exceptions.Error):
+        with self.assertRaises(ipfsapi.exceptions.Error):
             self.api.files_stat(self.test_directory_path)
 
 
 @skipIfOffline()
 class TestBlockFunctions(unittest.TestCase):
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
         self.multihash = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'
         self.content_size = 248
 
@@ -438,7 +438,7 @@ class TestBlockFunctions(unittest.TestCase):
 class IpfsApiRepoTest(unittest.TestCase):
 
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
 
     def test_repo_stat(self):
         # Verify that the correct key-value pairs are returned
@@ -466,7 +466,7 @@ class IpfsApiRepoTest(unittest.TestCase):
 class IpfsApiObjectTest(unittest.TestCase):
 
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
         self._olddir = os.getcwd()
         os.chdir(HERE)
         # Add a resource to get the stats for.
@@ -578,7 +578,7 @@ class IpfsApiObjectTest(unittest.TestCase):
 class IpfsApiBitswapTest(unittest.TestCase):
 
     def setUp(self):
-        self.api = ipfsApi.Client()
+        self.api = ipfsapi.Client()
 
     def test_bitswap_wantlist(self):
         result = self.api.bitswap_wantlist(peer='QmdkJZUWnVkEc6yfptVu4LWY8nHkEnGwsxqQ233QSGj8UP')

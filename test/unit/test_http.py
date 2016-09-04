@@ -14,8 +14,8 @@ import tarfile
 import os
 from httmock import urlmatch, HTTMock
 
-import ipfsApi.http
-import ipfsApi.exceptions
+import ipfsapi.http
+import ipfsapi.exceptions
 
 
 @urlmatch(netloc='localhost:5001', path=r'.*/okay')
@@ -133,7 +133,7 @@ class TestHttp(unittest.TestCase):
     """
     def setUp(self):
         """Creates an instance of HTTPClient to test against."""
-        self.client = ipfsApi.http.HTTPClient(
+        self.client = ipfsapi.http.HTTPClient(
             'localhost',
             5001,
             'api/v0',
@@ -148,13 +148,13 @@ class TestHttp(unittest.TestCase):
     def test_generic_failure(self):
         """Tests that a failed http request raises an HTTPError."""
         with HTTMock(return_fail):
-            self.assertRaises(ipfsApi.exceptions.StatusError,
+            self.assertRaises(ipfsapi.exceptions.StatusError,
                               self.client.request, '/fail')
 
     def test_api_failure(self):
         """Tests that an api failure raises an ispfApiError."""
         with HTTMock(api_fail):
-            self.assertRaises(ipfsApi.exceptions.Error,
+            self.assertRaises(ipfsapi.exceptions.Error,
                               self.client.request, '/apifail')
 
     def test_stream(self):
@@ -185,13 +185,13 @@ class TestHttp(unittest.TestCase):
     def test_unsupported_decoder(self):
         """Tests that unsupported encodings raise an exception."""
         with HTTMock(api_fail):
-            self.assertRaises(ipfsApi.exceptions.EncoderMissingError,
+            self.assertRaises(ipfsapi.exceptions.EncoderMissingError,
                               self.client.request, '/apifail', decoder='xyz')
 
     def test_failed_decoder(self):
         """Tests that a failed encoding parse raises an exception."""
         with HTTMock(return_okay):
-            self.assertRaises(ipfsApi.exceptions.DecodingError,
+            self.assertRaises(ipfsapi.exceptions.DecodingError,
                               self.client.request, '/okay', decoder='json')
 
     """TODO: Test successful download
@@ -203,7 +203,7 @@ class TestHttp(unittest.TestCase):
     def test_failed_download(self):
         """Tests that a failed download raises an HTTPError."""
         with HTTMock(return_fail):
-            self.assertRaises(ipfsApi.exceptions.StatusError,
+            self.assertRaises(ipfsapi.exceptions.StatusError,
                               self.client.download, '/fail')
 
     def test_session(self):

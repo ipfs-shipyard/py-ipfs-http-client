@@ -1,12 +1,12 @@
 Client API Reference
 --------------------
 
-All commands are accessed through the `ipfsApi.Client` class.
+All commands are accessed through the `ipfsapi.Client` class.
 
 ### Exceptions
 
 ```eval_rst
-.. automodule:: ipfsApi.exceptions
+.. automodule:: ipfsapi.exceptions
     :members:
 ```
 
@@ -20,11 +20,11 @@ All methods accept the following parameters in their `kwargs`:
                        HTTP request
 
 ```eval_rst
-.. autofunction:: ipfsApi.connect
+.. autofunction:: ipfsapi.connect
 
-.. autofunction:: ipfsApi.assert_version
+.. autofunction:: ipfsapi.assert_version
 
-.. autoclass:: ipfsApi.Client
+.. autoclass:: ipfsapi.Client
     :members:
     :show-inheritance:
 

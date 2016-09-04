@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name='ipfs-api',
+    name='ipfsapi',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -33,7 +33,7 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Science/Research',
-        
+
         'Topic :: Internet',
         'Topic :: Scientific/Engineering',
         'Topic :: System :: Filesystems',

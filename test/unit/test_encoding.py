@@ -10,8 +10,8 @@ import pickle
 
 from httmock import urlmatch, HTTMock
 
-import ipfsApi.encoding
-import ipfsApi.exceptions
+import ipfsapi.encoding
+import ipfsapi.exceptions
 
 
 class TestEncoding(unittest.TestCase):
@@ -29,8 +29,8 @@ class TestEncoding(unittest.TestCase):
     """
     def setUp(self):
         """create a Json encoder"""
-        self.encoder_json = ipfsApi.encoding.Json()
-        self.encoder_pickle = ipfsApi.encoding.Pickle()
+        self.encoder_json = ipfsapi.encoding.Json()
+        self.encoder_pickle = ipfsapi.encoding.Pickle()
 
     def test_json_parse(self):
         """Asserts parsed key/value json matches expected output."""
@@ -86,10 +86,10 @@ class TestEncoding(unittest.TestCase):
 
     def test_get_encoder_by_name(self):
         """Tests the process of obtaining an Encoder object given the named encoding."""
-        encoder = ipfsApi.encoding.get_encoding('json')
+        encoder = ipfsapi.encoding.get_encoding('json')
         self.assertEqual(encoder.name, 'json')
 
     def test_get_invalid_encoder(self):
         """Tests the exception handling given an invalid named encoding."""
-        self.assertRaises(ipfsApi.exceptions.EncoderMissingError,
-                          ipfsApi.encoding.get_encoding, 'fake')
+        self.assertRaises(ipfsapi.exceptions.EncoderMissingError,
+                          ipfsapi.encoding.get_encoding, 'fake')

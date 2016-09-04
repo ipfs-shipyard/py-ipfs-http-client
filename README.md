@@ -39,8 +39,8 @@ pip install ipfs-api
 Basic use-case (requires a running instance of IPFS daemon):
 
 ```py
->>> import ipfsApi
->>> api = ipfsApi.connect('127.0.0.1', 5001)
+>>> import ipfsapi
+>>> api = ipfsapi.connect('127.0.0.1', 5001)
 >>> res = api.add('test.txt')
 >>> res
 {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
