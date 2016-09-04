@@ -9,7 +9,7 @@
 
 > A python client library for the IPFS API
 
-Check out [ipfs](http://ipfs.io/) and [the API command reference](http://ipfs.io/docs/commands/) for more information about the IPFS API.
+Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/) for the full command reference.
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
 Currently, this library is tested against [go-ipfs v0.4.3rc3](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3-rc3).
@@ -63,12 +63,12 @@ Administrative functions:
 Pass in API options:
 
 ```py
->>> api.pin_ls(opts={'type':'all'})
+>>> api.pin_ls(type='all')
 {'Keys': {'QmNMELyizsfFdNZW3yKTi1SE2pErifwDTXx6vvQBfwcJbU': {'Count': 1,
                                                              'Type': 'indirect'},
           'QmNQ1h6o1xJARvYzwmySPsuv9L5XfzS4WTvJSTAWwYRSd8': {'Count': 1,
                                                              'Type': 'indirect'},
-          ...
+          …
 ```
 
 Add a directory and match against a filename pattern:
@@ -106,6 +106,14 @@ This module also contains some helper functions for adding strings, json, and ev
 >>> api.get_pyobj(_)
 [1, 77, 'lol']
 ```
+
+## Documentation
+
+Documentation (currently mostly API documentation unfortunately) is available on IPFS:
+
+https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/
+
+The [`ipfs` command-line Client documentation](https://ipfs.io/docs/commands/) may also be useful in some cases.
 
 ## Featured Projects
 
