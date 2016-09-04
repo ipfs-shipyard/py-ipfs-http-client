@@ -10,7 +10,7 @@ import logging
 import ipfsApi
 
 
-__is_available = NotImplemented
+__is_available = None
 def is_available():
     """
     Return whether the IPFS daemon is reachable or not
@@ -18,15 +18,16 @@ def is_available():
     global __is_available
     
     if not isinstance(__is_available, bool):
-        s = socket.socket()
         try:
-            s.connect((ipfsApi.DEFAULT_HOST, ipfsApi.DEFAULT_PORT))
-        except IOError:
+            ipfsApi.connect()
+        except ipfsApi.exceptions.Error as error:
             __is_available = False
+
+            # Make sure version incompatiblity is displayed to the user
+            if isinstance(error, ipfsApi.exceptions.VersionMismatch):
+                raise
         else:
             __is_available = True
-        finally:
-            s.close()
     
     return __is_available
 
@@ -45,6 +46,19 @@ def test_ipfs_node_available():
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+class AssertVersionTest(unittest.TestCase):
+    def test_assert_version(self):
+        # Minimum required version
+        ipfsApi.assert_version("0.1.0", "0.1.0", "0.2.0")
+        
+        # Too high version
+        with self.assertRaises(ipfsApi.exceptions.VersionMismatch):
+            ipfsApi.assert_version("0.2.0", "0.1.0", "0.2.0")
+        
+        # Too low version
+        with self.assertRaises(ipfsApi.exceptions.VersionMismatch):
+            ipfsApi.assert_version("0.0.5", "0.1.0", "0.2.0")
 
 @skipIfOffline()
 class IpfsApiTest(unittest.TestCase):
