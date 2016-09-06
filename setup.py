@@ -3,11 +3,11 @@ import os.path
 from setuptools import setup, find_packages
 
 
-
 # Make current version number as `__version__` available
-__dir__ = os.path.dirname(__file__)
+__dir__     = os.path.dirname(__file__)
+__version__ = None  # flake8 is being stupid
 with open(os.path.join(__dir__, 'ipfsapi', 'version.py')) as file:
-	exec(file.read())
+    exec(file.read())
 
 
 setup(
