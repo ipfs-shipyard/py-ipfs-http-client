@@ -1,4 +1,13 @@
+#!/usr/bin/python3
+import os.path
 from setuptools import setup, find_packages
+
+
+
+# Make current version number as `__version__` available
+__dir__ = os.path.dirname(__file__)
+with open(os.path.join(__dir__, 'ipfsapi', 'version.py')) as file:
+	exec(file.read())
 
 
 setup(
@@ -7,7 +16,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.2.3',
+    version=__version__,
 
     description='IPFS API Bindings for Python',
 
