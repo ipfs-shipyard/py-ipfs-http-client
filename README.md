@@ -4,7 +4,7 @@
 [![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-![](https://img.shields.io/pypi/v/ipfs-api.svg?style=flat-square)
+[![](https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square)](https://pypi.python.org/pypi/ipfsapi)
 [![](https://img.shields.io/travis/ipfs/py-ipfs-api.svg?style=flat-square)](https://travis-ci.org/ipfs/py-ipfs-api)
 
 > A python client library for the IPFS API
@@ -12,7 +12,7 @@
 Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/) for the full command reference.
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.3rc3](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3-rc3).
+Currently, this library is tested against [go-ipfs v0.4.3rc4](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3-rc4).
 You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
 
 ## Table of Contents
@@ -31,7 +31,7 @@ You may experience compatibility issues when attempting to use it with other ver
 Install with pip:
 
 ```sh
-pip install ipfs-api
+pip install ipfsapi
 ```
 
 ## Usage
@@ -113,7 +113,7 @@ Documentation (currently mostly API documentation unfortunately) is available on
 
 https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/
 
-The [`ipfs` command-line Client documentation](https://ipfs.io/docs/commands/) may also be useful in some cases.
+The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) may also be useful in some cases.
 
 ## Featured Projects
 
