@@ -1,18 +1,27 @@
+#!/usr/bin/python3
+import os.path
 from setuptools import setup, find_packages
 
 
+# Make current version number as `__version__` available
+__dir__     = os.path.dirname(__file__)
+__version__ = None  # flake8 is being stupid
+with open(os.path.join(__dir__, 'ipfsapi', 'version.py')) as file:
+    exec(file.read())
+
+
 setup(
-    name='ipfs-api',
+    name='ipfsapi',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.2.3',
+    version=__version__,
 
     description='IPFS API Bindings for Python',
 
     # The project's main homepage.
-    url='https://github.com/amstocker/python-ipfs-api',
+    url='https://github.com/ipfs/py-ipfs-api',
 
     # Author details
     author='Andrew Stocker',
@@ -31,7 +40,13 @@ setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: Science/Research',
+
+        'Topic :: Internet',
+        'Topic :: Scientific/Engineering',
+        'Topic :: System :: Filesystems',
+        'Topic :: System :: Networking',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: MIT License',
@@ -39,17 +54,16 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        # 'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
-    keywords='ipfs requests development',
+    keywords='ipfs storage distribution development',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().

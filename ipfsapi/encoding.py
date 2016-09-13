@@ -24,7 +24,7 @@ class Encoding(object):
 
         Raises
         ------
-        ~ipfsApi.exceptions.DecodingError
+        ~ipfsapi.exceptions.DecodingError
 
         Parameters
         ----------
@@ -38,7 +38,7 @@ class Encoding(object):
 
         Raises
         ------
-        ~ipfsApi.exceptions.EncodingError
+        ~ipfsapi.exceptions.EncodingError
 
         Parameters
         ----------
@@ -58,7 +58,7 @@ class Json(Encoding):
 
         Raises
         ------
-        ~ipfsApi.exceptions.DecodingError
+        ~ipfsapi.exceptions.DecodingError
 
         Parameters
         ----------
@@ -102,7 +102,7 @@ class Json(Encoding):
 
         Raises
         ------
-        ~ipfsApi.exceptions.EncodingError
+        ~ipfsapi.exceptions.EncodingError
 
         Parameters
         ----------
@@ -139,7 +139,7 @@ class Pickle(Encoding):
 
         Raises
         ------
-        ~ipfsApi.exceptions.DecodingError
+        ~ipfsapi.exceptions.DecodingError
 
         Parameters
         ----------
@@ -160,7 +160,7 @@ class Pickle(Encoding):
 
         Raises
         ------
-        ~ipfsApi.exceptions.EncodingError
+        ~ipfsapi.exceptions.EncodingError
 
         Parameters
         ----------
@@ -201,7 +201,7 @@ def get_encoding(name):
 
     Raises
     ------
-    ~ipfsApi.exceptions.EncoderMissingError
+    ~ipfsapi.exceptions.EncoderMissingError
 
     Parameters
     ----------

@@ -4,7 +4,7 @@ Internal API Reference
 ### `encoding`
 
 ```eval_rst
-.. automodule:: ipfsApi.encoding
+.. automodule:: ipfsapi.encoding
     :members:
     :show-inheritance:
 
@@ -13,7 +13,7 @@ Internal API Reference
 ### `http`
 
 ```eval_rst
-.. automodule:: ipfsApi.http
+.. automodule:: ipfsapi.http
     :members:
     :show-inheritance:
 
@@ -22,7 +22,7 @@ Internal API Reference
 ### `multipart`
 
 ```eval_rst
-.. automodule:: ipfsApi.multipart
+.. automodule:: ipfsapi.multipart
     :members:
     :show-inheritance:
 
@@ -31,7 +31,7 @@ Internal API Reference
 ### `utils`
 
 ```eval_rst
-.. automodule:: ipfsApi.utils
+.. automodule:: ipfsapi.utils
     :members:
     :show-inheritance:
 

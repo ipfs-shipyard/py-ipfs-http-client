@@ -23,7 +23,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 
     Raises
     ------
-    ~ipfsApi.exceptions.VersionMismatch
+    ~ipfsapi.exceptions.VersionMismatch
 
     Parameters
     ----------
@@ -46,25 +46,25 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
             default_enc='json', chunk_size=multipart.default_chunk_size,
             **defaults):
-    """Create a new :class:`~ipfsApi.Client` instance and connect to the
+    """Create a new :class:`~ipfsapi.Client` instance and connect to the
     daemon to validate that its version is supported.
 
     Raises
     ------
-    ~ipfsApi.exceptions.VersionMismatch
-    ~ipfsApi.exceptions.ErrorResponse
-    ~ipfsApi.exceptions.ConnectionError
-    ~ipfsApi.exceptions.ProtocolError
-    ~ipfsApi.exceptions.StatusError
-    ~ipfsApi.exceptions.TimeoutError
+    ~ipfsapi.exceptions.VersionMismatch
+    ~ipfsapi.exceptions.ErrorResponse
+    ~ipfsapi.exceptions.ConnectionError
+    ~ipfsapi.exceptions.ProtocolError
+    ~ipfsapi.exceptions.StatusError
+    ~ipfsapi.exceptions.TimeoutError
 
 
     All parameters are identical to those passed to the constructor of the
-    :class:`~ipfsApi.Client` class.
+    :class:`~ipfsapi.Client` class.
 
     Returns
     -------
-        ~ipfsApi.Client
+        ~ipfsapi.Client
     """
     # Create client instance
     client = Client(host, port, base, default_enc, chunk_size, **defaults)
@@ -78,7 +78,7 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 class Client(object):
     """A TCP client for interacting with an IPFS daemon.
 
-    A :class:`~ipfsApi.Client` instance will not actually establish a
+    A :class:`~ipfsapi.Client` instance will not actually establish a
     connection to the daemon until at least one of it's methods is called.
 
     Parameters
@@ -156,7 +156,7 @@ class Client(object):
             >>> c.cat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
             Traceback (most recent call last):
               ...
-            ipfsApi.exceptions.Error: this dag node is a directory
+            ipfsapi.exceptions.Error: this dag node is a directory
             >>> c.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')
             b'<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</…'
 
@@ -298,7 +298,7 @@ class Client(object):
         -------
             dict : Information about the new block
 
-                   See :meth:`~ipfsApi.Client.block_stat`
+                   See :meth:`~ipfsapi.Client.block_stat`
         """
         body, headers = multipart.stream_files(file, self.chunk_size)
         return self._client.request('/block/put',
@@ -507,7 +507,7 @@ class Client(object):
         -------
             dict : Hash and links of the created DAG object
 
-                   See :meth:`~ipfsApi.Object.object_links`
+                   See :meth:`~ipfsapi.Object.object_links`
         """
         body, headers = multipart.stream_files(file, self.chunk_size)
         return self._client.request('/object/put',
@@ -1025,7 +1025,7 @@ class Client(object):
         return self._client.request('/id', args=args, **kwargs)
 
     def bootstrap(self, **kwargs):
-        """Compatiblity alias for :meth:`~ipfsApi.Client.bootstrap_list`."""
+        """Compatiblity alias for :meth:`~ipfsapi.Client.bootstrap_list`."""
         self.bootstrap_list(**kwargs)
 
     def bootstrap_list(self, **kwargs):
@@ -1377,7 +1377,7 @@ class Client(object):
         You may only use keytypes that are supported in your ``ipfs`` binary:
         ``go-ipfs`` currently only supports the ``/ipns/`` keytype. Unless you
         have a relatively deep understanding of the key's internal structure,
-        you likely want to be using the :meth:`~ipfsApi.Client.name_publish`
+        you likely want to be using the :meth:`~ipfsapi.Client.name_publish`
         instead.
 
         Value is arbitrary text.

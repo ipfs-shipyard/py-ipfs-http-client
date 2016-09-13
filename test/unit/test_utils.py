@@ -10,7 +10,7 @@ import os
 import pickle
 import unittest
 
-import ipfsApi.utils as utils
+import ipfsapi.utils as utils
 
 class TestUtils(unittest.TestCase):
     """Contains unit tests for utils.py.
