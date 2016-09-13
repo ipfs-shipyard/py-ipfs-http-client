@@ -10,7 +10,7 @@ matrix:
   - python: "3.5"
     env: TOXENV=py35
 before_script:
-  - wget "https://dist.ipfs.io/go-ipfs/v0.4.3-rc3/go-ipfs_v0.4.3-rc3_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
+  - wget "https://dist.ipfs.io/go-ipfs/v0.4.3-rc4/go-ipfs_v0.4.3-rc4_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
   - mkdir $HOME/bin
   - pushd . && cd $HOME/bin && tar -xzvf /tmp/ipfs.tar.gz && popd
   - export PATH="$HOME/bin/go-ipfs:$PATH"
