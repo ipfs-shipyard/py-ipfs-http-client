@@ -161,7 +161,7 @@ class TestHttp(unittest.TestCase):
         """Tests that the stream flag being set returns the raw response."""
         with HTTMock(return_okay):
             res = self.client.request('/okay', stream=True)
-            self.assertEqual(res.read(4), b'okay')
+            self.assertEqual(next(res), b'okay')
 
     def test_cat(self):
         """Tests that paths ending in /cat are not parsed."""

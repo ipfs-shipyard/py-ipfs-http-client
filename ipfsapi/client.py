@@ -1570,30 +1570,31 @@ class Client(object):
             >>> for item in c.log_tail():
             ...     print(item)
             ...
-            b'{"event":"updatePeer","system":"dht",
-               "peerID":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
-               "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
-               "time":"2016-08-22T13:25:27.43353297Z"}\n'
-            b'{"event":"handleAddProviderBegin","system":"dht",
-               "peer":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
-               "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
-               "time":"2016-08-22T13:25:27.433642581Z"}\n'
-            b'{"event":"handleAddProvider","system":"dht","duration":91704,
-               "key":"QmNT9Tejg6t57Vs8XM2TVJXCwevWiGsZh3kB4HQXUZRK1o",
-               "peer":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
-               "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
-               "time":"2016-08-22T13:25:27.433747513Z"}\n'
-            b'{"event":"updatePeer","system":"dht",
-               "peerID":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
-               "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
-               "time":"2016-08-22T13:25:27.435843012Z"}\n
+            {"event":"updatePeer","system":"dht",
+             "peerID":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
+             "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
+             "time":"2016-08-22T13:25:27.43353297Z"}
+            {"event":"handleAddProviderBegin","system":"dht",
+             "peer":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
+             "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
+             "time":"2016-08-22T13:25:27.433642581Z"}
+            {"event":"handleAddProvider","system":"dht","duration":91704,
+             "key":"QmNT9Tejg6t57Vs8XM2TVJXCwevWiGsZh3kB4HQXUZRK1o",
+             "peer":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
+             "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
+             "time":"2016-08-22T13:25:27.433747513Z"}
+            {"event":"updatePeer","system":"dht",
+             "peerID":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",
+             "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
+             "time":"2016-08-22T13:25:27.435843012Z"}
             …
 
         Returns
         -------
             iterable
         """
-        return self._client.request('/log/tail', stream=True, **kwargs)
+        return self._client.request('/log/tail', decoder='json',
+                                    stream=True, **kwargs)
 
     def version(self, **kwargs):
         """Returns the software version of the currently connected node.

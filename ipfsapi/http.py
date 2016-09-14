@@ -5,6 +5,7 @@ by an asynchronous version.
 """
 from __future__ import absolute_import
 
+import abc
 import contextlib
 import functools
 import re
@@ -57,6 +58,9 @@ class HTTPClient(object):
         :meth:`~ipfsapi.http.HTTPClient.request`
     """
 
+    __metaclass__ = abc.ABCMeta
+
+
     def __init__(self, host, port, base, default_enc, **defaults):
         self.host = host
         self.port = port
@@ -101,10 +105,38 @@ class HTTPClient(object):
             else:
                 six.raise_from(exceptions.StatusError(error), error)
 
+    def _request(self, method, url, params, parser, stream=False, files=None,
+                 headers={}, data=None):
+        # Do HTTP request (synchronously)
+        res = self._do_request(method, url, params=params, stream=stream,
+                               files=files, headers=headers, data=data)
+
+        if stream:
+            # Raise exceptions for response status
+            self._do_raise_for_status(res)
+
+            # Decode each item as it is read
+            def stream_decode():
+                for data in res:
+                    for result in parser.parse_partial(data):
+                        yield result
+                for result in parser.parse_finalize():
+                    yield result
+            return stream_decode()
+        else:
+            # First decode received item
+            ret = parser.parse(res.content)
+
+            # Raise exception for response status
+            # (optionally incorpating the response message, if applicable)
+            self._do_raise_for_status(res, ret)
+
+            return ret
+
     @pass_defaults
     def request(self, path,
-                args=[], files=[], opts={},
-                decoder=None, **kwargs):
+                args=[], files=[], opts={}, stream=False,
+                decoder=None, headers={}, data=None):
         """Makes an HTTP request to the IPFS daemon.
 
         This function returns the contents of the HTTP response from the IPFS
@@ -137,38 +169,32 @@ class HTTPClient(object):
 
         params = []
         params.append(('stream-channels', 'true'))
-
         for opt in opts.items():
             params.append(opt)
         for arg in args:
             params.append(('arg', arg))
 
-        method = 'post' if (files or 'data' in kwargs) else 'get'
-
-        res = self._do_request(method, url, params=params, files=files,
-                               **kwargs)
+        method = 'post' if (files or data) else 'get'
 
         if not decoder:
-            # return raw stream
-            if kwargs.get('stream'):
-                return res.raw
-
-            if path == '/cat':
-                # since <api>/cat only returns the raw data and not an encoded
-                # object, dont't try to parse it automatically.
-                ret = res.content
+            if stream or path == '/cat':
+                parser = encoding.get_encoding("none")
             else:
-                try:
-                    ret = self.default_enc.parse(res.content)
-                except:
-                    ret = res.content
+                #FIXME: Properly specify encoding in `client.py`, then remove
+                #       this compatibility hack
+                class CompatEncoding(encoding.Dummy):
+                    @staticmethod
+                    def parse(raw):
+                        try:
+                            return self.default_enc.parse(raw)
+                        except:
+                            return raw
+                parser = CompatEncoding()
         else:
-            enc = encoding.get_encoding(decoder)
-            ret = enc.parse(res.content)
+            parser = encoding.get_encoding(decoder)
 
-        self._do_raise_for_status(res, ret)
-
-        return ret
+        return self._request(method, url, params, parser, stream,
+                             files, headers, data)
 
     @pass_defaults
     def download(self, path, filepath=None,
