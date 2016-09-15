@@ -49,10 +49,6 @@ class HTTPClient(object):
         The port the IPFS daemon is running at
     base : str
         The path prefix for API calls
-    default_enc : str
-        The default encoding of the HTTP client's response
-
-        See :func:`ipfsapi.encoding.get_encoding` for possible values.
     defaults : dict
         The default parameters to be passed to
         :meth:`~ipfsapi.http.HTTPClient.request`
@@ -60,8 +56,7 @@ class HTTPClient(object):
 
     __metaclass__ = abc.ABCMeta
 
-
-    def __init__(self, host, port, base, default_enc, **defaults):
+    def __init__(self, host, port, base, **defaults):
         self.host = host
         self.port = port
         if not re.match('^https?://', host.lower()):
@@ -69,13 +64,6 @@ class HTTPClient(object):
 
         self.base = '%s:%s/%s' % (host, port, base)
 
-        # default request keyword-args
-        if 'opts' in defaults:
-            defaults['opts'].update({'encoding': default_enc})
-        else:
-            defaults.update({'opts': {'encoding': default_enc}})
-
-        self.default_enc  = encoding.get_encoding(default_enc)
         self.defaults = defaults
         self._session = None
 
@@ -176,29 +164,13 @@ class HTTPClient(object):
 
         method = 'post' if (files or data) else 'get'
 
-        if not decoder:
-            if stream or path == '/cat':
-                parser = encoding.get_encoding("none")
-            else:
-                #FIXME: Properly specify encoding in `client.py`, then remove
-                #       this compatibility hack
-                class CompatEncoding(encoding.Dummy):
-                    @staticmethod
-                    def parse(raw):
-                        try:
-                            return self.default_enc.parse(raw)
-                        except:
-                            return raw
-                parser = CompatEncoding()
-        else:
-            parser = encoding.get_encoding(decoder)
+        parser = encoding.get_encoding(decoder if decoder else "none")
 
         return self._request(method, url, params, parser, stream,
                              files, headers, data)
 
     @pass_defaults
-    def download(self, path, filepath=None,
-                 args=[], opts={},
+    def download(self, path, args=[], filepath=None, opts={},
                  compress=True, **kwargs):
         """Makes a request to the IPFS daemon to download a file.
 

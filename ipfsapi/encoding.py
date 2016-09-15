@@ -24,7 +24,6 @@ class Encoding(object):
     """
     __metaclass__ = abc.ABCMeta
 
-
     @abc.abstractmethod
     def parse_partial(self, raw):
         """Parses the given data and yields all complete data sets that can
@@ -58,7 +57,6 @@ class Encoding(object):
         """
         return ()
 
-
     def parse(self, raw):
         """Returns a Python object decoded from the bytes of this encoding.
 
@@ -78,7 +76,6 @@ class Encoding(object):
         results = list(self.parse_partial(raw))
         results.extend(self.parse_finalize())
         return results[0] if len(results) == 1 else results
-
 
     @abc.abstractmethod
     def encode(self, obj):
@@ -141,7 +138,6 @@ class Json(Encoding):
         self._decoder2  = json.JSONDecoder()
         self._lasterror = None
 
-
     def parse_partial(self, data):
         """Incrementally decodes JSON data sets into Python objects.
 
@@ -203,8 +199,8 @@ class Json(Encoding):
             except UnicodeDecodeError as error:
                 raise exceptions.DecodingError('json', error)
 
-            # Late raise errors that looked like they could have been fixed if the
-            # caller had provided more data
+            # Late raise errors that looked like they could have been fixed if
+            # the caller had provided more data
             if self._buffer:
                 raise exceptions.DecodingError('json', self._lasterror)
         finally:
@@ -214,7 +210,6 @@ class Json(Encoding):
             self._decoder1.reset()
 
         return ()
-
 
     def encode(self, obj):
         """Returns ``obj`` serialized as JSON formatted bytes.
@@ -253,7 +248,7 @@ class Pickle(Encoding):
     def parse_partial(self, raw):
         """Buffers the given data so that the it can be passed to `pickle` in
         one go.
-        
+
         This does not actually process the data in smaller chunks, but merely
         buffers it until `parse_finalize` is called! This is mostly because
         the standard-library module expects the entire data to be available up

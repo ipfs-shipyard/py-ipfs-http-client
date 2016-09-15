@@ -136,8 +136,7 @@ class TestHttp(unittest.TestCase):
         self.client = ipfsapi.http.HTTPClient(
             'localhost',
             5001,
-            'api/v0',
-            'json')
+            'api/v0')
 
     def test_successful_request(self):
         """Tests that a successful http request returns the proper message."""
@@ -173,7 +172,7 @@ class TestHttp(unittest.TestCase):
         """Tests that the default encoding is set to json."""
         with HTTMock(api_okay):
             res = self.client.request('/apiokay')
-            self.assertEquals(res['Message'], 'okay')
+            self.assertEquals(res, b'{"Message": "okay"}')
 
     def test_explicit_decoder(self):
         """Tests that an explicit decoder is handled correctly."""
