@@ -12,7 +12,7 @@
 Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/) for the full command reference.
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.3rc4](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3-rc4).
+Currently, this library is tested against [go-ipfs v0.4.3](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3).
 You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
 
 ## Table of Contents
