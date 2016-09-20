@@ -1,5 +1,10 @@
 #!/usr/bin/python3
-import os.path
+import itertools
+import locale
+import os
+import sys
+import subprocess
+import warnings
 from setuptools import setup, find_packages
 
 
@@ -8,6 +13,44 @@ __dir__     = os.path.dirname(__file__)
 __version__ = None  # flake8 is being stupid
 with open(os.path.join(__dir__, 'ipfsapi', 'version.py')) as file:
     exec(file.read())
+
+
+def get_long_description():
+    """
+    Try generating long description by converting the `README.md` to Python's
+    ReStructuredText using `pandoc`.
+    """
+    readme_path = os.path.join(__dir__, 'README.md')
+
+    ##
+    # Look for `pandoc` in `$PATH`
+    #
+
+    # Assemble required parameters
+    path_list    = os.environ['PATH'].split(os.pathsep)
+    pathext_list = ['']
+    if sys.platform.startswith('win32'):  # NOT cygwin!
+        path_list.insert(0, os.getcwd())
+        pathext_list.extend(os.environ['PATHEXT'].split(os.pathsep))
+
+    # Do the search
+    pandoc_path = None
+    for dirpath, pathext in itertools.product(path_list, pathext_list):
+        pandoc_path = os.path.join(dirpath, "pandoc{}".format(pathext))
+        if os.access(pandoc_path, os.X_OK):
+            break
+        else:
+            pandoc_path = None
+    if not pandoc_path:
+        warnings.warn("Cannot generate long description: `pandoc` missing")
+        return "<!!! INSTALL PANDOC !!!>"
+
+    ##
+    # Do the actual conversion using `pandoc`
+    #
+    cmdline = [pandoc_path, "--from=markdown", "--to=rst", readme_path]
+    with subprocess.Popen(cmdline, stdout=subprocess.PIPE) as pandoc:
+        return pandoc.communicate()[0].decode(locale.getpreferredencoding())
 
 
 setup(
@@ -19,13 +62,14 @@ setup(
     version=__version__,
 
     description='IPFS API Bindings for Python',
+    long_description=get_long_description(),
 
     # The project's main homepage.
     url='https://github.com/ipfs/py-ipfs-api',
 
     # Author details
-    author='Andrew Stocker',
-    author_email='sleepyams@gmail.com',
+    author='py-ipfs-api team',
+    author_email='',
 
     # Choose your license
     license='MIT',
