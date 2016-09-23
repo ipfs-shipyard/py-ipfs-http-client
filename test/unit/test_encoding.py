@@ -8,6 +8,7 @@ import unittest
 import json
 import pickle
 
+import six
 from httmock import urlmatch, HTTMock
 
 import ipfsapi.encoding
@@ -35,16 +36,50 @@ class TestEncoding(unittest.TestCase):
     def test_json_parse(self):
         """Asserts parsed key/value json matches expected output."""
         data = {'key': 'value'}
-        raw = json.dumps(data)
+        raw = six.b(json.dumps(data))
         res = self.encoder_json.parse(raw)
         self.assertEqual(res['key'], 'value')
+
+    def test_json_parse_partial(self):
+        """Tests if feeding parts of JSON strings in the right order to the JSON parser produces the right results."""
+        data1 = {'key1': 'value1'}
+        data2 = {'key2': 'value2'}
+        
+        assertPartialEqual  = lambda d, r: self.assertEqual(list(self.encoder_json.parse_partial(d)), r)
+        assertFinalizeEmpty = lambda:      self.assertEqual(list(self.encoder_json.parse_finalize()), [])
+        
+        # Try single fragmented data set
+        data1_binary = six.b(json.dumps(data1))
+        assertPartialEqual(data1_binary[:5], [])
+        assertPartialEqual(data1_binary[5:], [data1])
+        assertFinalizeEmpty()
+        
+        # Try multiple data sets contained in whitespace
+        data2_binary = six.b(json.dumps(data2))
+        assertPartialEqual(b"  " + data1_binary + b"  \r\n  " + data2_binary + b"  ", [data1, data2])
+        assertFinalizeEmpty()
+        
+        # String containing broken UTF-8
+        self.assertRaises(ipfsapi.exceptions.DecodingError,
+                          lambda: list(self.encoder_json.parse_partial(b'{"hello": "\xc3ber world!"}')))
+        assertFinalizeEmpty()
+    
+    def test_json_parse_incomplete(self):
+        """Tests if feeding the JSON parse incomplete data correctly produces an error."""
+        list(self.encoder_json.parse_partial(b'{"bla":'))
+        self.assertRaises(ipfsapi.exceptions.DecodingError,
+                          self.encoder_json.parse_finalize)
+
+        list(self.encoder_json.parse_partial(b'{"\xc3')) # Incomplete UTF-8 sequence
+        self.assertRaises(ipfsapi.exceptions.DecodingError,
+                          self.encoder_json.parse_finalize)
 
     def test_json_parse_chained(self):
         """Tests if concatenated string of JSON object is being parsed correctly."""
         data1 = {'key1': 'value1'}
         data2 = {'key2': 'value2'}
         res = self.encoder_json.parse(
-            json.dumps(data1) + json.dumps(data2))
+            six.b(json.dumps(data1)) + six.b(json.dumps(data2)))
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]['key1'], 'value1')
         self.assertEqual(res[1]['key2'], 'value2')
@@ -54,7 +89,7 @@ class TestEncoding(unittest.TestCase):
         data1 = {'key1': 'value1'}
         data2 = {'key2': 'value2'}
         res = self.encoder_json.parse(
-            json.dumps(data1) + '\n' + json.dumps(data2))
+            six.b(json.dumps(data1)) + b'\n' + six.b(json.dumps(data2)))
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0]['key1'], 'value1')
         self.assertEqual(res[1]['key2'], 'value2')

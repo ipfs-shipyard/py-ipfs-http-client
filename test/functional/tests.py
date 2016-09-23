@@ -256,16 +256,9 @@ class IpfsApiLogTest(unittest.TestCase):
         # Gets the response object.
         tail = self.api.log_tail()
 
-        # Takes the first log received.
-        line = tail.readline()
-        log = json.loads(line.decode())
-
-        # Closes the response object.
-        tail.close()
-
         # The log should have been parsed into a dictionary object with
         # various keys depending on the event that occured.
-        self.assertTrue(type(log) is dict)
+        self.assertIs(type(next(tail)), dict)
 
 
 @skipIfOffline()

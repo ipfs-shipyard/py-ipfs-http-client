@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """Defines encoding related classes.
 
 .. note::
@@ -7,6 +8,9 @@
 
 from __future__ import absolute_import
 
+import abc
+import codecs
+import io
 import json
 import pickle
 
@@ -18,9 +22,12 @@ from . import exceptions
 class Encoding(object):
     """Abstract base for a data parser/encoder interface.
     """
+    __metaclass__ = abc.ABCMeta
 
-    def parse(self, string):
-        """Parses string into corresponding encoding.
+    @abc.abstractmethod
+    def parse_partial(self, raw):
+        """Parses the given data and yields all complete data sets that can
+        be built from this.
 
         Raises
         ------
@@ -28,11 +35,49 @@ class Encoding(object):
 
         Parameters
         ----------
-        string : bytes
+        raw : bytes
             Data to be parsed
-        """
-        raise NotImplemented
 
+        Returns
+        -------
+            generator
+        """
+
+    def parse_finalize(self):
+        """Finalizes parsing based on remaining buffered data and yields the
+        remaining data sets.
+
+        Raises
+        ------
+           ~ipfsapi.exceptions.DecodingError
+
+        Returns
+        -------
+            generator
+        """
+        return ()
+
+    def parse(self, raw):
+        """Returns a Python object decoded from the bytes of this encoding.
+
+        Raises
+        ------
+        ~ipfsapi.exceptions.DecodingError
+
+        Parameters
+        ----------
+        raw : bytes
+            Data to be parsed
+
+        Returns
+        -------
+            object
+        """
+        results = list(self.parse_partial(raw))
+        results.extend(self.parse_finalize())
+        return results[0] if len(results) == 1 else results
+
+    @abc.abstractmethod
     def encode(self, obj):
         """Serialize a raw object into corresponding encoding.
 
@@ -45,7 +90,41 @@ class Encoding(object):
         obj : object
             Object to be encoded
         """
-        raise NotImplemented
+
+
+class Dummy(Encoding):
+    """Dummy parser/encoder that does nothing.
+    """
+    name = "none"
+
+    def parse_partial(self, raw):
+        """Yields the data passed into this method.
+
+        Parameters
+        ----------
+        raw : bytes
+            Any kind of data
+
+        Returns
+        -------
+            generator
+        """
+        yield raw
+
+    def encode(self, obj):
+        """Returns the bytes representation of the data passed into this
+        function.
+
+        Parameters
+        ----------
+        obj : object
+            Any Python object
+
+        Returns
+        -------
+            bytes
+        """
+        return six.b(str(obj))
 
 
 class Json(Encoding):
@@ -53,49 +132,84 @@ class Json(Encoding):
     """
     name = 'json'
 
-    def parse(self, raw):
-        """Returns a Python object decoded from JSON object(s) bytes.
+    def __init__(self):
+        self._buffer    = ""
+        self._decoder1  = codecs.getincrementaldecoder('utf-8')()
+        self._decoder2  = json.JSONDecoder()
+        self._lasterror = None
+
+    def parse_partial(self, data):
+        """Incrementally decodes JSON data sets into Python objects.
 
         Raises
         ------
         ~ipfsapi.exceptions.DecodingError
 
-        Parameters
-        ----------
-        raw : bytes
-            Stringified JSON object
+        Returns
+        -------
+            generator
+        """
+        try:
+            # Python 3 requires all JSON data to be a text string
+            self._buffer += self._decoder1.decode(data, False)
+        except UnicodeDecodeError as error:
+            raise exceptions.DecodingError('json', error)
+
+        # Process data buffer
+        try:
+            while True:
+                # Make sure buffer does not start with whitespace
+                #PERF: `.lstrip()` does not reallocate if the string does
+                #      not actually start with whitespace.
+                self._buffer = self._buffer.lstrip()
+
+                # Try decoding the partial data buffer and return results
+                # from this
+                (obj, idx) = self._decoder2.raw_decode(self._buffer)
+
+                # Decoding succeeded – yield result and shorten buffer
+                yield obj
+                self._buffer = self._buffer[idx:]
+        except ValueError as error:
+            # It is unfortunately not possible to reliably detect whether
+            # parsing ended because of an error *within* the JSON string, or
+            # an unexpected *end* of the JSON string.
+            # We therefor have to assume that any error that occurs here
+            # *might* be related to the JSON parser hitting EOF and therefor
+            # have to postpone error reporting until `parse_finalize` is
+            # called.
+            self._lasterror = error
+
+    def parse_finalize(self):
+        """Raises errors for incomplete buffered data that could not be parsed
+        because the end of the input data has been reached.
+
+        Raises
+        ------
+        ~ipfsapi.exceptions.DecodingError
 
         Returns
         -------
-            str | list | dict | int
+            tuple : Always empty
         """
-        json_string = raw.strip()
-        decoder = json.JSONDecoder()
-        results = []
-
         try:
-            # Python 3 requires this to be a text string
-            if isinstance(json_string, six.binary_type):
-                json_string = json_string.decode("utf-8")
+            try:
+                # Raise exception for remaining bytes in bytes decoder
+                self._decoder1.decode(b'', True)
+            except UnicodeDecodeError as error:
+                raise exceptions.DecodingError('json', error)
 
-            # Some responses from the IPFS api are a concatenated string of
-            # JSON objects, which crashes json.loads(), so we need to use this
-            # instead as a general approach.
-            obj, idx = decoder.raw_decode(json_string)
-            results.append(obj)
-            cur = idx
-            while cur < len(json_string) - 1:
-                if json_string[cur] == '\n':
-                    cur += 1
-                obj, idx = decoder.raw_decode(json_string[cur:])
-                results.append(obj)
-                cur += idx
-        except (UnicodeDecodeError, ValueError) as error:
-            raise exceptions.DecodingError('json', error)
+            # Late raise errors that looked like they could have been fixed if
+            # the caller had provided more data
+            if self._buffer:
+                raise exceptions.DecodingError('json', self._lasterror)
+        finally:
+            # Reset state
+            self._buffer    = ""
+            self._lasterror = None
+            self._decoder1.reset()
 
-        if len(results) == 1:
-            return results[0]
-        return results
+        return ()
 
     def encode(self, obj):
         """Returns ``obj`` serialized as JSON formatted bytes.
@@ -124,9 +238,50 @@ class Json(Encoding):
 
 
 class Pickle(Encoding):
-    """Python object parser/encoder using pickle.
+    """Python object parser/encoder using `pickle`.
     """
     name = 'pickle'
+
+    def __init__(self):
+        self._buffer = io.BytesIO()
+
+    def parse_partial(self, raw):
+        """Buffers the given data so that the it can be passed to `pickle` in
+        one go.
+
+        This does not actually process the data in smaller chunks, but merely
+        buffers it until `parse_finalize` is called! This is mostly because
+        the standard-library module expects the entire data to be available up
+        front, which is currently always the case for our code anyways.
+
+        Parameters
+        ----------
+        raw : bytes
+            Data to be buffered
+
+        Returns
+        -------
+            tuple : An empty tuple
+        """
+        self._buffer.write(raw)
+        return ()
+
+    def parse_finalize(self):
+        """Parses the buffered data and yields the result.
+
+        Raises
+        ------
+           ~ipfsapi.exceptions.DecodingError
+
+        Returns
+        -------
+            generator
+        """
+        try:
+            self._buffer.seek(0, 0)
+            yield pickle.load(self._buffer)
+        except pickle.UnpicklingError as error:
+            raise exceptions.DecodingError('pickle', error)
 
     def parse(self, raw):
         r"""Returns a Python object decoded from a pickle byte stream.
@@ -150,10 +305,7 @@ class Pickle(Encoding):
         -------
             object
         """
-        try:
-            return pickle.loads(raw)
-        except pickle.UnpicklingError as error:
-            raise exceptions.DecodingError('pickle', error)
+        return Encoding.parse(self, raw)
 
     def encode(self, obj):
         """Returns ``obj`` serialized as a pickle binary string.
@@ -188,6 +340,7 @@ class Xml(Encoding):
 
 # encodings supported by the IPFS api (default is JSON)
 __encodings = {
+    Dummy.name: Dummy,
     Json.name: Json,
     Pickle.name: Pickle,
     Protobuf.name: Protobuf,
@@ -208,6 +361,7 @@ def get_encoding(name):
     name : str
         Encoding name. Supported options:
 
+         * ``"none"``
          * ``"json"``
          * ``"pickle"``
          * ``"protobuf"``

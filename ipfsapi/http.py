@@ -5,6 +5,7 @@ by an asynchronous version.
 """
 from __future__ import absolute_import
 
+import abc
 import contextlib
 import functools
 import re
@@ -48,16 +49,14 @@ class HTTPClient(object):
         The port the IPFS daemon is running at
     base : str
         The path prefix for API calls
-    default_enc : str
-        The default encoding of the HTTP client's response
-
-        See :func:`ipfsapi.encoding.get_encoding` for possible values.
     defaults : dict
         The default parameters to be passed to
         :meth:`~ipfsapi.http.HTTPClient.request`
     """
 
-    def __init__(self, host, port, base, default_enc, **defaults):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, host, port, base, **defaults):
         self.host = host
         self.port = port
         if not re.match('^https?://', host.lower()):
@@ -65,13 +64,6 @@ class HTTPClient(object):
 
         self.base = '%s:%s/%s' % (host, port, base)
 
-        # default request keyword-args
-        if 'opts' in defaults:
-            defaults['opts'].update({'encoding': default_enc})
-        else:
-            defaults.update({'opts': {'encoding': default_enc}})
-
-        self.default_enc  = encoding.get_encoding(default_enc)
         self.defaults = defaults
         self._session = None
 
@@ -101,10 +93,38 @@ class HTTPClient(object):
             else:
                 six.raise_from(exceptions.StatusError(error), error)
 
+    def _request(self, method, url, params, parser, stream=False, files=None,
+                 headers={}, data=None):
+        # Do HTTP request (synchronously)
+        res = self._do_request(method, url, params=params, stream=stream,
+                               files=files, headers=headers, data=data)
+
+        if stream:
+            # Raise exceptions for response status
+            self._do_raise_for_status(res)
+
+            # Decode each item as it is read
+            def stream_decode():
+                for data in res:
+                    for result in parser.parse_partial(data):
+                        yield result
+                for result in parser.parse_finalize():
+                    yield result
+            return stream_decode()
+        else:
+            # First decode received item
+            ret = parser.parse(res.content)
+
+            # Raise exception for response status
+            # (optionally incorpating the response message, if applicable)
+            self._do_raise_for_status(res, ret)
+
+            return ret
+
     @pass_defaults
     def request(self, path,
-                args=[], files=[], opts={},
-                decoder=None, **kwargs):
+                args=[], files=[], opts={}, stream=False,
+                decoder=None, headers={}, data=None):
         """Makes an HTTP request to the IPFS daemon.
 
         This function returns the contents of the HTTP response from the IPFS
@@ -137,42 +157,20 @@ class HTTPClient(object):
 
         params = []
         params.append(('stream-channels', 'true'))
-
         for opt in opts.items():
             params.append(opt)
         for arg in args:
             params.append(('arg', arg))
 
-        method = 'post' if (files or 'data' in kwargs) else 'get'
+        method = 'post' if (files or data) else 'get'
 
-        res = self._do_request(method, url, params=params, files=files,
-                               **kwargs)
+        parser = encoding.get_encoding(decoder if decoder else "none")
 
-        if not decoder:
-            # return raw stream
-            if kwargs.get('stream'):
-                return res.raw
-
-            if path == '/cat':
-                # since <api>/cat only returns the raw data and not an encoded
-                # object, dont't try to parse it automatically.
-                ret = res.content
-            else:
-                try:
-                    ret = self.default_enc.parse(res.content)
-                except:
-                    ret = res.content
-        else:
-            enc = encoding.get_encoding(decoder)
-            ret = enc.parse(res.content)
-
-        self._do_raise_for_status(res, ret)
-
-        return ret
+        return self._request(method, url, params, parser, stream,
+                             files, headers, data)
 
     @pass_defaults
-    def download(self, path, filepath=None,
-                 args=[], opts={},
+    def download(self, path, args=[], filepath=None, opts={},
                  compress=True, **kwargs):
         """Makes a request to the IPFS daemon to download a file.
 
