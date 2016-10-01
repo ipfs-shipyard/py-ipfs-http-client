@@ -104,7 +104,7 @@ class Client(object):
 
         self._client = self._clientfactory(host, port, base, **defaults)
 
-    def add(self, files, recursive=False, fnpattern='.*', **kwargs):
+    def add(self, files, recursive=False, fnpattern='*', **kwargs):
         """Add a file, or directory of files to IPFS.
 
         .. code-block:: python
