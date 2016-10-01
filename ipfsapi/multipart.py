@@ -335,7 +335,7 @@ class DirectoryStream(BufferedGenerator):
     def __init__(self,
                  directory,
                  recursive=False,
-                 fnpattern='*',
+                 fnpattern='.*',
                  chunk_size=default_chunk_size):
         BufferedGenerator.__init__(self, directory, chunk_size=chunk_size)
 
@@ -452,7 +452,7 @@ def stream_files(files, chunk_size=default_chunk_size):
 
 def stream_directory(directory,
                      recursive=False,
-                     fnpattern='*',
+                     fnpattern='.*',
                      chunk_size=default_chunk_size):
     """Gets a buffered generator for streaming directories.
 
@@ -480,7 +480,7 @@ def stream_directory(directory,
 
 def stream_filesystem_node(path,
                            recursive=False,
-                           fnpattern='*',
+                           fnpattern='.*',
                            chunk_size=default_chunk_size):
     """Gets a buffered generator for streaming either files or directories.
 
