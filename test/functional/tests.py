@@ -16,7 +16,7 @@ def is_available():
     Return whether the IPFS daemon is reachable or not
     """
     global __is_available
-    
+
     if not isinstance(__is_available, bool):
         try:
             ipfsapi.connect()
@@ -28,7 +28,7 @@ def is_available():
                 raise
         else:
             __is_available = True
-    
+
     return __is_available
 
 
@@ -51,11 +51,11 @@ class AssertVersionTest(unittest.TestCase):
     def test_assert_version(self):
         # Minimum required version
         ipfsapi.assert_version("0.1.0", "0.1.0", "0.2.0")
-        
+
         # Too high version
         with self.assertRaises(ipfsapi.exceptions.VersionMismatch):
             ipfsapi.assert_version("0.2.0", "0.1.0", "0.2.0")
-        
+
         # Too low version
         with self.assertRaises(ipfsapi.exceptions.VersionMismatch):
             ipfsapi.assert_version("0.0.5", "0.1.0", "0.2.0")
@@ -101,6 +101,15 @@ class IpfsApiTest(unittest.TestCase):
             {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
             {'Name': 'test2/llllg', 'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ'},
             {'Name': 'test2', 'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ'}]
+
+    ## test_add_filepattern_from_dirname
+    fake_dir_test2 = 'fake_dir/test2'
+    fnpattern = 'fss*'
+    # the hash of the folder is not same as above because the content of the folder
+    # added is not same.
+    fake_dir_fnpattern_res = [
+            {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
+            {'Name': 'test2', 'Hash': 'QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe'}]
 
     ## test_add_recursive
     fake_dir = 'fake_dir'
@@ -162,6 +171,13 @@ class IpfsApiTest(unittest.TestCase):
         self.assertEqual(sorted(res,
                                 key=lambda x: x['Name']),
                          sorted(self.fake_dir_res,
+                                key=lambda x: x['Name']))
+
+    def test_add_filepattern_from_dirname(self):
+        res = self.api.add(self.fake_dir_test2, fnpattern=self.fnpattern)
+        self.assertEqual(sorted(res,
+                                key=lambda x: x['Name']),
+                         sorted(self.fake_dir_fnpattern_res,
                                 key=lambda x: x['Name']))
 
     def test_add_recursive(self):

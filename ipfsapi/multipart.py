@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import requests
 import io
 import os
+import re
 from inspect import isgenerator
 from uuid import uuid4
 
@@ -386,10 +387,12 @@ class DirectoryStream(BufferedGenerator):
                 if short_name.startswith(os.sep):
                     short_name = short_name[1:]
                 try:
-                    # add the file to those being sent
-                    names.append(('files', (short_name,
-                                            open(filepath, 'rb'),
-                                            'application/octet-stream')))
+                    # add the file to those being sent if it matches the
+                    # given file pattern
+                    if re.match(self.fnpattern, filename):
+                        names.append(('files', (short_name,
+                                                open(filepath, 'rb'),
+                                                'application/octet-stream')))
                 except OSError:
                     # File might have disappeared between `os.walk()`
                     # and `open()`
