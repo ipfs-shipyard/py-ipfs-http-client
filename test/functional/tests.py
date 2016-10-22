@@ -315,7 +315,7 @@ class IpfsApiPinTest(unittest.TestCase):
         self.api = ipfsapi.Client()
         # Add resources to be pinned.
         self.resource = self.api.add_str('Mary had a little lamb')
-        resp_add = self.api.add('fake_dir', recursive=True)
+        resp_add = self.api.add('test/functional/fake_dir', recursive=True)
         self.fake_dir_hashes = [el['Hash'] for el in resp_add if 'Hash' in el]
 
     def test_pin_ls_add_rm_single(self):
