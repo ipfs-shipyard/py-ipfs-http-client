@@ -81,7 +81,7 @@ class IpfsApiTest(unittest.TestCase):
              'Name': 'fake_dir/test2'},
             {'Hash': u'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q',
              'Name': 'fake_dir/test3'},
-            {'Hash': u'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY',
+            {'Hash': u'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi',
              'Name': 'fake_dir'}]
 
     fake_lookup = dict((i['Name'], i['Hash']) for i in fake)
@@ -100,16 +100,32 @@ class IpfsApiTest(unittest.TestCase):
     fake_dir_res = [
             {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
             {'Name': 'test2/llllg', 'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ'},
-            {'Name': 'test2', 'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ'}]
+            {'Name': 'test2', 'Hash': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU'},
+            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN',
+             'Name': 'test2/high'},
+            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE',
+             'Name': 'test2/high/five'},
+            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT',
+             'Name': 'test2/high/five/dummy'}]
 
     ## test_add_filepattern_from_dirname
     fake_dir_test2 = 'fake_dir/test2'
-    fnpattern = 'fss*'
+    fnpattern = '**/fss*'
     # the hash of the folder is not same as above because the content of the folder
     # added is not same.
     fake_dir_fnpattern_res = [
             {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
             {'Name': 'test2', 'Hash': 'QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe'}]
+
+    ## test_add_filepattern_subdir_wildcard
+    fnpattern2 = 'fake_dir/**/test2/**/high'
+    fake_dir_fnpattern2_res = [
+            {'Hash': 'QmUXuNHpV6cdeTngSkEMbP2nQDPuyE2MFXNYtTXzZvLZHf', 'Name': 'fake_dir'},
+            {'Hash': 'QmZGuwqaXMmSwJcfTsvseHwy3mvDPD9zrs9WVowAZcQN4W', 'Name': 'fake_dir/test2'},
+            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN', 'Name': 'fake_dir/test2/high'},
+            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE', 'Name': 'fake_dir/test2/high/five'},
+            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT', 'Name': 'fake_dir/test2/high/five/dummy'}]
+
 
     ## test_add_recursive
     fake_dir = 'fake_dir'
@@ -117,21 +133,27 @@ class IpfsApiTest(unittest.TestCase):
             {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX', 'Name': 'fake_dir/fsdfgh'},
             {'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv', 'Name': 'fake_dir/popoiopiu'},
             {'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD', 'Name': 'fake_dir/test2/fssdf'},
+            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN', 'Name': 'fake_dir/test2/high'},
+            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE', 'Name': 'fake_dir/test2/high/five'},
+            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT', 'Name': 'fake_dir/test2/high/five/dummy'},
             {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ', 'Name': 'fake_dir/test2/llllg'},
             {'Hash': 'QmeMbJSHNCesAh7EeopackUdjutTJznum1Fn7knPm873Fe', 'Name': 'fake_dir/test3/ppppoooooooooo'},
-            {'Hash': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ', 'Name': 'fake_dir/test2'},
+            {'Hash': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU', 'Name': 'fake_dir/test2'},
             {'Hash': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q', 'Name': 'fake_dir/test3'},
-            {'Hash': 'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY', 'Name': 'fake_dir'}]
+            {'Hash': 'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi', 'Name': 'fake_dir'}]
 
     ## test_refs
     refs_res = [{'Err': '', 'Ref': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
                 {'Err': '', 'Ref': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv'},
-                {'Err': '', 'Ref': 'QmX1dd5DtkgoiYRKaPQPTCtXArUu4jEZ62rJBUcd5WhxAZ'},
+                {'Err': '', 'Ref': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU'},
                 {'Err': '', 'Ref': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q'}]
 
     def setUp(self):
         self._olddir = os.getcwd()
         os.chdir(HERE)
+
+        # Makes all of the diff visible if the hashes change for some reason
+        self.maxDiff = None
 
     def tearDown(self):
         os.chdir(self._olddir)
@@ -155,36 +177,43 @@ class IpfsApiTest(unittest.TestCase):
 
     def test_add_single_from_str(self):
         res = self.api.add(self.fake_file)
-        self.assertEqual(res, self.fake_file_only_res)
+        self.assertEqual(self.fake_file_only_res, res)
 
     def test_add_single_from_fp(self):
         with open(self.fake_file, 'rb') as fp:
             res = self.api.add(fp)
-            self.assertEqual(res, self.fake_file_only_res)
+            self.assertEqual(self.fake_file_only_res, res)
 
     def test_add_multiple_from_list(self):
         res = self.api.add([self.fake_file, self.fake_file2])
-        self.assertEqual(res, self.fake_files_res)
+        self.assertEqual(self.fake_files_res, res)
 
     def test_add_multiple_from_dirname(self):
         res = self.api.add(self.fake_dir_test2)
-        self.assertEqual(sorted(res,
+        self.assertEqual(sorted(self.fake_dir_res,
                                 key=lambda x: x['Name']),
-                         sorted(self.fake_dir_res,
+                         sorted(res,
                                 key=lambda x: x['Name']))
 
     def test_add_filepattern_from_dirname(self):
-        res = self.api.add(self.fake_dir_test2, fnpattern=self.fnpattern)
-        self.assertEqual(sorted(res,
+        res = self.api.add(self.fake_dir_test2, pattern=self.fnpattern)
+        self.assertEqual(sorted(self.fake_dir_fnpattern_res,
                                 key=lambda x: x['Name']),
-                         sorted(self.fake_dir_fnpattern_res,
+                         sorted(res,
+                                key=lambda x: x['Name']))
+
+    def test_add_filepattern_subdir_wildcard(self):
+        res = self.api.add(self.fake_dir, pattern=self.fnpattern2)
+        self.assertEqual(sorted(self.fake_dir_fnpattern2_res,
+                                key=lambda x: x['Name']),
+                         sorted(res,
                                 key=lambda x: x['Name']))
 
     def test_add_recursive(self):
         res = self.api.add(self.fake_dir, recursive=True)
-        self.assertEqual(sorted(res,
+        self.assertEqual(sorted(self.fake_dir_recursive_res,
                                 key=lambda x: x['Name']),
-                         sorted(self.fake_dir_recursive_res,
+                         sorted(res,
                                 key=lambda x: x['Name']))
 
     def test_add_get_pyobject(self):
@@ -231,8 +260,8 @@ class IpfsApiTest(unittest.TestCase):
 
         refs = self.api.refs(self.fake[8]['Hash'])
 
-        self.assertEqual(sorted(refs, key=lambda x: x['Ref']),
-                         sorted(self.refs_res, key=lambda x: x['Ref']))
+        self.assertEqual(sorted(self.refs_res, key=lambda x: x['Ref']),
+                         sorted(refs, key=lambda x: x['Ref']))
 
     def test_refs_local(self):
         refs = self.api.refs_local()
@@ -280,7 +309,7 @@ class IpfsApiLogTest(unittest.TestCase):
 @skipIfOffline()
 class IpfsApiPinTest(unittest.TestCase):
 
-    fake_dir_hash = 'QmYqqgRahxbZvudnzDu2ZzUS1vFSNEuCrxghM8hgT8uBFY'
+    fake_dir_hash = 'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi'
 
     def setUp(self):
         self.api = ipfsapi.Client()
@@ -298,7 +327,7 @@ class IpfsApiPinTest(unittest.TestCase):
             self.api.pin_rm(self.resource)
 
         # No matter what, the resource should not be pinned at this point.
-        self.assertFalse(self.resource in self.api.pin_ls()['Keys'])
+        self.assertNotIn(self.resource, self.api.pin_ls()['Keys'])
 
         for option in [True, False]:
             # Pin the resource.
