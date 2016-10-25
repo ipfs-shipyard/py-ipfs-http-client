@@ -109,16 +109,16 @@ class IpfsApiTest(unittest.TestCase):
              'Name': 'test2/high/five/dummy'}]
 
     ## test_add_filepattern_from_dirname
-    fake_dir_test2 = 'fake_dir/test2'
-    fnpattern = '**/fss*'
+    pattern = '**/fss*'
     # the hash of the folder is not same as above because the content of the folder
     # added is not same.
     fake_dir_fnpattern_res = [
-            {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
-            {'Name': 'test2', 'Hash': 'QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe'}]
+            {'Name': 'fake_dir/test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
+            {'Name': 'fake_dir/test2',       'Hash': 'QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe'},
+            {'Name': 'fake_dir',             'Hash': 'QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm'}]
 
     ## test_add_filepattern_subdir_wildcard
-    fnpattern2 = 'fake_dir/**/test2/**/high'
+    pattern2 = 'test2/**/high'
     fake_dir_fnpattern2_res = [
             {'Hash': 'QmUXuNHpV6cdeTngSkEMbP2nQDPuyE2MFXNYtTXzZvLZHf', 'Name': 'fake_dir'},
             {'Hash': 'QmZGuwqaXMmSwJcfTsvseHwy3mvDPD9zrs9WVowAZcQN4W', 'Name': 'fake_dir/test2'},
@@ -196,14 +196,14 @@ class IpfsApiTest(unittest.TestCase):
                                 key=lambda x: x['Name']))
 
     def test_add_filepattern_from_dirname(self):
-        res = self.api.add(self.fake_dir_test2, pattern=self.fnpattern)
+        res = self.api.add(self.fake_dir, pattern=self.pattern)
         self.assertEqual(sorted(self.fake_dir_fnpattern_res,
                                 key=lambda x: x['Name']),
                          sorted(res,
                                 key=lambda x: x['Name']))
 
     def test_add_filepattern_subdir_wildcard(self):
-        res = self.api.add(self.fake_dir, pattern=self.fnpattern2)
+        res = self.api.add(self.fake_dir, pattern=self.pattern2)
         self.assertEqual(sorted(self.fake_dir_fnpattern2_res,
                                 key=lambda x: x['Name']),
                          sorted(res,

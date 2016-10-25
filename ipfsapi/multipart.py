@@ -319,7 +319,7 @@ class FileStream(BufferedGenerator):
 def glob_compile(pat):
     """Translate a shell glob PATTERN to a regular expression.
 
-    This is almost entire based on `fnmatch.translate` source-code from the
+    This is almost entirely based on `fnmatch.translate` source-code from the
     python 3.5 standard-library.
     """
 
@@ -455,10 +455,25 @@ class DirectoryStream(BufferedGenerator):
                 # File might have disappeared between `os.walk()` and `open()`
                 pass
 
+        def match_short_path(short_path):
+            # Remove initial path component so that all files are based in
+            # the target directory itself (not one level above)
+            if os.sep in short_path:
+                path = short_path.split(os.sep, 1)[1]
+            else:
+                return False
+
+            # Convert all path seperators to POSIX style
+            path = path.replace(os.sep, '/')
+
+            # Do the matching and the simplified path
+            for pattern in self.patterns:
+                if pattern.match(path):
+                    return True
+            return False
+
         # Identify the unecessary portion of the relative path
         truncate = os.path.dirname(self.directory)
-        if self.directory == '.':
-            truncate = self.directory
         # Traverse the filesystem downward from the target directory's uri
         # Errors: `os.walk()` will simply return an empty generator if the
         #         target directory does not exist.
@@ -481,13 +496,11 @@ class DirectoryStream(BufferedGenerator):
                 wildcard_directory = True
             else:
                 # Check if directory path matches one of the patterns
-                for pattern in self.patterns:
-                    if pattern.match(short_path.replace(os.sep, '/')):
-                        # Directory matched pattern and it should therefor
-                        # be added along with all of its contents
-                        wildcard_directories.add(short_path)
-                        wildcard_directory = True
-                        break
+                if match_short_path(short_path):
+                    # Directory matched pattern and it should therefor
+                    # be added along with all of its contents
+                    wildcard_directories.add(short_path)
+                    wildcard_directory = True
 
             # Always add directories within wildcard directories - even if they
             # are empty
@@ -506,11 +519,9 @@ class DirectoryStream(BufferedGenerator):
                 else:
                     # Add file (and all missing intermediary directories)
                     # if it matches one of the patterns
-                    for pattern in self.patterns:
-                        if pattern.match(short_name.replace(os.sep, '/')):
-                            add_directory(short_path)
-                            add_file(short_name, filepath)
-                            break
+                    if match_short_path(short_name):
+                        add_directory(short_path)
+                        add_file(short_name, filepath)
         # Send the request and present the response body to the user
         req = requests.Request("POST", 'http://localhost', files=names)
         prep = req.prepare()
