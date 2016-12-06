@@ -5,7 +5,7 @@
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![](https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square)](https://pypi.python.org/pypi/ipfsapi)
-[![](https://img.shields.io/travis/ipfs/py-ipfs-api.svg?style=flat-square)](https://travis-ci.org/ipfs/py-ipfs-api)
+[![Build Status](https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-api)
 
 > A python client library for the IPFS API
 
