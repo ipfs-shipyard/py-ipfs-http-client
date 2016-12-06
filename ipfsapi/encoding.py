@@ -338,6 +338,7 @@ class Xml(Encoding):
     """XML parser/encoder that handles XML."""
     name = 'xml'
 
+    
 # encodings supported by the IPFS api (default is JSON)
 __encodings = {
     Dummy.name: Dummy,
