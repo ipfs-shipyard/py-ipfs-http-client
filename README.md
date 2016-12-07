@@ -140,6 +140,7 @@ The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) m
 Projects that currently use py-ipfs-api. If your project isn't here, feel free to submit a PR to add it!
 
 - [git-remote-ipfs](https://github.com/larsks/git-remote-ipfs) allows users to push and pull git repositories from the IPFS network.
+- [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](http://www.iso.org/iso/catalogue_detail.htm?csnumber=44717)) files for distributed indexing and replay using IPFS.
 
 ## Contribute
 
