@@ -133,6 +133,7 @@ The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) m
     - If you require stabilisation of some feature please open an issue with the feature in question and your preceived use-case
  * Raised exceptions have been completely changed and are now documented with guaranteed backwards compatibility
    ([reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/api_ref.html#module-ipfsapi.exceptions))
+ * The new `ipfsapi.connect()` function allows creating a `Client` instance, while also checking whether a compatible IPFS daemon instance is actually available
  * Methods in `Client()` now have parameters for options
 
 ## Featured Projects
