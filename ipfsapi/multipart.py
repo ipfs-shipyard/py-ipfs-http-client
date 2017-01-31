@@ -2,11 +2,10 @@
 """
 from __future__ import absolute_import
 
-# import fnmatch
+import re
 import requests
 import io
 import os
-import fnmatch
 from inspect import isgenerator
 from uuid import uuid4
 
@@ -317,6 +316,56 @@ class FileStream(BufferedGenerator):
             yield chunk
 
 
+def glob_compile(pat):
+    """Translate a shell glob PATTERN to a regular expression.
+
+    This is almost entirely based on `fnmatch.translate` source-code from the
+    python 3.5 standard-library.
+    """
+
+    i, n = 0, len(pat)
+    res = ''
+    while i < n:
+        c = pat[i]
+        i = i + 1
+        if c == '/' and len(pat) > (i + 2) and pat[i:(i + 3)] == '**/':
+            # Special-case for "any number of sub-directories" operator since
+            # may also expand to no entries:
+            #  Otherwise `a/**/b` would expand to `a[/].*[/]b` which wouldn't
+            #  match the immediate sub-directories of `a`, like `a/b`.
+            i = i + 3
+            res = res + '[/]([^/]*[/])*'
+        elif c == '*':
+            if len(pat) > i and pat[i] == '*':
+                i = i + 1
+                res = res + '.*'
+            else:
+                res = res + '[^/]*'
+        elif c == '?':
+            res = res + '[^/]'
+        elif c == '[':
+            j = i
+            if j < n and pat[j] == '!':
+                j = j + 1
+            if j < n and pat[j] == ']':
+                j = j + 1
+            while j < n and pat[j] != ']':
+                j = j + 1
+            if j >= n:
+                res = res + '\\['
+            else:
+                stuff = pat[i:j].replace('\\', '\\\\')
+                i = j + 1
+                if stuff[0] == '!':
+                    stuff = '^' + stuff[1:]
+                elif stuff[0] == '^':
+                    stuff = '\\' + stuff
+                res = '%s[%s]' % (res, stuff)
+        else:
+            res = res + re.escape(c)
+    return re.compile('^' + res + '\Z(?ms)' + '$')
+
+
 class DirectoryStream(BufferedGenerator):
     """Generator that encodes a directory into HTTP multipart.
 
@@ -328,6 +377,9 @@ class DirectoryStream(BufferedGenerator):
     ----------
     directory : str
         The filepath of the directory to encode
+    patterns : str | list
+        A single glob pattern or a list of several glob patterns and
+        compiled regular expressions used to determine which filepaths to match
     chunk_size : int
         The maximum size that any single file chunk may have in bytes
     """
@@ -335,13 +387,20 @@ class DirectoryStream(BufferedGenerator):
     def __init__(self,
                  directory,
                  recursive=False,
-                 fnpattern='*',
+                 patterns='**',
                  chunk_size=default_chunk_size):
         BufferedGenerator.__init__(self, directory, chunk_size=chunk_size)
 
-        self.directory = directory
+        self.patterns = []
+        patterns = [patterns] if isinstance(patterns, str) else patterns
+        for pattern in patterns:
+            if isinstance(pattern, str):
+                self.patterns.append(glob_compile(pattern))
+            else:
+                self.patterns.append(pattern)
+
+        self.directory = os.path.normpath(directory)
         self.recursive = recursive
-        self.fnpattern = fnpattern
         self._request = self._prepare()
         self.headers = self._request.headers
 
@@ -356,13 +415,69 @@ class DirectoryStream(BufferedGenerator):
     def _prepare(self):
         """Pre-formats the multipart HTTP request to transmit the directory."""
         names = []
-        if self.directory.endswith(os.sep):
-            self.directory = self.directory[:-1]
-        # identify the unecessary portion of the relative path
+
+        added_directories = set()
+
+        def add_directory(short_path):
+            # Do not continue if this directory has already been added
+            if short_path in added_directories:
+                return
+
+            # Scan for first super-directory that has already been added
+            dir_base  = short_path
+            dir_parts = []
+            while dir_base:
+                dir_base, dir_name = os.path.split(dir_base)
+                dir_parts.append(dir_name)
+                if dir_base in added_directories:
+                    break
+
+            # Add missing intermediate directory nodes in the right order
+            while dir_parts:
+                dir_base = os.path.join(dir_base, dir_parts.pop())
+
+                # Create an empty, fake file to represent the directory
+                mock_file = io.StringIO()
+                mock_file.write(u'')
+                # Add this directory to those that will be sent
+                names.append(('files',
+                             (dir_base, mock_file, 'application/x-directory')))
+                # Remember that this directory has already been sent
+                added_directories.add(dir_base)
+
+        def add_file(short_path, full_path):
+            try:
+                # Always add files in wildcard directories
+                names.append(('files', (short_name,
+                                        open(full_path, 'rb'),
+                                        'application/octet-stream')))
+            except OSError:
+                # File might have disappeared between `os.walk()` and `open()`
+                pass
+
+        def match_short_path(short_path):
+            # Remove initial path component so that all files are based in
+            # the target directory itself (not one level above)
+            if os.sep in short_path:
+                path = short_path.split(os.sep, 1)[1]
+            else:
+                return False
+
+            # Convert all path seperators to POSIX style
+            path = path.replace(os.sep, '/')
+
+            # Do the matching and the simplified path
+            for pattern in self.patterns:
+                if pattern.match(path):
+                    return True
+            return False
+
+        # Identify the unecessary portion of the relative path
         truncate = os.path.dirname(self.directory)
-        # traverse the filesystem downward from the target directory's uri
+        # Traverse the filesystem downward from the target directory's uri
         # Errors: `os.walk()` will simply return an empty generator if the
-        # target directory does not exist.
+        #         target directory does not exist.
+        wildcard_directories = set()
         for curr_dir, _, files in os.walk(self.directory):
             # find the path relative to the directory being added
             if len(truncate) > 0:
@@ -372,32 +487,42 @@ class DirectoryStream(BufferedGenerator):
             # remove leading / or \ if it is present
             if short_path.startswith(os.sep):
                 short_path = short_path[1:]
-            # create an empty, fake file to represent the directory
-            mock_file = io.StringIO()
-            mock_file.write(u'')
-            # add this file to those that will be sent
-            names.append(('files',
-                         (short_path, mock_file, 'application/x-directory')))
-            # iterate across the files in the current directory
+
+            wildcard_directory = False
+            if os.path.split(short_path)[0] in wildcard_directories:
+                # Parent directory has matched a pattern, all sub-nodes should
+                # be added too
+                wildcard_directories.add(short_path)
+                wildcard_directory = True
+            else:
+                # Check if directory path matches one of the patterns
+                if match_short_path(short_path):
+                    # Directory matched pattern and it should therefor
+                    # be added along with all of its contents
+                    wildcard_directories.add(short_path)
+                    wildcard_directory = True
+
+            # Always add directories within wildcard directories - even if they
+            # are empty
+            if wildcard_directory:
+                add_directory(short_path)
+
+            # Iterate across the files in the current directory
             for filename in files:
-                # find the filename relative to the directory being added
+                # Find the filename relative to the directory being added
                 short_name = os.path.join(short_path, filename)
                 filepath = os.path.join(curr_dir, filename)
-                # remove leading / or \ if it is present
-                if short_name.startswith(os.sep):
-                    short_name = short_name[1:]
-                try:
-                    # add the file to those being sent if it matches the
-                    # given file pattern
-                    if fnmatch.fnmatch(filename, self.fnpattern):
-                        names.append(('files', (short_name,
-                                                open(filepath, 'rb'),
-                                                'application/octet-stream')))
-                except OSError:
-                    # File might have disappeared between `os.walk()`
-                    # and `open()`
-                    pass
-        # send the request and present the response body to the user
+
+                if wildcard_directory:
+                    # Always add files in wildcard directories
+                    add_file(short_name, filepath)
+                else:
+                    # Add file (and all missing intermediary directories)
+                    # if it matches one of the patterns
+                    if match_short_path(short_name):
+                        add_directory(short_path)
+                        add_file(short_name, filepath)
+        # Send the request and present the response body to the user
         req = requests.Request("POST", 'http://localhost', files=names)
         prep = req.prepare()
         return prep
@@ -452,7 +577,7 @@ def stream_files(files, chunk_size=default_chunk_size):
 
 def stream_directory(directory,
                      recursive=False,
-                     fnpattern='*',
+                     patterns='**',
                      chunk_size=default_chunk_size):
     """Gets a buffered generator for streaming directories.
 
@@ -465,14 +590,15 @@ def stream_directory(directory,
         The filepath of the directory to stream
     recursive : bool
         Stream all content within the directory recursively?
-    fnpattern : str
-        *fnmatch* pattern of filenames to keep
+    patterns : str | list
+        Single *glob* pattern or list of *glob* patterns and compiled
+        regular expressions to match the names of the filepaths to keep
     chunk_size : int
         Maximum size of each stream chunk
     """
     stream = DirectoryStream(directory,
                              recursive=recursive,
-                             fnpattern=fnpattern,
+                             patterns=patterns,
                              chunk_size=chunk_size)
 
     return stream.body(), stream.headers
@@ -480,7 +606,7 @@ def stream_directory(directory,
 
 def stream_filesystem_node(path,
                            recursive=False,
-                           fnpattern='*',
+                           patterns='**',
                            chunk_size=default_chunk_size):
     """Gets a buffered generator for streaming either files or directories.
 
@@ -494,14 +620,15 @@ def stream_filesystem_node(path,
         The filepath of the directory or file to stream
     recursive : bool
         Stream all content within the directory recursively?
-    fnpattern : str
-        *fnmatch* pattern of filenames to keep
+    patterns : str | list
+        Single *glob* pattern or list of *glob* patterns and compiled
+        regular expressions to match the names of the filepaths to keep
     chunk_size : int
         Maximum size of each stream chunk
     """
     is_dir = isinstance(path, six.string_types) and os.path.isdir(path)
     if recursive or is_dir:
-        return stream_directory(path, recursive, fnpattern, chunk_size)
+        return stream_directory(path, recursive, patterns, chunk_size)
     else:
         return stream_files(path, chunk_size)
 
