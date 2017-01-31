@@ -104,7 +104,7 @@ class Client(object):
 
         self._client = self._clientfactory(host, port, base, **defaults)
 
-    def add(self, files, recursive=False, fnpattern='*', **kwargs):
+    def add(self, files, recursive=False, pattern='**', **kwargs):
         """Add a file, or directory of files to IPFS.
 
         .. code-block:: python
@@ -121,15 +121,17 @@ class Client(object):
             A filepath to either a file or directory
         recursive : bool
             Controls if files in subdirectories are added or not
-        fnpattern : str
-            *fnmatch* pattern of filenames to keep
+        pattern : str | list
+            Single `*glob* <https://docs.python.org/3/library/glob.html>`_
+            pattern or list of *glob* patterns and compiled regular expressions
+            to match the names of the filepaths to keep
 
         Returns
         -------
             dict: File name and hash of the added file node
         """
         body, headers = multipart.stream_filesystem_node(
-            files, recursive, fnpattern, self.chunk_size
+            files, recursive, pattern, self.chunk_size
         )
         return self._client.request('/add', decoder='json',
                                     data=body, headers=headers, **kwargs)
