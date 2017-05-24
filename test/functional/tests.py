@@ -496,7 +496,7 @@ class IpfsApiRepoTest(unittest.TestCase):
 
         # Verify the garbage object was collected
         self.assertGreater(orig_objs, cur_objs)
-        keys = [el['Key'] for el in gc]
+        keys = [el['Key']['/'] for el in gc]
         self.assertTrue(garbage in keys)
 
 
