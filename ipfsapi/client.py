@@ -743,6 +743,42 @@ class Client(object):
         args = (name,)
         return self._client.request('/resolve', args, decoder='json', **kwargs)
 
+    def key_gen(self, keyName, type='rsa', size='2048', **kwargs):
+        """Adds a new public key that can be used for name_publish.
+
+        .. code-block:: python
+
+            >>> c.key_gen('exampleKeyName')
+            {'Name': 'exampleKeyName',
+             'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
+
+        Parameters
+        ----------
+        keyName : str
+            Name of the new Key to be generated. Used to reference the Keys.
+        type : str
+            Type of key to generate
+        size : str
+            Bitsize of key to generate 
+
+        Returns
+        -------
+            dict : Key name and Key Id
+        """
+
+        existingKeys = self._client.request('/key/list', decoder='json')['Keys']
+
+        for key in existingKeys:
+            if key['Name'] == keyName:
+                return key
+
+        opts = {"type": type, "size": size}
+        kwargs.setdefault("opts", opts)
+        args = (keyName,)
+
+        return self._client.request('/key/gen', args,
+                                    decoder='json', **kwargs)
+
     def name_publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None,
                      **kwargs):
         """Publishes an object to IPNS.
