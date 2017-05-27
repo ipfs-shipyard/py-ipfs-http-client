@@ -15,7 +15,7 @@ Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxG
 The legacy `ipfs-api`/`ipfsApi` package/module will only work for IPFS 0.3.x and Python 2 and is deprecated. [Please upgrade](#important-changes-from-ipfsapi-02x)!
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.3](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.3).
+Currently, this library is tested against [go-ipfs v0.4.9](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.9).
 You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
 
 ## Table of Contents
