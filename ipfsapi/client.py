@@ -743,22 +743,43 @@ class Client(object):
         args = (name,)
         return self._client.request('/resolve', args, decoder='json', **kwargs)
 
-    def key_gen(self, keyName, type='rsa', size='2048', **kwargs):
+    def key_list(self, **kwargs):
+        """Returns a list of generated public keys that can be used with name_publish
+
+        .. code-block:: python
+
+            >>> c.key_list()
+            [{'Name': 'self',
+              'Id': 'QmQf22bZar3WKmojipms22PkXH1MZGmvsqzQtuSvQE3uhm'},
+             {'Name': 'example_key_name',
+              'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
+            ]
+             
+        Returns
+        -------
+            list : List of dictionaries with Names and Ids of public keys.
+        """
+        return self._client.request('/key/list', decoder='json')['Keys']
+
+    def key_gen(self, key_name, type, size=2048, **kwargs):
         """Adds a new public key that can be used for name_publish.
 
         .. code-block:: python
 
-            >>> c.key_gen('exampleKeyName')
-            {'Name': 'exampleKeyName',
+            >>> c.key_gen('example_key_name')
+            {'Name': 'example_key_name',
              'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
 
         Parameters
         ----------
-        keyName : str
+        key_name : str
             Name of the new Key to be generated. Used to reference the Keys.
         type : str
-            Type of key to generate
-        size : str
+            Type of key to generate. The current possible keys types are:
+
+             * ``"rsa"``
+             * ``"ed25519"``
+        size : int
             Bitsize of key to generate 
 
         Returns
@@ -766,15 +787,15 @@ class Client(object):
             dict : Key name and Key Id
         """
 
-        existingKeys = self._client.request('/key/list', decoder='json')['Keys']
+        existing_keys = self.key_list()
 
-        for key in existingKeys:
-            if key['Name'] == keyName:
+        for key in existing_keys:
+            if key['Name'] == key_name:
                 return key
 
         opts = {"type": type, "size": size}
         kwargs.setdefault("opts", opts)
-        args = (keyName,)
+        args = (key_name,)
 
         return self._client.request('/key/gen', args,
                                     decoder='json', **kwargs)
