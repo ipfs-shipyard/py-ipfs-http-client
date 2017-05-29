@@ -50,8 +50,8 @@ class TestEncoding(unittest.TestCase):
         
         # Try single fragmented data set
         data1_binary = six.b(json.dumps(data1))
-        assertPartialEqual(data1_binary[:5], [])
-        assertPartialEqual(data1_binary[5:], [data1])
+        assertPartialEqual(data1_binary[:8], [])
+        assertPartialEqual(data1_binary[8:], [data1])
         assertFinalizeEmpty()
         
         # Try multiple data sets contained in whitespace
@@ -63,6 +63,17 @@ class TestEncoding(unittest.TestCase):
         self.assertRaises(ipfsapi.exceptions.DecodingError,
                           lambda: list(self.encoder_json.parse_partial(b'{"hello": "\xc3ber world!"}')))
         assertFinalizeEmpty()
+    
+    def test_json_with_newlines(self):
+        """Tests if feeding partial JSON strings with line breaks behaves as expected."""
+        data1 = '{"key1":\n"value1",\n'
+        data2 = '"key2":\n\n\n"value2"\n}'
+        
+        data_expected = json.loads(data1 + data2)
+        
+        assert list(self.encoder_json.parse_partial(six.b(data1))) == []
+        assert list(self.encoder_json.parse_partial(six.b(data2))) == [data_expected]
+        assert list(self.encoder_json.parse_finalize()) == []
     
     def test_json_parse_incomplete(self):
         """Tests if feeding the JSON parse incomplete data correctly produces an error."""
