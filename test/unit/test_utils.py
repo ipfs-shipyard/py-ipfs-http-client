@@ -34,7 +34,7 @@ class TestUtils(unittest.TestCase):
         """
         path = os.path.join(os.path.dirname(__file__),
                             "..", "..", "requirements.txt")
-        self.assertEqual(utils.guess_mimetype(path),"text/plain")
+        assert utils.guess_mimetype(path) == "text/plain"
 
     def test_ls_dir(self):
         """Tests utils.ls_dir()
@@ -54,14 +54,14 @@ class TestUtils(unittest.TestCase):
         result[0].sort()
         result[1].sort()
         
-        self.assertEqual(result, contents)
+        assert result == contents
 
     def test_clean_file_opened(self):
         """Tests utils.clean_file() with a stringIO object."""
         string_io = io.StringIO(u'Mary had a little lamb')
         f, opened = utils.clean_file(string_io)
-        self.assertEqual(hasattr(f, 'read'), True)
-        self.assertEqual(opened, False)
+        assert hasattr(f, 'read')
+        assert not opened
         # Closing stringIO after test assertions.
         f.close()
 
@@ -74,8 +74,8 @@ class TestUtils(unittest.TestCase):
         path = os.path.join(os.path.dirname(__file__),
                             "..", "functional", "fake_dir", "fsdfgh")
         f, opened = utils.clean_file(path)
-        self.assertEqual(hasattr(f, 'read'), True)
-        self.assertEqual(opened, True)
+        assert hasattr(f, 'read')
+        assert opened
         # Closing file after test assertions.
         f.close()
 
@@ -89,8 +89,8 @@ class TestUtils(unittest.TestCase):
                             "..", "functional", "fake_dir", "fsdfgh")
         gen = utils.clean_files(path)
         for tup in gen:
-            self.assertEqual(hasattr(tup[0], 'read'), True)
-            self.assertEqual(tup[1], True)
+            assert hasattr(tup[0], 'read')
+            assert tup[1]
             # Closing file after test assertions.
             tup[0].close()
 
@@ -103,11 +103,11 @@ class TestUtils(unittest.TestCase):
         gen = utils.clean_files(files)
         for i in range(0, 2):
             tup = next(gen)
-            self.assertEqual(hasattr(tup[0], 'read'), True)
+            assert hasattr(tup[0], 'read')
             if i == 0:
-                self.assertEqual(tup[1], True)
+                assert tup[1]
             else:
-                self.assertEqual(tup[1], False)
+                assert not tup[1]
             # Closing files/stringIO objects after test assertions.
             tup[0].close()
 
@@ -119,19 +119,19 @@ class TestUtils(unittest.TestCase):
         """
         path = os.path.join(os.path.dirname(__file__),
                             "..", "functional", "fake_dir", "fsdfgh")
-        self.assertEqual(utils.file_size(path), 8)
+        assert utils.file_size(path) == 8
 
     def test_return_field_init(self):
         """Tests utils.return_field.__init__()."""
         return_field = utils.return_field('Hash')
-        self.assertEqual(return_field.field, 'Hash')
+        assert return_field.field == 'Hash'
 
     def test_return_field_call(self):
         """Tests utils.return_field.__call__()."""
+        expected_hash = u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
+        
         @utils.return_field('Hash')
         def wrapper(string, *args, **kwargs):
-            resp = {'Hash':u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab',
-                    'string': string}
+            resp = {'Hash': expected_hash, 'string': string}
             return resp
-        self.assertEqual(wrapper('Mary had a little lamb'),
-                         u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab')
+        assert wrapper('Mary had a little lamb') == expected_hash

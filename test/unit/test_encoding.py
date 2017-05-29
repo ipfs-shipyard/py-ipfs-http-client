@@ -8,6 +8,7 @@ import unittest
 import json
 import pickle
 
+import pytest
 import six
 from httmock import urlmatch, HTTMock
 
@@ -38,31 +39,29 @@ class TestEncoding(unittest.TestCase):
         data = {'key': 'value'}
         raw = six.b(json.dumps(data))
         res = self.encoder_json.parse(raw)
-        self.assertEqual(res['key'], 'value')
+        assert res['key'] == 'value'
 
     def test_json_parse_partial(self):
         """Tests if feeding parts of JSON strings in the right order to the JSON parser produces the right results."""
         data1 = {'key1': 'value1'}
         data2 = {'key2': 'value2'}
         
-        assertPartialEqual  = lambda d, r: self.assertEqual(list(self.encoder_json.parse_partial(d)), r)
-        assertFinalizeEmpty = lambda:      self.assertEqual(list(self.encoder_json.parse_finalize()), [])
-        
         # Try single fragmented data set
         data1_binary = six.b(json.dumps(data1))
-        assertPartialEqual(data1_binary[:8], [])
-        assertPartialEqual(data1_binary[8:], [data1])
-        assertFinalizeEmpty()
+        assert list(self.encoder_json.parse_partial(data1_binary[:8])) == []
+        assert list(self.encoder_json.parse_partial(data1_binary[8:])) == [data1]
+        assert list(self.encoder_json.parse_finalize()) == []
         
         # Try multiple data sets contained in whitespace
         data2_binary = six.b(json.dumps(data2))
-        assertPartialEqual(b"  " + data1_binary + b"  \r\n  " + data2_binary + b"  ", [data1, data2])
-        assertFinalizeEmpty()
+        data2_final  = b"  " + data1_binary + b"  \r\n  " + data2_binary + b"  "
+        assert list(self.encoder_json.parse_partial(data2_final)) == [data1, data2]
+        assert list(self.encoder_json.parse_finalize()) == []
         
         # String containing broken UTF-8
-        self.assertRaises(ipfsapi.exceptions.DecodingError,
-                          lambda: list(self.encoder_json.parse_partial(b'{"hello": "\xc3ber world!"}')))
-        assertFinalizeEmpty()
+        with pytest.raises(ipfsapi.exceptions.DecodingError):
+            list(self.encoder_json.parse_partial(b'{"hello": "\xc3ber world!"}'))
+        assert list(self.encoder_json.parse_finalize()) == []
     
     def test_json_with_newlines(self):
         """Tests if feeding partial JSON strings with line breaks behaves as expected."""
@@ -78,12 +77,12 @@ class TestEncoding(unittest.TestCase):
     def test_json_parse_incomplete(self):
         """Tests if feeding the JSON parse incomplete data correctly produces an error."""
         list(self.encoder_json.parse_partial(b'{"bla":'))
-        self.assertRaises(ipfsapi.exceptions.DecodingError,
-                          self.encoder_json.parse_finalize)
+        with pytest.raises(ipfsapi.exceptions.DecodingError):
+            self.encoder_json.parse_finalize()
 
         list(self.encoder_json.parse_partial(b'{"\xc3')) # Incomplete UTF-8 sequence
-        self.assertRaises(ipfsapi.exceptions.DecodingError,
-                          self.encoder_json.parse_finalize)
+        with pytest.raises(ipfsapi.exceptions.DecodingError):
+            self.encoder_json.parse_finalize()
 
     def test_json_parse_chained(self):
         """Tests if concatenated string of JSON object is being parsed correctly."""
@@ -91,9 +90,9 @@ class TestEncoding(unittest.TestCase):
         data2 = {'key2': 'value2'}
         res = self.encoder_json.parse(
             six.b(json.dumps(data1)) + six.b(json.dumps(data2)))
-        self.assertEqual(len(res), 2)
-        self.assertEqual(res[0]['key1'], 'value1')
-        self.assertEqual(res[1]['key2'], 'value2')
+        assert len(res) == 2
+        assert res[0]['key1'] == 'value1'
+        assert res[1]['key2'] == 'value2'
 
     def test_json_parse_chained_newlines(self):
         """Tests parsing of concatenated string of JSON object containing a new line."""
@@ -101,16 +100,14 @@ class TestEncoding(unittest.TestCase):
         data2 = {'key2': 'value2'}
         res = self.encoder_json.parse(
             six.b(json.dumps(data1)) + b'\n' + six.b(json.dumps(data2)))
-        self.assertEqual(len(res), 2)
-        self.assertEqual(res[0]['key1'], 'value1')
-        self.assertEqual(res[1]['key2'], 'value2')
+        assert len(res) == 2
+        assert res[0]['key1'] == 'value1'
+        assert res[1]['key2'] == 'value2'
 
     def test_json_encode(self):
         """Tests serilization of json formatted string into an object."""
         data = {'key': 'value'}
-        self.assertEqual(
-            self.encoder_json.encode(data),
-            b'{"key": "value"}')
+        assert self.encoder_json.encode(data) == b'{"key": "value"}'
 
     def test_encode_pickle(self):
         """Tests serilization of pickle formatted string into an object."""
@@ -121,21 +118,21 @@ class TestEncoding(unittest.TestCase):
         data = {'key': 'value'}
         encoder_res = pickle.loads(self.encoder_pickle.encode(data))
         pickle_res = pickle.loads(pickle.dumps(data))
-        self.assertEqual(encoder_res, pickle_res)
+        assert encoder_res == pickle_res
 
     def test_parse_pickle(self):
         """Tests if pickled Python object matches expected output."""
         data = {'key': 'value'}
         raw = pickle.dumps(data)
         res = self.encoder_pickle.parse(raw)
-        self.assertEqual(res['key'], 'value')
+        assert res['key'] == 'value'
 
     def test_get_encoder_by_name(self):
         """Tests the process of obtaining an Encoder object given the named encoding."""
         encoder = ipfsapi.encoding.get_encoding('json')
-        self.assertEqual(encoder.name, 'json')
+        assert encoder.name == 'json'
 
     def test_get_invalid_encoder(self):
         """Tests the exception handling given an invalid named encoding."""
-        self.assertRaises(ipfsapi.exceptions.EncoderMissingError,
-                          ipfsapi.encoding.get_encoding, 'fake')
+        with pytest.raises(ipfsapi.exceptions.EncoderMissingError):
+            ipfsapi.encoding.get_encoding('fake')
