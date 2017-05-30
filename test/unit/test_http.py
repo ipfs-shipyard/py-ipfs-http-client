@@ -9,10 +9,12 @@ TestHttp -- A TCP client for interacting with an IPFS daemon
 
 import unittest
 import json
-import requests
 import tarfile
 import os
+
 from httmock import urlmatch, HTTMock
+import pytest
+import requests
 
 import ipfsapi.http
 import ipfsapi.exceptions
@@ -142,56 +144,56 @@ class TestHttp(unittest.TestCase):
         """Tests that a successful http request returns the proper message."""
         with HTTMock(return_okay):
             res = self.client.request('/okay')
-            self.assertEqual(res, b'okay')
+            assert res == b'okay'
 
     def test_generic_failure(self):
         """Tests that a failed http request raises an HTTPError."""
         with HTTMock(return_fail):
-            self.assertRaises(ipfsapi.exceptions.StatusError,
-                              self.client.request, '/fail')
+            with pytest.raises(ipfsapi.exceptions.StatusError):
+                self.client.request('/fail')
 
     def test_api_failure(self):
         """Tests that an api failure raises an ispfApiError."""
         with HTTMock(api_fail):
-            self.assertRaises(ipfsapi.exceptions.Error,
-                              self.client.request, '/apifail')
+            with pytest.raises(ipfsapi.exceptions.Error):
+                self.client.request('/apifail')
 
     def test_stream(self):
         """Tests that the stream flag being set returns the raw response."""
         with HTTMock(return_okay):
             res = self.client.request('/okay', stream=True)
-            self.assertEqual(next(res), b'okay')
+            assert next(res) == b'okay'
 
     def test_cat(self):
         """Tests that paths ending in /cat are not parsed."""
         with HTTMock(api_cat):
             res = self.client.request('/cat')
-            self.assertEquals(res, b'{"Message": "do not parse"}')
+            assert res == b'{"Message": "do not parse"}'
 
     def test_default_decoder(self):
         """Tests that the default encoding is set to json."""
         with HTTMock(api_okay):
             res = self.client.request('/apiokay')
-            self.assertEquals(res, b'{"Message": "okay"}')
+            assert res == b'{"Message": "okay"}'
 
     def test_explicit_decoder(self):
         """Tests that an explicit decoder is handled correctly."""
         with HTTMock(api_okay):
             res = self.client.request('/apiokay',
                                       decoder='json')
-            self.assertEquals(res['Message'], 'okay')
+            assert res['Message'] == 'okay'
 
     def test_unsupported_decoder(self):
         """Tests that unsupported encodings raise an exception."""
         with HTTMock(api_fail):
-            self.assertRaises(ipfsapi.exceptions.EncoderMissingError,
-                              self.client.request, '/apifail', decoder='xyz')
+            with pytest.raises(ipfsapi.exceptions.EncoderMissingError):
+                self.client.request('/apifail', decoder='xyz')
 
     def test_failed_decoder(self):
         """Tests that a failed encoding parse raises an exception."""
         with HTTMock(return_okay):
-            self.assertRaises(ipfsapi.exceptions.DecodingError,
-                              self.client.request, '/okay', decoder='json')
+            with pytest.raises(ipfsapi.exceptions.DecodingError):
+                self.client.request('/okay', decoder='json')
 
     """TODO: Test successful download
     Need to determine correct way to mock an http request that returns a tar
@@ -202,13 +204,13 @@ class TestHttp(unittest.TestCase):
     def test_failed_download(self):
         """Tests that a failed download raises an HTTPError."""
         with HTTMock(return_fail):
-            self.assertRaises(ipfsapi.exceptions.StatusError,
-                              self.client.download, '/fail')
+            with pytest.raises(ipfsapi.exceptions.StatusError):
+                self.client.download('/fail')
 
     def test_session(self):
         """Tests that a session is established and then closed."""
         with HTTMock(return_okay):
             with self.client.session():
                 res = self.client.request('/okay')
-                self.assertEqual(res, b'okay')
-            self.assertEqual(self.client._session, None)
+                assert res == b'okay'
+            assert self.client._session is None
