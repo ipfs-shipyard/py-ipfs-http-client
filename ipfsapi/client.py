@@ -754,7 +754,7 @@ class Client(object):
              {'Name': 'example_key_name',
               'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
             ]
-             
+
         Returns
         -------
             list : List of dictionaries with Names and Ids of public keys.
@@ -780,7 +780,7 @@ class Client(object):
              * ``"rsa"``
              * ``"ed25519"``
         size : int
-            Bitsize of key to generate 
+            Bitsize of key to generate
 
         Returns
         -------
