@@ -216,6 +216,19 @@ class IpfsApiTest(unittest.TestCase):
                          sorted(res,
                                 key=lambda x: x['Name']))
 
+    def test_add_json(self):
+        data = {'Action': 'Open', 'Type': 'PR', 'Name': 'IPFS', 'Pubkey': 7}
+        res = self.api.add_json(data)
+        self.assertEqual(data,
+                         self.api.get_json(res))
+
+        # have to test the string added to IPFS, deserializing JSON will not
+        # test order of keys
+        self.assertEqual(
+            '{"Action": "Open", "Name": "IPFS", "Pubkey": 7, "Type": "PR"}',
+            self.api.cat(res)
+        )
+
     def test_add_get_pyobject(self):
         data = [-1, 3.14, u'Hän€', b'23' ]
         res = self.api.add_pyobj(data)
