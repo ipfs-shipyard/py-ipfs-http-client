@@ -226,7 +226,7 @@ class IpfsApiTest(unittest.TestCase):
         # test order of keys
         self.assertEqual(
             '{"Action": "Open", "Name": "IPFS", "Pubkey": 7, "Type": "PR"}',
-            self.api.cat(res)
+            self.api.cat(res).decode('utf-8')
         )
 
     def test_add_get_pyobject(self):
