@@ -848,7 +848,8 @@ class Client(object):
         return self._client.request('/name/publish', args,
                                     decoder='json', **kwargs)
 
-    def name_resolve(self, name=None, recursive=False, nocache=False, **kwargs):
+    def name_resolve(self, name=None, recursive=False, 
+                     nocache=False, **kwargs):
         """Gets the value currently published at an IPNS name.
 
         IPNS is a PKI namespace, where names are the hashes of public keys, and
@@ -873,7 +874,8 @@ class Client(object):
         -------
             dict : The IPFS path the IPNS hash points at
         """
-        kwargs.setdefault("opts", {"recursive": recursive, "nocache": nocache})
+        kwargs.setdefault("opts", {"recursive": recursive, 
+                                   "nocache": nocache})
         args = (name,) if name is not None else ()
         return self._client.request('/name/resolve', args,
                                     decoder='json', **kwargs)
