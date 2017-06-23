@@ -277,7 +277,8 @@ class Json(Encoding):
             bytes
         """
         try:
-            result = json.dumps(obj, sort_keys=True)
+            result = json.dumps(obj, sort_keys=True, indent=None,
+                                separators=(',', ':'))
             if isinstance(result, six.text_type):
                 return result.encode("utf-8")
             else:
