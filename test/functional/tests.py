@@ -225,7 +225,7 @@ class IpfsApiTest(unittest.TestCase):
         # have to test the string added to IPFS, deserializing JSON will not
         # test order of keys
         self.assertEqual(
-            '{"Action": "Open", "Name": "IPFS", "Pubkey": 7, "Type": "PR"}',
+            '{"Action":"Open","Name":"IPFS","Pubkey":7,"Type":"PR"}',
             self.api.cat(res).decode('utf-8')
         )
 
