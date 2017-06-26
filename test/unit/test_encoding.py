@@ -107,7 +107,7 @@ class TestEncoding(unittest.TestCase):
     def test_json_encode(self):
         """Tests serilization of json formatted string into an object."""
         data = {'key': 'value'}
-        assert self.encoder_json.encode(data) == b'{"key": "value"}'
+        assert self.encoder_json.encode(data) == b'{"key":"value"}'
 
     def test_encode_pickle(self):
         """Tests serilization of pickle formatted string into an object."""
