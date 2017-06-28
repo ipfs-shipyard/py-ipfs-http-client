@@ -801,7 +801,7 @@ class Client(object):
                                     decoder='json', **kwargs)
 
     def name_publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None,
-                     **kwargs):
+                     key=None, **kwargs):
         """Publishes an object to IPNS.
 
         IPNS is a PKI namespace, where names are the hashes of public keys, and
@@ -834,6 +834,8 @@ class Client(object):
              * ``"h"``
         ttl : int
             Time duration this record should be cached for
+        key : string
+             Name of the key to be used, as listed by 'ipfs key list'.
 
         Returns
         -------
@@ -842,6 +844,8 @@ class Client(object):
         opts = {"lifetime": lifetime, "resolve": resolve}
         if ttl:
             opts["ttl"] = ttl
+        if key:
+            opts["key"] = key
         kwargs.setdefault("opts", opts)
 
         args = (ipfs_path,)
