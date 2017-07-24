@@ -494,8 +494,8 @@ class IpfsApiRepoTest(unittest.TestCase):
     def test_repo_stat(self):
         # Verify that the correct key-value pairs are returned
         stat = self.api.repo_stat()
-        self.assertEqual(sorted(stat.keys()), ['NumObjects', 'RepoPath',
-                                               'RepoSize', 'Version'])
+        self.assertEqual(sorted(stat.keys()), [u'NumObjects', u'RepoPath', u'RepoSize',
+                                               u'StorageMax', u'Version'])
 
     def test_repo_gc(self):
         # Add and unpin an object to be garbage collected
