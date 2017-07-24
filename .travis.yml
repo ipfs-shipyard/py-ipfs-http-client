@@ -3,12 +3,12 @@ matrix:
   include:
   - python: "2.7"
     env: TOXENV=py27
-  - python: "3.3"
-    env: TOXENV=py33
   - python: "3.4"
     env: TOXENV=py34
   - python: "3.5"
     env: TOXENV=py35
+  - python: "3.6"
+    env: TOXENV=py36
 before_script:
   - wget "https://dist.ipfs.io/go-ipfs/v0.4.9/go-ipfs_v0.4.9_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
   - mkdir $HOME/bin
