@@ -1902,6 +1902,15 @@ class Client(object):
         args = (source, dest)
         return self._client.request('/files/mv', args, **kwargs)
 
+    def shutdown(self):
+        """Stop the connected IPFS daemon instance.
+
+        Sending any further requests after this will fail with
+        ``ipfsapi.exceptions.ConnectionError``, until you start another IPFS
+        daemon instance.
+        """
+        return self._client.request('/shutdown')
+
     ###########
     # HELPERS #
     ###########

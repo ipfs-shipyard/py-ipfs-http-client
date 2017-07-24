@@ -1,11 +1,15 @@
 # _*_ coding: utf-8 -*-
 import os
 import json
+import platform
 import shutil
 import socket
 import sys
+import time
 import unittest
 import logging
+
+import pytest
 
 import ipfsapi
 
@@ -37,6 +41,11 @@ def skipIfOffline():
         return lambda func: func
     else:
         return unittest.skip("IPFS node is not available")
+
+def skipUnlessCI():
+    is_ci    = os.environ.get("CI", "false") == "true"
+    is_linux = platform.system() == "Linux"
+    return unittest.skipUnless(is_ci and is_linux, "CI")
 
 
 def test_ipfs_node_available():
@@ -647,6 +656,45 @@ class IpfsApiBitswapTest(unittest.TestCase):
 
         result = self.api.bitswap_unwant(key='QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V')
         self.assertTrue(result is not None)
+
+# Run test for `.shutdown()` only as the last test in CI environments – it would be to annoying
+# during normal testing
+@skipIfOffline()
+@skipUnlessCI()
+@pytest.mark.last
+@pytest.mark.xfail(reason="Daemon does not shut down on Travis for some reason")
+class IpfsApiShutdownTest(unittest.TestCase):
+    def setUp(self):
+        self.api = ipfsapi.Client()
+    
+    def _is_ipfs_running(self):
+        # Test only running on Linux CI – use procfs directly
+        for pid in filter(lambda n: n.isdigit(), os.listdir("/proc")):
+            try:
+                if "ipfs" in os.readlink("/proc/{}/exe".format(pid)):
+                    return True
+            except OSError: #PY2: Cannot use `(FileNotFoundError, PermissionError):`
+                pass
+        
+        return False
+    
+    def test_daemon_shutdown(self):
+        # Daemon should still be running at this point
+        assert self._is_ipfs_running()
+        
+        # Send stop request
+        self.api.shutdown()
+        
+        # Wait for daemon process to disappear
+        for _ in range(10000):
+            if not self._is_ipfs_running():
+                break
+            time.sleep(0.001)
+        
+        # Daemon should not be running anymore
+        assert not self._is_ipfs_running()
+        
+
 
 if __name__ == "__main__":
     unittest.main()
