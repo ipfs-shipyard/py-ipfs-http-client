@@ -1013,6 +1013,83 @@ class Client(object):
 
         return self._client.request('/pin/ls', decoder='json', **kwargs)
 
+    def pin_update(self, from_path, to_path, **kwargs):
+        """Replaces one pin with another.
+
+        Updates one pin to another, making sure that all objects in the new pin
+        are local. Then removes the old pin. This is an optimized version of
+        using first using :meth:`~ipfsapi.Client.pin_add` to add a new pin
+        for an object and then using :meth:`~ipfsapi.Client.pin_rm` to remove
+        the pin for the old object.
+
+        .. code-block:: python
+
+            >>> c.pin_update("QmXMqez83NU77ifmcPs5CkNRTMQksBLkyfBf4H5g1NZ52P",
+            ...              "QmUykHAi1aSjMzHw3KmBoJjqRUQYNkFXm8K1y7ZsJxpfPH")
+            {"Pins": ["/ipfs/QmXMqez83NU77ifmcPs5CkNRTMQksBLkyfBf4H5g1NZ52P",
+                      "/ipfs/QmUykHAi1aSjMzHw3KmBoJjqRUQYNkFXm8K1y7ZsJxpfPH"]}
+
+        Parameters
+        ----------
+        from_path : str
+            Path to the old object
+        to_path : str
+            Path to the new object to be pinned
+        unpin : bool
+            Should the pin of the old object be removed? (Default: ``True``)
+
+        Returns
+        -------
+            dict : List of IPFS objects affected by the pinning operation
+        """
+        #PY2: No support for kw-only parameters after glob parameters
+        if "unpin" in kwargs:
+            kwargs.setdefault("opts", {"unpin": kwargs["unpin"]})
+            del kwargs["unpin"]
+
+        args = (from_path, to_path)
+        return self._client.request('/pin/update', args, decoder='json',
+                                    **kwargs)
+
+    def pin_verify(self, path, *paths, **kwargs):
+        """Verify that recursive pins are complete.
+
+        Scan the repo for pinned object graphs and check their integrity.
+        Issues will be reported back with a helpful human-readable error
+        message to aid in error recovery. This is useful to help recover
+        from datastore corruptions (such as when accidentally deleting
+        files added using the filestore backend).
+
+        .. code-block:: python
+
+            >>> for item in c.pin_verify("QmNuvmuFeeWWpx…wTTZ", verbose=True):
+            ...     print(item)
+            ...
+            {"Cid":"QmVkNdzCBukBRdpyFiKPyL2R15qPExMr9rV9RFV2kf9eeV","Ok":True}
+            {"Cid":"QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm","Ok":True}
+            {"Cid":"Qmcns1nUvbeWiecdGDPw8JxWeUfxCV8JKhTfgzs3F8JM4P","Ok":True}
+            …
+
+        Parameters
+        ----------
+        path : str
+            Path to object(s) to be checked
+        verbose : bool
+            Also report status of items that were OK? (Default: ``False``)
+
+        Returns
+        -------
+            iterable
+        """
+        #PY2: No support for kw-only parameters after glob parameters
+        if "verbose" in kwargs:
+            kwargs.setdefault("opts", {"verbose": kwargs["verbose"]})
+            del kwargs["verbose"]
+
+        args = (path,) + paths
+        return self._client.request('/pin/verify', args, decoder='json',
+                                    stream=True, **kwargs)
+
     def repo_gc(self, **kwargs):
         """Removes stored objects that are not pinned from the repo.
 

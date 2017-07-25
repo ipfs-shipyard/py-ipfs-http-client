@@ -330,15 +330,18 @@ class IpfsApiLogTest(unittest.TestCase):
 
 @skipIfOffline()
 class IpfsApiPinTest(unittest.TestCase):
-
-    fake_dir_hash = 'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi'
-
     def setUp(self):
         self.api = ipfsapi.Client()
+        
         # Add resources to be pinned.
         self.resource = self.api.add_str('Mary had a little lamb')
         resp_add = self.api.add('test/functional/fake_dir', recursive=True)
         self.fake_dir_hashes = [el['Hash'] for el in resp_add if 'Hash' in el]
+        for resp in resp_add:
+            if resp["Name"] == "fake_dir":
+                self.fake_dir_hash = resp["Hash"]
+            elif resp["Name"] == "fake_dir/test2":
+                self.fake_dir_test2_hash = resp["Hash"]
 
     def test_pin_ls_add_rm_single(self):
         # Get pinned objects at start.
@@ -373,18 +376,12 @@ class IpfsApiPinTest(unittest.TestCase):
         self.assertFalse(self.resource in pins_end.keys())
 
     def test_pin_ls_add_rm_directory(self):
-        # Get pinned objects at start.
-        pins_begin = self.api.pin_ls()['Keys']
-
         # Remove fake_dir if it had previously been pinned.
-        if self.fake_dir_hash in pins_begin.keys() and \
-           pins_begin[self.fake_dir_hash]['Type'] == 'recursive':
+        if self.fake_dir_hash in self.api.pin_ls(type="recursive")['Keys'].keys():
             self.api.pin_rm(self.fake_dir_hash)
 
         # Make sure I removed it
-        pins_after_rm = self.api.pin_ls()['Keys']
-        self.assertFalse(self.fake_dir_hash in pins_after_rm.keys() and \
-                        pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
+        assert self.fake_dir_hash not in self.api.pin_ls()['Keys'].keys()
 
         # Add 'fake_dir' recursively.
         self.api.pin_add(self.fake_dir_hash)
@@ -392,13 +389,59 @@ class IpfsApiPinTest(unittest.TestCase):
         # Make sure all appear on the list of pinned objects.
         pins_after_add = self.api.pin_ls()['Keys'].keys()
         for el in self.fake_dir_hashes:
-            self.assertTrue(el in pins_after_add)
+            assert el in pins_after_add
 
         # Clean up.
         self.api.pin_rm(self.fake_dir_hash)
-        pins_end = self.api.pin_ls()['Keys'].keys()
-        self.assertFalse(self.fake_dir_hash in pins_end and \
-                        pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
+        pins_end = self.api.pin_ls(type="recursive")['Keys'].keys()
+        assert self.fake_dir_hash not in pins_end
+    
+    def test_pin_add_update_verify_rm(self):
+        # Get pinned objects at start.
+        pins_begin = self.api.pin_ls(type="recursive")['Keys'].keys()
+        
+        # Remove fake_dir and demo resource if it had previously been pinned.
+        if self.fake_dir_hash in pins_begin:
+            self.api.pin_rm(self.fake_dir_hash)
+        if self.fake_dir_test2_hash in pins_begin:
+            self.api.pin_rm(self.fake_dir_test2_hash)
+        
+        # Ensure that none of the above are pinned anymore.
+        pins_after_rm = self.api.pin_ls(type="recursive")['Keys'].keys()
+        assert self.fake_dir_hash       not in pins_after_rm
+        assert self.fake_dir_test2_hash not in pins_after_rm
+        
+        # Add pin for sub-directory
+        self.api.pin_add(self.fake_dir_test2_hash)
+        
+        # Replace it by pin for the entire fake dir
+        self.api.pin_update(self.fake_dir_test2_hash, self.fake_dir_hash)
+        
+        # Ensure that the sub-directory is not pinned directly anymore
+        pins_after_update = self.api.pin_ls(type="recursive")["Keys"].keys()
+        assert self.fake_dir_test2_hash not in pins_after_update
+        assert self.fake_dir_hash           in pins_after_update
+        
+        # Now add a pin to the sub-directory from the parent directory
+        self.api.pin_update(self.fake_dir_hash, self.fake_dir_test2_hash, unpin=False)
+        
+        # Check integrity of all directory content hashes and whether all
+        # directory contents have been processed in doing this
+        hashes = []
+        for result in self.api.pin_verify(self.fake_dir_hash, verbose=True):
+            assert result["Ok"]
+            hashes.append(result["Cid"])
+        assert self.fake_dir_hash in hashes
+        
+        # Ensure that both directories are now recursively pinned
+        pins_after_update2 = self.api.pin_ls(type="recursive")["Keys"].keys()
+        assert self.fake_dir_test2_hash in pins_after_update2
+        assert self.fake_dir_hash       in pins_after_update2
+        
+        # Clean up
+        self.api.pin_rm(self.fake_dir_hash, self.fake_dir_test2_hash)
+        
+        
 
 
 @skipIfOffline()
