@@ -7,11 +7,13 @@ Classes:
 """
 from __future__ import absolute_import
 
+import os
+
 from . import http, multipart, utils, exceptions, encoding
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 5001
-DEFAULT_BASE = 'api/v0'
+DEFAULT_HOST = str(os.environ.get("PY_IPFSAPI_DEFAULT_HOST", 'localhost'))
+DEFAULT_PORT = int(os.environ.get("PY_IPFSAPI_DEFAULT_PORT", 5001))
+DEFAULT_BASE = str(os.environ.get("PY_IPFSAPI_DEFAULT_BASE", 'api/v0'))
 
 VERSION_MINIMUM = "0.4.3"
 VERSION_MAXIMUM = "0.5.0"
