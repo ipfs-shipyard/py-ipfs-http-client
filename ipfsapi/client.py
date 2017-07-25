@@ -794,6 +794,55 @@ class Client(object):
         return self._client.request('/key/gen', args,
                                     decoder='json', **kwargs)
 
+    def key_rm(self, key_name, *key_names, **kwargs):
+        """Remove a keypair
+
+        .. code-block:: python
+
+            >>> c.key_rm("bla")
+            {"Keys": [
+                {"Name": "bla",
+                 "Id": "QmfJpR6paB6h891y7SYXGe6gapyNgepBeAYMbyejWA4FWA"}
+            ]}
+
+        Parameters
+        ----------
+        key_name : str
+            Name of the key(s) to remove.
+
+        Returns
+        -------
+            dict : List of key names and IDs that have been removed
+        """
+        args = (key_name,) + key_names
+        return self._client.request('/key/rm', args, decoder='json', **kwargs)
+
+    def key_rename(self, key_name, new_key_name, **kwargs):
+        """Rename a keypair
+
+        .. code-block:: python
+
+            >>> c.key_rename("bla", "personal")
+            {"Was": "bla",
+             "Now": "personal",
+             "Id": "QmeyrRNxXaasZaoDXcCZgryoBCga9shaHQ4suHAYXbNZF3",
+             "Overwrite": False}
+
+        Parameters
+        ----------
+        key_name : str
+            Current name of the key to rename
+        new_key_name : str
+            New name of the key
+
+        Returns
+        -------
+            dict : List of key names and IDs that have been removed
+        """
+        args = (key_name, new_key_name)
+        return self._client.request('/key/rename', args, decoder='json',
+                                    **kwargs)
+
     def name_publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None,
                      key=None, **kwargs):
         """Publishes an object to IPNS.
