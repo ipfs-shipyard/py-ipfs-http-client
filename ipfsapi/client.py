@@ -759,7 +759,7 @@ class Client(object):
         -------
             list : List of dictionaries with Names and Ids of public keys.
         """
-        return self._client.request('/key/list', decoder='json')['Keys']
+        return self._client.request('/key/list', decoder='json', **kwargs)
 
     def key_gen(self, key_name, type, size=2048, **kwargs):
         """Adds a new public key that can be used for name_publish.
@@ -786,12 +786,6 @@ class Client(object):
         -------
             dict : Key name and Key Id
         """
-
-        existing_keys = self.key_list()
-
-        for key in existing_keys:
-            if key['Name'] == key_name:
-                return key
 
         opts = {"type": type, "size": size}
         kwargs.setdefault("opts", opts)
