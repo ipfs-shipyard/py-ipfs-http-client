@@ -13,7 +13,7 @@ ipfs config Addresses.API     "/ip4/${PY_IPFSAPI_DEFAULT_HOST}/tcp/${PY_IPFSAPI_
 
 # Start IPFS daemon in instance directory
 ipfs daemon &
-DAEMON_PID=$!
+export PY_IPFSAPI_TEST_DAEMON_PID=$!
 
 # Wait for daemon startup
 while ! ipfs stats bw >/dev/null 2>&1;
@@ -22,10 +22,17 @@ do
 done
 
 # Run tests in CI-mode (will stop the daemon at the end through the API)
-env CI=true py.test-3 --verbose --pdb
+export CI=true
+if [ "${1}" = "tox" ];
+then
+	tox
+else
+	py.test-3 --verbose --pdb
+fi
+CODE=$?
 
 # Stop daemon if it is still running
-kill -9 ${DAEMON_PID} 2>/dev/null
+kill -9 ${PY_IPFSAPI_TEST_DAEMON_PID} 2>/dev/null
 if [ $? -eq 0 ];
 then
 	echo "IPFS daemon was still running after test!" >&2
@@ -33,3 +40,5 @@ fi
 
 # Clean up IPFS directory
 rm -rf "${IPFS_PATH}"
+
+exit ${CODE}

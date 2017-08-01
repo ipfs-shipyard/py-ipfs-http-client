@@ -1,7 +1,6 @@
 # _*_ coding: utf-8 -*-
 import os
 import json
-import platform
 import shutil
 import socket
 import sys
@@ -43,9 +42,9 @@ def skipIfOffline():
         return unittest.skip("IPFS node is not available")
 
 def skipUnlessCI():
-    is_ci    = os.environ.get("CI", "false") == "true"
-    is_linux = platform.system() == "Linux"
-    return unittest.skipUnless(is_ci and is_linux, "CI")
+    have_ci  = os.environ.get("CI", "false") == "true"
+    have_pid = os.environ.get("PY_IPFSAPI_TEST_DAEMON_PID", "").isdigit()
+    return unittest.skipUnless(have_ci and have_pid, "CI-only test")
 
 
 def test_ipfs_node_available():
@@ -745,21 +744,63 @@ class IpfsApiBitswapTest(unittest.TestCase):
 @skipIfOffline()
 @skipUnlessCI()
 @pytest.mark.last
-@pytest.mark.xfail(reason="Daemon does not shut down on Travis for some reason")
 class IpfsApiShutdownTest(unittest.TestCase):
     def setUp(self):
         self.api = ipfsapi.Client()
+        self.pid = int(os.environ["PY_IPFSAPI_TEST_DAEMON_PID"])
+    
+    @staticmethod
+    def _pid_exists(pid):
+        """
+        Check whether pid exists in the current process table
+
+        Source: https://stackoverflow.com/a/23409343/277882
+        """
+        if os.name == 'posix':
+            import errno
+            if pid < 0:
+                return False
+            try:
+                os.kill(pid, 0)
+            except OSError as e:
+                return e.errno == errno.EPERM
+            else:
+                return True
+        else:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            HANDLE = ctypes.c_void_p
+            DWORD = ctypes.c_ulong
+            LPDWORD = ctypes.POINTER(DWORD)
+            class ExitCodeProcess(ctypes.Structure):
+                _fields_ = [ ('hProcess', HANDLE),
+                    ('lpExitCode', LPDWORD)]
+
+            SYNCHRONIZE = 0x100000
+            process = kernel32.OpenProcess(SYNCHRONIZE, 0, pid)
+            if not process:
+                return False
+
+            ec = ExitCodeProcess()
+            out = kernel32.GetExitCodeProcess(process, ctypes.byref(ec))
+            if not out:
+                err = kernel32.GetLastError()
+                if kernel32.GetLastError() == 5:
+                    # Access is denied.
+                    logging.warning("Access is denied to get pid info.")
+                kernel32.CloseHandle(process)
+                return False
+            elif bool(ec.lpExitCode):
+                # There is an exit code, it quit
+                kernel32.CloseHandle(process)
+                return False
+            # No exit code, it's running.
+            kernel32.CloseHandle(process)
+            return True
     
     def _is_ipfs_running(self):
-        # Test only running on Linux CI – use procfs directly
-        for pid in filter(lambda n: n.isdigit(), os.listdir("/proc")):
-            try:
-                if "ipfs" in os.readlink("/proc/{}/exe".format(pid)):
-                    return True
-            except OSError: #PY2: Cannot use `(FileNotFoundError, PermissionError):`
-                pass
-        
-        return False
+        return self._pid_exists(self.pid)
+    
     
     def test_daemon_shutdown(self):
         # Daemon should still be running at this point
