@@ -104,13 +104,13 @@ Or add a directory recursively:
   'Name': 'fake_dir'}]
 ```
 
-This module also contains some helper functions for adding strings, json, and even python objects to IPFS:
+This module also contains some helper functions for adding strings and JSON to IPFS:
 
 ```py
 >>> lst = [1, 77, 'lol']
->>> api.add_pyobj(lst)
-'QmRFqz1ABQtbMBDfjpMubTaginvpVnf58Y87gheRzGfe4i'
->>> api.get_pyobj(_)
+>>> client.add_json(lst)
+'QmQ4R5cCUYBWiJpNL7mFe4LDrwD6qBr5Re17BoRAY9VNpd'
+>>> client.get_json(_)
 [1, 77, 'lol']
 ```
 
