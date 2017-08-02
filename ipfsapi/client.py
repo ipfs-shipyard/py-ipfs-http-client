@@ -8,6 +8,7 @@ Classes:
 from __future__ import absolute_import
 
 import os
+import warnings
 
 from . import http, multipart, utils, exceptions, encoding
 
@@ -2126,6 +2127,14 @@ class Client(object):
     def add_pyobj(self, py_obj, **kwargs):
         """Adds a picklable Python object as a file to IPFS.
 
+        .. deprecated:: 0.4.2
+           The ``*_pyobj`` APIs allow for arbitrary code execution if abused.
+           Either switch to :meth:`~ipfsapi.Client.add_json` or use
+           ``client.add_bytes(pickle.dumps(py_obj))`` instead.
+
+        Please see :meth:`~ipfsapi.Client.get_pyobj` for the
+        **security risks** of using these methods!
+
         .. code-block:: python
 
             >>> c.add_pyobj([0, 1.0, 2j, '3', 4e5])
@@ -2140,10 +2149,17 @@ class Client(object):
         -------
             str : Hash of the added IPFS object
         """
+        warnings.warn("Using `*_pyobj` on untrusted data is a security risk",
+                      DeprecationWarning)
         return self.add_bytes(encoding.Pickle().encode(py_obj), **kwargs)
 
     def get_pyobj(self, multihash, **kwargs):
         """Loads a pickled Python object from IPFS.
+
+        .. deprecated:: 0.4.2
+           The ``*_pyobj`` APIs allow for arbitrary code execution if abused.
+           Either switch to :meth:`~ipfsapi.Client.get_json` or use
+           ``pickle.loads(client.cat(multihash))`` instead.
 
         .. caution::
 
@@ -2151,7 +2167,9 @@ class Client(object):
             maliciously constructed data. Never unpickle data received from an
             untrusted or unauthenticated source.
 
-            See the :mod:`pickle` module documentation for more information.
+            Please **read**
+            `this article <https://www.cs.uic.edu/%7Es/musings/pickle/>`_ to
+            understand the security risks of using this method!
 
         .. code-block:: python
 
@@ -2167,4 +2185,6 @@ class Client(object):
         -------
             object : Deserialized IPFS Python object
         """
+        warnings.warn("Using `*_pyobj` on untrusted data is a security risk",
+                      DeprecationWarning)
         return self.cat(multihash, decoder='pickle', **kwargs)
