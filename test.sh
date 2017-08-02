@@ -16,7 +16,7 @@ ipfs daemon &
 export PY_IPFSAPI_TEST_DAEMON_PID=$!
 
 # Wait for daemon startup
-while ! ipfs stats bw >/dev/null 2>&1;
+while ! curl "http://${PY_IPFSAPI_DEFAULT_HOST}:${PY_IPFSAPI_DEFAULT_PORT}/api/v0/stats/bw" >/dev/null 2>&1;
 do
 	sleep 0.1
 done
