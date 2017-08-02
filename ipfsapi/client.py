@@ -7,11 +7,13 @@ Classes:
 """
 from __future__ import absolute_import
 
+import os
+
 from . import http, multipart, utils, exceptions, encoding
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 5001
-DEFAULT_BASE = 'api/v0'
+DEFAULT_HOST = str(os.environ.get("PY_IPFSAPI_DEFAULT_HOST", 'localhost'))
+DEFAULT_PORT = int(os.environ.get("PY_IPFSAPI_DEFAULT_PORT", 5001))
+DEFAULT_BASE = str(os.environ.get("PY_IPFSAPI_DEFAULT_BASE", 'api/v0'))
 
 VERSION_MINIMUM = "0.4.3"
 VERSION_MAXIMUM = "0.5.0"
@@ -759,7 +761,7 @@ class Client(object):
         -------
             list : List of dictionaries with Names and Ids of public keys.
         """
-        return self._client.request('/key/list', decoder='json')['Keys']
+        return self._client.request('/key/list', decoder='json', **kwargs)
 
     def key_gen(self, key_name, type, size=2048, **kwargs):
         """Adds a new public key that can be used for name_publish.
@@ -787,18 +789,61 @@ class Client(object):
             dict : Key name and Key Id
         """
 
-        existing_keys = self.key_list()
-
-        for key in existing_keys:
-            if key['Name'] == key_name:
-                return key
-
         opts = {"type": type, "size": size}
         kwargs.setdefault("opts", opts)
         args = (key_name,)
 
         return self._client.request('/key/gen', args,
                                     decoder='json', **kwargs)
+
+    def key_rm(self, key_name, *key_names, **kwargs):
+        """Remove a keypair
+
+        .. code-block:: python
+
+            >>> c.key_rm("bla")
+            {"Keys": [
+                {"Name": "bla",
+                 "Id": "QmfJpR6paB6h891y7SYXGe6gapyNgepBeAYMbyejWA4FWA"}
+            ]}
+
+        Parameters
+        ----------
+        key_name : str
+            Name of the key(s) to remove.
+
+        Returns
+        -------
+            dict : List of key names and IDs that have been removed
+        """
+        args = (key_name,) + key_names
+        return self._client.request('/key/rm', args, decoder='json', **kwargs)
+
+    def key_rename(self, key_name, new_key_name, **kwargs):
+        """Rename a keypair
+
+        .. code-block:: python
+
+            >>> c.key_rename("bla", "personal")
+            {"Was": "bla",
+             "Now": "personal",
+             "Id": "QmeyrRNxXaasZaoDXcCZgryoBCga9shaHQ4suHAYXbNZF3",
+             "Overwrite": False}
+
+        Parameters
+        ----------
+        key_name : str
+            Current name of the key to rename
+        new_key_name : str
+            New name of the key
+
+        Returns
+        -------
+            dict : List of key names and IDs that have been removed
+        """
+        args = (key_name, new_key_name)
+        return self._client.request('/key/rename', args, decoder='json',
+                                    **kwargs)
 
     def name_publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None,
                      key=None, **kwargs):
@@ -1012,6 +1057,83 @@ class Client(object):
         kwargs.setdefault("opts", {"type": type})
 
         return self._client.request('/pin/ls', decoder='json', **kwargs)
+
+    def pin_update(self, from_path, to_path, **kwargs):
+        """Replaces one pin with another.
+
+        Updates one pin to another, making sure that all objects in the new pin
+        are local. Then removes the old pin. This is an optimized version of
+        using first using :meth:`~ipfsapi.Client.pin_add` to add a new pin
+        for an object and then using :meth:`~ipfsapi.Client.pin_rm` to remove
+        the pin for the old object.
+
+        .. code-block:: python
+
+            >>> c.pin_update("QmXMqez83NU77ifmcPs5CkNRTMQksBLkyfBf4H5g1NZ52P",
+            ...              "QmUykHAi1aSjMzHw3KmBoJjqRUQYNkFXm8K1y7ZsJxpfPH")
+            {"Pins": ["/ipfs/QmXMqez83NU77ifmcPs5CkNRTMQksBLkyfBf4H5g1NZ52P",
+                      "/ipfs/QmUykHAi1aSjMzHw3KmBoJjqRUQYNkFXm8K1y7ZsJxpfPH"]}
+
+        Parameters
+        ----------
+        from_path : str
+            Path to the old object
+        to_path : str
+            Path to the new object to be pinned
+        unpin : bool
+            Should the pin of the old object be removed? (Default: ``True``)
+
+        Returns
+        -------
+            dict : List of IPFS objects affected by the pinning operation
+        """
+        #PY2: No support for kw-only parameters after glob parameters
+        if "unpin" in kwargs:
+            kwargs.setdefault("opts", {"unpin": kwargs["unpin"]})
+            del kwargs["unpin"]
+
+        args = (from_path, to_path)
+        return self._client.request('/pin/update', args, decoder='json',
+                                    **kwargs)
+
+    def pin_verify(self, path, *paths, **kwargs):
+        """Verify that recursive pins are complete.
+
+        Scan the repo for pinned object graphs and check their integrity.
+        Issues will be reported back with a helpful human-readable error
+        message to aid in error recovery. This is useful to help recover
+        from datastore corruptions (such as when accidentally deleting
+        files added using the filestore backend).
+
+        .. code-block:: python
+
+            >>> for item in c.pin_verify("QmNuvmuFeeWWpx…wTTZ", verbose=True):
+            ...     print(item)
+            ...
+            {"Cid":"QmVkNdzCBukBRdpyFiKPyL2R15qPExMr9rV9RFV2kf9eeV","Ok":True}
+            {"Cid":"QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm","Ok":True}
+            {"Cid":"Qmcns1nUvbeWiecdGDPw8JxWeUfxCV8JKhTfgzs3F8JM4P","Ok":True}
+            …
+
+        Parameters
+        ----------
+        path : str
+            Path to object(s) to be checked
+        verbose : bool
+            Also report status of items that were OK? (Default: ``False``)
+
+        Returns
+        -------
+            iterable
+        """
+        #PY2: No support for kw-only parameters after glob parameters
+        if "verbose" in kwargs:
+            kwargs.setdefault("opts", {"verbose": kwargs["verbose"]})
+            del kwargs["verbose"]
+
+        args = (path,) + paths
+        return self._client.request('/pin/verify', args, decoder='json',
+                                    stream=True, **kwargs)
 
     def repo_gc(self, **kwargs):
         """Removes stored objects that are not pinned from the repo.
@@ -1901,6 +2023,15 @@ class Client(object):
         """
         args = (source, dest)
         return self._client.request('/files/mv', args, **kwargs)
+
+    def shutdown(self):
+        """Stop the connected IPFS daemon instance.
+
+        Sending any further requests after this will fail with
+        ``ipfsapi.exceptions.ConnectionError``, until you start another IPFS
+        daemon instance.
+        """
+        return self._client.request('/shutdown')
 
     ###########
     # HELPERS #

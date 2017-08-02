@@ -4,8 +4,11 @@ import json
 import shutil
 import socket
 import sys
+import time
 import unittest
 import logging
+
+import pytest
 
 import ipfsapi
 
@@ -37,6 +40,11 @@ def skipIfOffline():
         return lambda func: func
     else:
         return unittest.skip("IPFS node is not available")
+
+def skipUnlessCI():
+    have_ci  = os.environ.get("CI", "false") == "true"
+    have_pid = os.environ.get("PY_IPFSAPI_TEST_DAEMON_PID", "").isdigit()
+    return unittest.skipUnless(have_ci and have_pid, "CI-only test")
 
 
 def test_ipfs_node_available():
@@ -321,15 +329,18 @@ class IpfsApiLogTest(unittest.TestCase):
 
 @skipIfOffline()
 class IpfsApiPinTest(unittest.TestCase):
-
-    fake_dir_hash = 'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi'
-
     def setUp(self):
         self.api = ipfsapi.Client()
+        
         # Add resources to be pinned.
         self.resource = self.api.add_str('Mary had a little lamb')
         resp_add = self.api.add('test/functional/fake_dir', recursive=True)
         self.fake_dir_hashes = [el['Hash'] for el in resp_add if 'Hash' in el]
+        for resp in resp_add:
+            if resp["Name"] == "fake_dir":
+                self.fake_dir_hash = resp["Hash"]
+            elif resp["Name"] == "fake_dir/test2":
+                self.fake_dir_test2_hash = resp["Hash"]
 
     def test_pin_ls_add_rm_single(self):
         # Get pinned objects at start.
@@ -364,18 +375,12 @@ class IpfsApiPinTest(unittest.TestCase):
         self.assertFalse(self.resource in pins_end.keys())
 
     def test_pin_ls_add_rm_directory(self):
-        # Get pinned objects at start.
-        pins_begin = self.api.pin_ls()['Keys']
-
         # Remove fake_dir if it had previously been pinned.
-        if self.fake_dir_hash in pins_begin.keys() and \
-           pins_begin[self.fake_dir_hash]['Type'] == 'recursive':
+        if self.fake_dir_hash in self.api.pin_ls(type="recursive")['Keys'].keys():
             self.api.pin_rm(self.fake_dir_hash)
 
         # Make sure I removed it
-        pins_after_rm = self.api.pin_ls()['Keys']
-        self.assertFalse(self.fake_dir_hash in pins_after_rm.keys() and \
-                        pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
+        assert self.fake_dir_hash not in self.api.pin_ls()['Keys'].keys()
 
         # Add 'fake_dir' recursively.
         self.api.pin_add(self.fake_dir_hash)
@@ -383,13 +388,59 @@ class IpfsApiPinTest(unittest.TestCase):
         # Make sure all appear on the list of pinned objects.
         pins_after_add = self.api.pin_ls()['Keys'].keys()
         for el in self.fake_dir_hashes:
-            self.assertTrue(el in pins_after_add)
+            assert el in pins_after_add
 
         # Clean up.
         self.api.pin_rm(self.fake_dir_hash)
-        pins_end = self.api.pin_ls()['Keys'].keys()
-        self.assertFalse(self.fake_dir_hash in pins_end and \
-                        pins_after_rm[self.fake_dir_hash]['Type'] == 'recursive')
+        pins_end = self.api.pin_ls(type="recursive")['Keys'].keys()
+        assert self.fake_dir_hash not in pins_end
+    
+    def test_pin_add_update_verify_rm(self):
+        # Get pinned objects at start.
+        pins_begin = self.api.pin_ls(type="recursive")['Keys'].keys()
+        
+        # Remove fake_dir and demo resource if it had previously been pinned.
+        if self.fake_dir_hash in pins_begin:
+            self.api.pin_rm(self.fake_dir_hash)
+        if self.fake_dir_test2_hash in pins_begin:
+            self.api.pin_rm(self.fake_dir_test2_hash)
+        
+        # Ensure that none of the above are pinned anymore.
+        pins_after_rm = self.api.pin_ls(type="recursive")['Keys'].keys()
+        assert self.fake_dir_hash       not in pins_after_rm
+        assert self.fake_dir_test2_hash not in pins_after_rm
+        
+        # Add pin for sub-directory
+        self.api.pin_add(self.fake_dir_test2_hash)
+        
+        # Replace it by pin for the entire fake dir
+        self.api.pin_update(self.fake_dir_test2_hash, self.fake_dir_hash)
+        
+        # Ensure that the sub-directory is not pinned directly anymore
+        pins_after_update = self.api.pin_ls(type="recursive")["Keys"].keys()
+        assert self.fake_dir_test2_hash not in pins_after_update
+        assert self.fake_dir_hash           in pins_after_update
+        
+        # Now add a pin to the sub-directory from the parent directory
+        self.api.pin_update(self.fake_dir_hash, self.fake_dir_test2_hash, unpin=False)
+        
+        # Check integrity of all directory content hashes and whether all
+        # directory contents have been processed in doing this
+        hashes = []
+        for result in self.api.pin_verify(self.fake_dir_hash, verbose=True):
+            assert result["Ok"]
+            hashes.append(result["Cid"])
+        assert self.fake_dir_hash in hashes
+        
+        # Ensure that both directories are now recursively pinned
+        pins_after_update2 = self.api.pin_ls(type="recursive")["Keys"].keys()
+        assert self.fake_dir_test2_hash in pins_after_update2
+        assert self.fake_dir_hash       in pins_after_update2
+        
+        # Clean up
+        self.api.pin_rm(self.fake_dir_hash, self.fake_dir_test2_hash)
+        
+        
 
 
 @skipIfOffline()
@@ -494,8 +545,8 @@ class IpfsApiRepoTest(unittest.TestCase):
     def test_repo_stat(self):
         # Verify that the correct key-value pairs are returned
         stat = self.api.repo_stat()
-        self.assertEqual(sorted(stat.keys()), ['NumObjects', 'RepoPath',
-                                               'RepoSize', 'Version'])
+        self.assertEqual(sorted(stat.keys()), [u'NumObjects', u'RepoPath', u'RepoSize',
+                                               u'StorageMax', u'Version'])
 
     def test_repo_gc(self):
         # Add and unpin an object to be garbage collected
@@ -511,6 +562,46 @@ class IpfsApiRepoTest(unittest.TestCase):
         self.assertGreater(orig_objs, cur_objs)
         keys = [el['Key']['/'] for el in gc]
         self.assertTrue(garbage in keys)
+
+
+@skipIfOffline()
+class IpfsApiKeyTest(unittest.TestCase):
+    def setUp(self):
+        self.api = ipfsapi.Client()
+
+    def test_key_add_list_rename_rm(self):
+        # Remove keys if they already exist
+        key_list = list(map(lambda k: k["Name"], self.api.key_list()["Keys"]))
+        if "ipfsapi-test-rsa" in key_list:
+            self.api.key_rm("ipfsapi-test-rsa")
+        if "ipfsapi-test-ed" in key_list:
+            self.api.key_rm("ipfsapi-test-ed")
+        
+        # Add new RSA and ED25519 key
+        key1 = self.api.key_gen("ipfsapi-test-rsa", "rsa")["Name"]
+        key2 = self.api.key_gen("ipfsapi-test-ed",  "ed25519")["Name"]
+        
+        # Validate the keys exist now
+        key_list = list(map(lambda k: k["Name"], self.api.key_list()["Keys"]))
+        assert key1 in key_list
+        assert key2 in key_list
+        
+        # Rename the EC key
+        key2_new = self.api.key_rename(key2, "ipfsapi-test-ed2")["Now"]
+        
+        # Validate that the key was successfully renamed
+        key_list = list(map(lambda k: k["Name"], self.api.key_list()["Keys"]))
+        assert key1     in key_list
+        assert key2 not in key_list
+        assert key2_new in key_list
+        
+        # Drop both keys with one request
+        self.api.key_rm(key1, key2_new)
+        
+        # Validate that the keys are gone again
+        key_list = list(map(lambda k: k["Name"], self.api.key_list()["Keys"]))
+        assert key1     not in key_list
+        assert key2_new not in key_list
 
 
 @skipIfOffline()
@@ -647,6 +738,87 @@ class IpfsApiBitswapTest(unittest.TestCase):
 
         result = self.api.bitswap_unwant(key='QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V')
         self.assertTrue(result is not None)
+
+# Run test for `.shutdown()` only as the last test in CI environments – it would be to annoying
+# during normal testing
+@skipIfOffline()
+@skipUnlessCI()
+@pytest.mark.last
+class IpfsApiShutdownTest(unittest.TestCase):
+    def setUp(self):
+        self.api = ipfsapi.Client()
+        self.pid = int(os.environ["PY_IPFSAPI_TEST_DAEMON_PID"])
+    
+    @staticmethod
+    def _pid_exists(pid):
+        """
+        Check whether pid exists in the current process table
+
+        Source: https://stackoverflow.com/a/23409343/277882
+        """
+        if os.name == 'posix':
+            import errno
+            if pid < 0:
+                return False
+            try:
+                os.kill(pid, 0)
+            except OSError as e:
+                return e.errno == errno.EPERM
+            else:
+                return True
+        else:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            HANDLE = ctypes.c_void_p
+            DWORD = ctypes.c_ulong
+            LPDWORD = ctypes.POINTER(DWORD)
+            class ExitCodeProcess(ctypes.Structure):
+                _fields_ = [ ('hProcess', HANDLE),
+                    ('lpExitCode', LPDWORD)]
+
+            SYNCHRONIZE = 0x100000
+            process = kernel32.OpenProcess(SYNCHRONIZE, 0, pid)
+            if not process:
+                return False
+
+            ec = ExitCodeProcess()
+            out = kernel32.GetExitCodeProcess(process, ctypes.byref(ec))
+            if not out:
+                err = kernel32.GetLastError()
+                if kernel32.GetLastError() == 5:
+                    # Access is denied.
+                    logging.warning("Access is denied to get pid info.")
+                kernel32.CloseHandle(process)
+                return False
+            elif bool(ec.lpExitCode):
+                # There is an exit code, it quit
+                kernel32.CloseHandle(process)
+                return False
+            # No exit code, it's running.
+            kernel32.CloseHandle(process)
+            return True
+    
+    def _is_ipfs_running(self):
+        return self._pid_exists(self.pid)
+    
+    
+    def test_daemon_shutdown(self):
+        # Daemon should still be running at this point
+        assert self._is_ipfs_running()
+        
+        # Send stop request
+        self.api.shutdown()
+        
+        # Wait for daemon process to disappear
+        for _ in range(10000):
+            if not self._is_ipfs_running():
+                break
+            time.sleep(0.001)
+        
+        # Daemon should not be running anymore
+        assert not self._is_ipfs_running()
+        
+
 
 if __name__ == "__main__":
     unittest.main()

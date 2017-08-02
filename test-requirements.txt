@@ -2,4 +2,5 @@ flake8
 httmock
 pytest
 pytest-cov
+pytest-ordering
 tox

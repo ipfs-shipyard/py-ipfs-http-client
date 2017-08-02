@@ -1,5 +1,6 @@
 build/
 dist/
+test-tmp/
 *.egg-info
 *.pyc
 *.swp
@@ -11,3 +12,4 @@ htmlcov*
 .cache
 docs/build/
 .python-version
+
