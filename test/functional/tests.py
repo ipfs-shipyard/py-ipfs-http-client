@@ -98,6 +98,10 @@ class IpfsApiTest(unittest.TestCase):
     fake_file  = 'fake_dir/fsdfgh'
     fake_file_only_res = {'Name': 'fsdfgh',
                           'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'}
+    fake_file_dir_res = [
+        {'Name': 'fsdfgh', 'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
+        {'Name': '',       'Hash': 'Qme7vmxd4LAAYL7vpho3suQeT3gvMeLLtPdp7myCb9Db55'}
+    ]
     fake_file2 = 'fake_dir/popoiopiu'
     fake_files_res = [
             {'Name': 'fsdfgh', 'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
@@ -162,9 +166,20 @@ class IpfsApiTest(unittest.TestCase):
 
         # Makes all of the diff visible if the hashes change for some reason
         self.maxDiff = None
+        
+        self.pinned = set(self.api.pin_ls(type="recursive")["Keys"])
 
     def tearDown(self):
         os.chdir(self._olddir)
+
+    def _clean_up_pins(self):
+        for multihash in self.api.pin_ls(type="recursive")["Keys"]:
+            if multihash not in self.pinned:
+                self.api.pin_rm(multihash)
+    
+    @staticmethod
+    def _sort_by_key(items, key="Name"):
+        return sorted(items, key=lambda x: x[key])
 
     #########
     # TESTS #
@@ -174,125 +189,178 @@ class IpfsApiTest(unittest.TestCase):
         expected = ['Repo', 'Commit', 'Version']
         resp_version = self.api.version()
         for key in expected:
-            self.assertTrue(key in resp_version)
+            assert key in resp_version
 
     def test_id(self):
         expected = ['PublicKey', 'ProtocolVersion',
                     'ID', 'AgentVersion', 'Addresses']
         resp_id = self.api.id()
         for key in expected:
-            self.assertTrue(key in resp_id)
+            assert key in resp_id
 
     def test_add_single_from_str(self):
-        res = self.api.add(self.fake_file)
-        self.assertEqual(self.fake_file_only_res, res)
+        res = self.api.add(self.fake_file, pin=False)
+        
+        assert self.fake_file_only_res == res
+        
+        assert res["Hash"] not in self.api.pin_ls(type="recursive")
+        assert res["Hash"]     in list(map(lambda i: i["Ref"], self.api.refs_local()))
 
     def test_add_single_from_fp(self):
         with open(self.fake_file, 'rb') as fp:
-            res = self.api.add(fp)
-            self.assertEqual(self.fake_file_only_res, res)
+            res = self.api.add(fp, pin=False)
+            
+            assert self.fake_file_only_res == res
+            
+            assert res["Hash"] not in self.api.pin_ls(type="recursive")
+            assert res["Hash"]     in list(map(lambda i: i["Ref"], self.api.refs_local()))
+
+    def test_add_single_from_str_with_dir(self):
+        res = self.api.add(self.fake_file, wrap_with_directory=True)
+        
+        try:
+            assert self.fake_file_dir_res == res
+            
+            dir_hash = None
+            for item in res:
+                if item["Name"] == "":
+                    dir_hash = item["Hash"]
+            assert dir_hash in self.api.pin_ls(type="recursive")["Keys"]
+        finally:
+            self._clean_up_pins()
+
+    def test_only_hash_file(self):
+        self.api.repo_gc()
+        
+        res = self.api.add(self.fake_file, only_hash=True)
+        
+        assert self.fake_file_only_res == res
+        
+        assert res["Hash"] not in self.api.pin_ls(type="recursive")
+        assert res["Hash"] not in list(map(lambda i: i["Ref"], self.api.refs_local()))
 
     def test_add_multiple_from_list(self):
         res = self.api.add([self.fake_file, self.fake_file2])
-        self.assertEqual(self.fake_files_res, res)
+        
+        try:
+            assert self.fake_files_res == res
+        finally:
+            self._clean_up_pins()
 
     def test_add_multiple_from_dirname(self):
         res = self.api.add(self.fake_dir_test2)
-        self.assertEqual(sorted(self.fake_dir_res,
-                                key=lambda x: x['Name']),
-                         sorted(res,
-                                key=lambda x: x['Name']))
+        
+        try:
+            assert self._sort_by_key(self.fake_dir_res) == self._sort_by_key(res)
+        finally:
+            self._clean_up_pins()
 
     def test_add_filepattern_from_dirname(self):
         res = self.api.add(self.fake_dir, pattern=self.pattern)
-        self.assertEqual(sorted(self.fake_dir_fnpattern_res,
-                                key=lambda x: x['Name']),
-                         sorted(res,
-                                key=lambda x: x['Name']))
+        
+        try:
+            assert self._sort_by_key(self.fake_dir_fnpattern_res) == self._sort_by_key(res)
+        finally:
+            self._clean_up_pins()
+        
 
     def test_add_filepattern_subdir_wildcard(self):
         res = self.api.add(self.fake_dir, pattern=self.pattern2)
-        self.assertEqual(sorted(self.fake_dir_fnpattern2_res,
-                                key=lambda x: x['Name']),
-                         sorted(res,
-                                key=lambda x: x['Name']))
+        
+        try:
+            assert self._sort_by_key(self.fake_dir_fnpattern2_res) == self._sort_by_key(res)
+        finally:
+            self._clean_up_pins()
 
     def test_add_recursive(self):
         res = self.api.add(self.fake_dir, recursive=True)
-        self.assertEqual(sorted(self.fake_dir_recursive_res,
-                                key=lambda x: x['Name']),
-                         sorted(res,
-                                key=lambda x: x['Name']))
+        
+        try:
+            assert self._sort_by_key(self.fake_dir_recursive_res) == self._sort_by_key(res)
+        finally:
+            self._clean_up_pins()
 
     def test_add_json(self):
         data = {'Action': 'Open', 'Type': 'PR', 'Name': 'IPFS', 'Pubkey': 7}
         res = self.api.add_json(data)
-        self.assertEqual(data,
-                         self.api.get_json(res))
+        
+        try:
+            assert data == self.api.get_json(res)
 
-        # have to test the string added to IPFS, deserializing JSON will not
-        # test order of keys
-        self.assertEqual(
-            '{"Action":"Open","Name":"IPFS","Pubkey":7,"Type":"PR"}',
-            self.api.cat(res).decode('utf-8')
-        )
+            # have to test the string added to IPFS, deserializing JSON will not
+            # test order of keys
+            assert '{"Action":"Open","Name":"IPFS","Pubkey":7,"Type":"PR"}' == self.api.cat(res).decode('utf-8')
+        finally:
+            self._clean_up_pins()
 
     def test_add_get_pyobject(self):
         data = [-1, 3.14, u'Hän€', b'23' ]
         res = self.api.add_pyobj(data)
-        self.assertEqual(data,
-                         self.api.get_pyobj(res))
+        
+        try:
+            assert data == self.api.get_pyobj(res)
+        finally:
+            self._clean_up_pins()
 
     def test_get_file(self):
         self.api.add(self.fake_file)
+        
+        try:
+            test_hash = self.fake[0]['Hash']
 
-        test_hash = self.fake[0]['Hash']
+            self.api.get(test_hash)
+            assert test_hash in os.listdir(os.getcwd())
 
-        self.api.get(test_hash)
-        self.assertIn(test_hash, os.listdir(os.getcwd()))
-
-        os.remove(test_hash)
-        self.assertNotIn(test_hash, os.listdir(os.getcwd()))
+            os.remove(test_hash)
+            assert test_hash not in os.listdir(os.getcwd())
+        finally:
+            self._clean_up_pins()
 
     def test_get_dir(self):
         self.api.add(self.fake_dir, recursive=True)
-
-        test_hash = self.fake[8]['Hash']
-
-        self.api.get(test_hash)
-        self.assertIn(test_hash, os.listdir(os.getcwd()))
-
-        shutil.rmtree(test_hash)
-        self.assertNotIn(test_hash, os.listdir(os.getcwd()))
+        
+        try:
+            test_hash = self.fake[8]['Hash']
+            
+            self.api.get(test_hash)
+            assert test_hash in os.listdir(os.getcwd())
+            
+            shutil.rmtree(test_hash)
+            assert test_hash not in os.listdir(os.getcwd())
+        finally:
+            self._clean_up_pins()
 
     def test_get_path(self):
         self.api.add(self.fake_file)
-
-        test_hash = self.fake[8]['Hash'] + '/fsdfgh'
-
-        self.api.get(test_hash)
-        self.assertIn('fsdfgh', os.listdir(os.getcwd()))
-
-        os.remove('fsdfgh')
-        self.assertNotIn('fsdfgh', os.listdir(os.getcwd()))
+        
+        try:
+            test_hash = self.fake[8]['Hash'] + '/fsdfgh'
+            
+            self.api.get(test_hash)
+            assert 'fsdfgh' in os.listdir(os.getcwd())
+            
+            os.remove('fsdfgh')
+            assert 'fsdfgh' not in os.listdir(os.getcwd())
+        finally:
+            self._clean_up_pins()
 
     def test_refs(self):
         self.api.add(self.fake_dir, recursive=True)
-
-        refs = self.api.refs(self.fake[8]['Hash'])
-
-        self.assertEqual(sorted(self.refs_res, key=lambda x: x['Ref']),
-                         sorted(refs, key=lambda x: x['Ref']))
-
-    def test_refs_local(self):
-        refs = self.api.refs_local()
-
-        self.assertEqual(sorted(refs[0].keys()), ['Err', 'Ref'])
+        
+        try:
+            refs = self.api.refs(self.fake[8]['Hash'])
+            assert self._sort_by_key(self.refs_res, "Ref") == self._sort_by_key(refs, "Ref")
+        finally:
+            self._clean_up_pins()
 
     def test_cat_single_file_str(self):
         self.api.add(self.fake_file)
-        res = self.api.cat('QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX')
-        self.assertEqual(b"dsadsad\n", res)
+        
+        try:
+            content = self.api.cat('QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX')
+            assert content == b"dsadsad\n"
+        finally:
+            self._clean_up_pins()
 
 
 @skipIfOffline()
