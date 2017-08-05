@@ -19,4 +19,4 @@ install:
   - "pip install -r test-requirements.txt"
 script:
   - tox -e pep8
-  - ./test.sh tox
+  - tox
