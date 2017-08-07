@@ -16,7 +16,6 @@
 /+junk
 
 # Build artefacts
-*.egg-info
 build/
 dist/
 
@@ -24,6 +23,5 @@ dist/
 docs/build/
 
 # Testing artefacts
-.cache/
 .coverage
 .tox/
