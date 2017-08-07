@@ -1,7 +1,7 @@
 Since releasing new versions is currently a somewhat complicated task, the current procedure
-(02.06.2017) will be outlined in this document.
+(07.08.2017) will be outlined in this document.
 
-All of this has only ever been tested on Debian 9 (Linux).
+All of this has only been tested on Debian 9 & Fedora 26 (Linux).
 
 # Prerequirements
 
@@ -9,14 +9,16 @@ All of this has only ever been tested on Debian 9 (Linux).
 
 ### Python 3 with `setuptools` and `wheel` support
 
-APT line: `sudo apt install python3-setuptools python3-wheel`
+APT line: `sudo apt install python3-setuptools python3-wheel`  
+DNF line: `sudo dnf install python3-setuptools python3-wheel`
 
 ### PanDoc
 
 PanDoc is used to on-the-fly convert the `README.md` to reStructuredText when running `./setup.py`.
 This way we can keep all the project documentation in one (nice) format.
 
-APT line: `sudo apt install pandoc`
+APT line: `sudo apt install pandoc`  
+DNF line: `sudo dnf install pandoc`
 
 ## Building the documentation
 
@@ -25,7 +27,8 @@ APT line: `sudo apt install pandoc`
 Sphinx is the standard documentation framework for Python. Recommonmark is an extension that allows
 Sphinx to process Markdown documentation as if it where reStructuredText.
 
-APT line: `sudo apt install python3-sphinx python3-recommonmark`
+APT line: `sudo apt install python3-sphinx python3-recommonmark`  
+DNF line: `sudo dnf install python3-sphinx python3-recommonmark`
 
 ## Hosting Documentation
 
@@ -44,22 +47,24 @@ and then publishes the resulting hash as the node's primary hash. This is curren
 new versions of the documentation.
 
 You can download it at:
-https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfs-file-publish
+[https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfs-file-publish](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfs-file-publish)
 
 
 # Steps when releasing a new version
 
 ## Update the source code
 
- 1. Make a GIT commit incrementing the version number in `ipfsapi/version.py` (`git commit ipfsapi/version.py`)
- 2. Tag the GIT commit with the version number (`git tag 0.4.X`)
+ 1. Make a GIT commit incrementing the version number in `ipfsapi/version.py`:  
+    `git commit -m "Release version 0.4.X" ipfsapi/version.py`)
+ 2. Tag the GIT commit with the version number using an annotated and signed tag:  
+    `git tag --sign -m "Release version 0.4.X" 0.4.X`
  3. Push the new version
 
 ## Upload the new version to PyPI
 
 Run: `./setup.py sdist bdist_wheel upload`
 
-**You must have `pandoc` installed or the description PyPI will be replaced with nothing!**
+**You must have `pandoc` installed or the description PyPI will be replaced with nothingness!**
 
 ## Re-generate the documentation
 
