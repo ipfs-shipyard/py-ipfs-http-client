@@ -157,9 +157,9 @@ You can submit bug reports using the [GitHub issue tracker](https://github.com/i
 ### Pull requests
 
 Pull requests are welcome.  Before submitting a new pull request, please
-make sure that your code passes both the [pep8](https://www.python.org/dev/peps/pep-0008/) formatting check:
+make sure that your code passes both the [code formatting](https://www.python.org/dev/peps/pep-0008/) formatting check:
 
-    $ tox -e pep8
+    $ tox -e codestyle
 
 And the unit tests:
 
