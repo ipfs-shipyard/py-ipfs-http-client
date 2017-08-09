@@ -7,9 +7,7 @@
 [![](https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square)](https://pypi.python.org/pypi/ipfsapi)
 [![Build Status](https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-api)
 
-![](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
-
-> A python client library for the IPFS API
+![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
 Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/) for the full command reference.
 
@@ -159,9 +157,9 @@ You can submit bug reports using the [GitHub issue tracker](https://github.com/i
 ### Pull requests
 
 Pull requests are welcome.  Before submitting a new pull request, please
-make sure that your code passes both the [pep8](https://www.python.org/dev/peps/pep-0008/) formatting check:
+make sure that your code passes both the [code formatting](https://www.python.org/dev/peps/pep-0008/) formatting check:
 
-    $ tox -e pep8
+    $ tox -e codestyle
 
 And the unit tests:
 

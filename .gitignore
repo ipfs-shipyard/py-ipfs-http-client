@@ -1,15 +1,27 @@
-build/
-dist/
-test-tmp/
-*.egg-info
-*.pyc
+# Temporary files used by some editors
 *.swp
 *~
-.tox/
-.coverage
-htmlcov*
-**/__pycache__/
-.cache
-docs/build/
-.python-version
 
+# Temporary files created during Python file loading
+*.pyc
+**/__pycache__/
+
+# Project storage of some editors
+/.idea
+/.project
+/.settings
+/.vscode
+
+# Stuff that never was meant to be public
+/+junk
+
+# Build artefacts
+build/
+dist/
+
+# Documentation build artefacts
+docs/build/
+
+# Testing artefacts
+.coverage
+.tox/

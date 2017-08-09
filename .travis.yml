@@ -9,14 +9,17 @@ matrix:
     env: TOXENV=py35
   - python: "3.6"
     env: TOXENV=py36
-before_script:
+  - python: "3.6"
+    env: TOXENV=codestyle
+    before_install: true
+
+before_install:
   - wget "https://dist.ipfs.io/go-ipfs/v0.4.10/go-ipfs_v0.4.10_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
   - mkdir $HOME/bin
   - pushd . && cd $HOME/bin && tar -xzvf /tmp/ipfs.tar.gz && popd
   - export PATH="$HOME/bin/go-ipfs:$PATH"
+
 install:
-  - "pip install -r requirements.txt"
-  - "pip install -r test-requirements.txt"
-script:
-  - tox -e pep8
-  - ./test.sh tox
+  - pip install tox
+
+script: tox
