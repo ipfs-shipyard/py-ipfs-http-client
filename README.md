@@ -1,8 +1,8 @@
 # py-ipfs-api
 
-[![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
-[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/)
-[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
+[![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](https://protocol.ai/)
+[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.io/)
+[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![](https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square)](https://pypi.python.org/pypi/ipfsapi)
 [![Build Status](https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-api)
@@ -141,7 +141,7 @@ The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) m
 Projects that currently use py-ipfs-api. If your project isn't here, feel free to submit a PR to add it!
 
 - [git-remote-ipfs](https://github.com/larsks/git-remote-ipfs) allows users to push and pull git repositories from the IPFS network.
-- [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](http://www.iso.org/iso/catalogue_detail.htm?csnumber=44717)) files for distributed indexing and replay using IPFS.
+- [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](https://www.iso.org/standard/44717.html)) files for distributed indexing and replay using IPFS.
 
 ## Contribute
 
