@@ -16,5 +16,5 @@ if [ "x$1" = "x--install" ]; then
 	exit
 fi
 
-# run pep8 tests before accepting a commit
-tox -e pep8
+# run code style tests before accepting a commit
+tox -e codestyle

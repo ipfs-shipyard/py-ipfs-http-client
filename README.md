@@ -164,7 +164,7 @@ And the unit tests:
 
     $ tox
 
-You can arrange to run the pep8 tests automatically before each commit by
+You can arrange to run the code style tests automatically before each commit by
 installing a `pre-commit` hook:
 
     $ ./tools/pre-commit --install
