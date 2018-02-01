@@ -2021,7 +2021,7 @@ class Client(object):
         count : int
             Maximum number of bytes to read from the source ``file``
         """
-        opts = {"offset": offset, "create": create, truncate: truncate}
+        opts = {"offset": offset, "create": create, "truncate": truncate}
         if count is not None:
             opts["count"] = count
         kwargs.setdefault("opts", opts)
