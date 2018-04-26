@@ -73,7 +73,7 @@ subprocess.call(["ipfs", "config", "Addresses.API",     "/ip4/{}/tcp/{}".format(
 ################
 
 # Spawn IPFS daemon in data directory
-DAEMON = subprocess.Popen(["ipfs", "daemon"])
+DAEMON = subprocess.Popen(["ipfs", "daemon", "--enable-pubsub-experiment"])
 os.environ["PY_IPFSAPI_TEST_DAEMON_PID"] = str(DAEMON.pid)
 
 # Collect the exit code of `DAEMON` when `SIGCHLD` is received
