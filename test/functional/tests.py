@@ -577,31 +577,31 @@ class IpfsApiMFSTest(unittest.TestCase):
             self.api.files_stat(self.test_directory_path)
 
 
-@skipIfOffline()
-class TestBlockFunctions(unittest.TestCase):
-    def setUp(self):
-        self.api = ipfsapi.Client()
-        self.multihash = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'
-        self.content_size = 248
+# @skipIfOffline()
+# class TestBlockFunctions(unittest.TestCase):
+    # def setUp(self):
+        # self.api = ipfsapi.Client()
+        # self.multihash = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'
+        # self.content_size = 248
 
-    def test_block_stat(self):
-        expected_keys = ['Key', 'Size']
-        res = self.api.block_stat(self.multihash)
-        for key in expected_keys:
-            self.assertTrue(key in res)
+    # def test_block_stat(self):
+        # expected_keys = ['Key', 'Size']
+        # res = self.api.block_stat(self.multihash)
+        # for key in expected_keys:
+            # self.assertTrue(key in res)
 
-    def test_block_get(self):
-        self.assertEqual(len(self.api.block_get(self.multihash)), self.content_size)
+    # def test_block_get(self):
+        # self.assertEqual(len(self.api.block_get(self.multihash)), self.content_size)
 
-    def test_block_put(self):
-        path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                            "functional", "fake_dir", "fsdfgh")
-        expected_block_multihash = 'QmPevo2B1pwvDyuZyJbWVfhwkaGPee3f1kX36wFmqx1yna'
-        expected_keys = ['Key', 'Size']
-        res = self.api.block_put(path)
-        for key in expected_keys:
-            self.assertTrue(key in res)
-        self.assertEqual(res['Key'], expected_block_multihash)
+    # def test_block_put(self):
+        # path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                            # "functional", "fake_dir", "fsdfgh")
+        # expected_block_multihash = 'QmPevo2B1pwvDyuZyJbWVfhwkaGPee3f1kX36wFmqx1yna'
+        # expected_keys = ['Key', 'Size']
+        # res = self.api.block_put(path)
+        # for key in expected_keys:
+            # self.assertTrue(key in res)
+        # self.assertEqual(res['Key'], expected_block_multihash)
 
 
 @skipIfOffline()
@@ -806,6 +806,68 @@ class IpfsApiBitswapTest(unittest.TestCase):
 
         result = self.api.bitswap_unwant(key='QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V')
         self.assertTrue(result is not None)
+
+@skipIfOffline()
+class IpfsApiPubSubTest(unittest.TestCase):
+
+    def setUp(self):
+        self.api = ipfsapi.Client()
+
+    def test_pubsub_pub_sub(self):
+        """
+        We should test both publishing and subscribing
+        at the same time for it's difficult
+        to determine if one works without checking the
+        other.
+        """
+        # the topic that will be published/subscribed to
+        topic = 'testing'
+        # the message that will be published
+        message = 'hello'
+
+        expected_data = 'aGVsbG8='	
+        expected_topicIDs = [topic]
+
+
+        # get the subscription stream
+        sub = self.api.pubsub_sub(topic)
+
+        # make sure something was actually returned from the subscription
+        assert sub is not None
+
+        # publish a message to topic
+        self.api.pubsub_pub(topic, message)
+
+        # get the 
+        sub_data = next(sub)
+
+        self.assertEqual(sub_data['data'], expected_data)
+        self.assertEqual(sub_data['topicIDs'], expected_topicIDs)
+
+    def test_pubsub_ls(self):
+        """
+        Testing the ls, assumes we are able
+        to at least subscribe to a topic
+        """
+        topic = 'lsing'
+        expected_return = { 'Strings': [topic] }
+
+        # subscribe to the topic testing
+        # in this test we don't care about the return value
+        a = self.api.pubsub_sub(topic)   
+
+        # grab the channels we're subscribed to
+        channels = self.api.pubsub_ls()
+        self.assertEqual(channels, expected_return)
+
+    def test_pubsub_peers(self):
+        """
+        Not sure how to test this since it fully depends
+        on who we're connected to. We may not even have
+        any peers
+        """
+        pass
+
 
 # Run test for `.shutdown()` only as the last test in CI environments – it would be to annoying
 # during normal testing

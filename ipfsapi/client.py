@@ -2215,8 +2215,8 @@ class Client(object):
 
     def pubsub_ls(self, **kwargs):
         """Lists subscribed topics by name
-        
-        This method returns data that contains a list of 
+
+        This method returns data that contains a list of
         all topics the user is subscribed to. In order
         to subscribe to a topic pubsub_sub must be called.
 
@@ -2231,7 +2231,7 @@ class Client(object):
 
         Returns
         -------
-            dict : Dictionary with the key "Strings" who's value is an array of 
+            dict : Dictionary with the key "Strings" who's value is an array of
                    topics we are subscribed to
         """
         return self._client.request('/pubsub/ls', decoder='json', **kwargs)
@@ -2248,7 +2248,7 @@ class Client(object):
 
         .. code-block:: python
             >>> c.pubsub_peers()
-            {'Strings': 
+            {'Strings':
                     [
                         'QmPbZ3SDgmTNEB1gNSE9DEf4xT8eag3AFn5uo7X39TbZM8',
                         'QmQKiXYzoFpiGZ93DaFBFDMDWDJCRjXDARu4wne2PRtSgA',
@@ -2265,15 +2265,15 @@ class Client(object):
             {'String':
                     [
                         'QmPbZ3SDgmTNEB1gNSE9DEf4xT8eag3AFn5uo7X39TbZM8',
-                        ... 
+                        ...
                         # other peers connected to the same channel
                     ]
             }
-        
+
         Parameters
         ----------
         topic : str
-            The topic to list connected peers of 
+            The topic to list connected peers of
             (defaults to None which lists peers for all topics)
 
         Returns
@@ -2287,9 +2287,9 @@ class Client(object):
 
     def pubsub_pub(self, topic, payload, **kwargs):
         """Publish a message to a given pubsub topic
-        
-        Publishing will publish the given payload (string) to 
-        everyone currently subscribed to the given topic. 
+
+        Publishing will publish the given payload (string) to
+        everyone currently subscribed to the given topic.
 
         All data (including the id of the publisher) is automatically
         base64 encoded when published.
@@ -2298,13 +2298,13 @@ class Client(object):
             # publishes the message 'message' to the topic 'hello'
             >>> c.pubsub_pub('hello', 'message')
             []
-        
+
         Parameters
         ----------
         topic : str
             Topic to publish to
         payload : Data to be published to the given topic
-        
+
         Returns
         -------
             list : empty list
@@ -2315,7 +2315,7 @@ class Client(object):
 
     def pubsub_sub(self, topic, discover=False, **kwargs):
         """Subscribe to mesages on a given topic
-        
+
         Subscribing to a topic in IPFS means anytime
         a message is published to a topic, the subscribers
         will be notified of the publication.
@@ -2334,28 +2334,29 @@ class Client(object):
             # of this example we're going to ignore that
             >>> c.pubsub_pub('testing', 'hello')
             >>> for message in c.pubsub_sub('testing'):
-            ...     {'from': '<base64encoded IPFS id>',
-            ...      'data': 'aGVsbG8=',
-            ...      'topicIDs': ['testing']}
+            ...     print(message)
+            {'from': '<base64encoded IPFS id>',
+             'data': 'aGVsbG8=',
+             'topicIDs': ['testing']}
 
             # NOTE: in order to receive published data
             # you must already be subscribed to the topic at publication
-            # time. 
-        
+            # time.
+
         Parameters
         ----------
         topic : str
             Name of a topic to subscribe to
-            
+
         discover : bool
             Try to discover other peers subscibed to the same topic
             (defaults to False)
-        
+
         Returns
         -------
             Generator that maintains a connection
             stream to the given topic.
         """
         args = (topic, discover)
-        return self._client.request('/pubsub/sub', args, 
+        return self._client.request('/pubsub/sub', args,
                                     stream=True, decoder='json')
