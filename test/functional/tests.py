@@ -7,6 +7,7 @@ import sys
 import time
 import unittest
 import logging
+import uuid
 
 import pytest
 
@@ -577,31 +578,31 @@ class IpfsApiMFSTest(unittest.TestCase):
             self.api.files_stat(self.test_directory_path)
 
 
-# @skipIfOffline()
-# class TestBlockFunctions(unittest.TestCase):
-    # def setUp(self):
-        # self.api = ipfsapi.Client()
-        # self.multihash = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'
-        # self.content_size = 248
+@skipIfOffline()
+class TestBlockFunctions(unittest.TestCase):
+    def setUp(self):
+        self.api = ipfsapi.Client()
+        self.multihash = 'QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE'
+        self.content_size = 248
 
-    # def test_block_stat(self):
-        # expected_keys = ['Key', 'Size']
-        # res = self.api.block_stat(self.multihash)
-        # for key in expected_keys:
-            # self.assertTrue(key in res)
+    def test_block_stat(self):
+        expected_keys = ['Key', 'Size']
+        res = self.api.block_stat(self.multihash)
+        for key in expected_keys:
+            self.assertTrue(key in res)
 
-    # def test_block_get(self):
-        # self.assertEqual(len(self.api.block_get(self.multihash)), self.content_size)
+    def test_block_get(self):
+        self.assertEqual(len(self.api.block_get(self.multihash)), self.content_size)
 
-    # def test_block_put(self):
-        # path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                            # "functional", "fake_dir", "fsdfgh")
-        # expected_block_multihash = 'QmPevo2B1pwvDyuZyJbWVfhwkaGPee3f1kX36wFmqx1yna'
-        # expected_keys = ['Key', 'Size']
-        # res = self.api.block_put(path)
-        # for key in expected_keys:
-            # self.assertTrue(key in res)
-        # self.assertEqual(res['Key'], expected_block_multihash)
+    def test_block_put(self):
+        path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                            "functional", "fake_dir", "fsdfgh")
+        expected_block_multihash = 'QmPevo2B1pwvDyuZyJbWVfhwkaGPee3f1kX36wFmqx1yna'
+        expected_keys = ['Key', 'Size']
+        res = self.api.block_put(path)
+        for key in expected_keys:
+            self.assertTrue(key in res)
+        self.assertEqual(res['Key'], expected_block_multihash)
 
 
 @skipIfOffline()
@@ -813,15 +814,24 @@ class IpfsApiPubSubTest(unittest.TestCase):
     def setUp(self):
         self.api = ipfsapi.Client()
 
+    def createTestChannel(self):
+        """
+        Creates a unique topic for testing purposes
+        """
+        return "{}.testing".format(uuid.uuid4())
+
     def test_pubsub_pub_sub(self):
         """
-        We should test both publishing and subscribing
-        at the same time for it's difficult
-        to determine if one works without checking the
-        other.
+        We test both publishing and subscribing at
+        the same time because we cannot verify that
+        something has been properly published unless
+        we subscribe to that channel and receive it.
+        Likewise, we cannot accurately test a subscription 
+        without publishing something on the topic we are subscribed
+        to.
         """
         # the topic that will be published/subscribed to
-        topic = 'testing'
+        topic = self.createTestChannel()
         # the message that will be published
         message = 'hello'
 
@@ -841,15 +851,15 @@ class IpfsApiPubSubTest(unittest.TestCase):
         # get the 
         sub_data = next(sub)
 
-        self.assertEqual(sub_data['data'], expected_data)
-        self.assertEqual(sub_data['topicIDs'], expected_topicIDs)
+        assert sub_data['data'] == expected_data
+        assert sub_data['topicIDs'] == expected_topicIDs
 
     def test_pubsub_ls(self):
         """
         Testing the ls, assumes we are able
         to at least subscribe to a topic
         """
-        topic = 'lsing'
+        topic = self.createTestChannel()
         expected_return = { 'Strings': [topic] }
 
         # subscribe to the topic testing
@@ -858,7 +868,8 @@ class IpfsApiPubSubTest(unittest.TestCase):
 
         # grab the channels we're subscribed to
         channels = self.api.pubsub_ls()
-        self.assertEqual(channels, expected_return)
+
+        assert channels == expected_return
 
     def test_pubsub_peers(self):
         """
@@ -866,7 +877,18 @@ class IpfsApiPubSubTest(unittest.TestCase):
         on who we're connected to. We may not even have
         any peers
         """
-        pass
+        peers = self.api.pubsub_peers()
+
+        expected_return = {
+                'Strings': []
+                }
+
+        # make sure the Strings key is in the map thats returned
+        assert 'Strings' in peers
+
+        # ensure the value of 'Strings' is a list.
+        # The list may or may not be empty.
+        assert isinstance(peers['Strings'], list)
 
 
 # Run test for `.shutdown()` only as the last test in CI environments – it would be to annoying
