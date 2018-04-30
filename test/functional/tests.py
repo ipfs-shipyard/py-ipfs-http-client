@@ -851,6 +851,10 @@ class IpfsApiPubSubTest(unittest.TestCase):
         # get the 
         sub_data = next(sub)
 
+        # assert that the returned dict has the following keys
+        assert 'data' in sub_data
+        assert 'topicIDs' in sub_data
+
         assert sub_data['data'] == expected_data
         assert sub_data['topicIDs'] == expected_topicIDs
 
