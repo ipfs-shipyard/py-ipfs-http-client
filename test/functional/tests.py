@@ -96,63 +96,86 @@ class IpfsApiTest(unittest.TestCase):
 
     ## test_add_multiple_from_list
     fake_file  = 'fake_dir/fsdfgh'
-    fake_file_only_res = {'Name': 'fsdfgh',
-                          'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'}
+    fake_file_only_res = {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
+                          'Name': 'fsdfgh', 'Size': '16'}
     fake_file_dir_res = [
-        {'Name': 'fsdfgh', 'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
-        {'Name': '',       'Hash': 'Qme7vmxd4LAAYL7vpho3suQeT3gvMeLLtPdp7myCb9Db55'}
+        {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
+         'Name': 'fsdfgh', 'Size': '16'},
+        {'Hash': 'Qme7vmxd4LAAYL7vpho3suQeT3gvMeLLtPdp7myCb9Db55',
+         'Name': '',       'Size': '68'}
     ]
     fake_file2 = 'fake_dir/popoiopiu'
     fake_files_res = [
-            {'Name': 'fsdfgh', 'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
-            {'Name': 'popoiopiu', 'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv'}]
+            {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
+             'Name': 'fsdfgh',    'Size': '16'},
+            {'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv',
+             'Name': 'popoiopiu', 'Size': '23'}]
 
     ## test_add_multiple_from_dirname
     fake_dir_test2 = 'fake_dir/test2'
     fake_dir_res = [
-            {'Name': 'test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
-            {'Name': 'test2/llllg', 'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ'},
-            {'Name': 'test2', 'Hash': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU'},
+            {'Hash': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU',
+             'Name': 'test2',                 'Size': '297'},
             {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN',
-             'Name': 'test2/high'},
+             'Name': 'test2/high',            'Size': '114'},
             {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE',
-             'Name': 'test2/high/five'},
+             'Name': 'test2/high/five',       'Size': '64'},
             {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT',
-             'Name': 'test2/high/five/dummy'}]
+             'Name': 'test2/high/five/dummy', 'Size': '13'},
+            {'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD',
+             'Name': 'test2/fssdf',           'Size': '22'},
+            {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
+             'Name': 'test2/llllg',           'Size': '17'}]
 
     ## test_add_filepattern_from_dirname
     pattern = '**/fss*'
     # the hash of the folder is not same as above because the content of the folder
     # added is not same.
     fake_dir_fnpattern_res = [
-            {'Name': 'fake_dir/test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD'},
-            {'Name': 'fake_dir/test2',       'Hash': 'QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe'},
-            {'Name': 'fake_dir',             'Hash': 'QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm'}]
+            {'Name': 'fake_dir/test2/fssdf', 'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD', 'Size': '22'},
+            {'Name': 'fake_dir/test2',       'Hash': 'QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe', 'Size': '73'},
+            {'Name': 'fake_dir',             'Hash': 'QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm', 'Size': '124'}]
 
     ## test_add_filepattern_subdir_wildcard
     pattern2 = 'test2/**/high'
     fake_dir_fnpattern2_res = [
-            {'Hash': 'QmUXuNHpV6cdeTngSkEMbP2nQDPuyE2MFXNYtTXzZvLZHf', 'Name': 'fake_dir'},
-            {'Hash': 'QmZGuwqaXMmSwJcfTsvseHwy3mvDPD9zrs9WVowAZcQN4W', 'Name': 'fake_dir/test2'},
-            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN', 'Name': 'fake_dir/test2/high'},
-            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE', 'Name': 'fake_dir/test2/high/five'},
-            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT', 'Name': 'fake_dir/test2/high/five/dummy'}]
+            {'Hash': 'QmUXuNHpV6cdeTngSkEMbP2nQDPuyE2MFXNYtTXzZvLZHf',
+             'Name': 'fake_dir',                       'Size': '216'},
+            {'Hash': 'QmZGuwqaXMmSwJcfTsvseHwy3mvDPD9zrs9WVowAZcQN4W',
+             'Name': 'fake_dir/test2',                 'Size': '164'},
+            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN',
+             'Name': 'fake_dir/test2/high',            'Size': '114'},
+            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE',
+             'Name': 'fake_dir/test2/high/five',       'Size': '64'},
+            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT',
+             'Name': 'fake_dir/test2/high/five/dummy', 'Size': '13'}]
 
 
     ## test_add_recursive
     fake_dir = 'fake_dir'
     fake_dir_recursive_res = [
-            {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX', 'Name': 'fake_dir/fsdfgh'},
-            {'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv', 'Name': 'fake_dir/popoiopiu'},
-            {'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD', 'Name': 'fake_dir/test2/fssdf'},
-            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN', 'Name': 'fake_dir/test2/high'},
-            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE', 'Name': 'fake_dir/test2/high/five'},
-            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT', 'Name': 'fake_dir/test2/high/five/dummy'},
-            {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ', 'Name': 'fake_dir/test2/llllg'},
-            {'Hash': 'QmeMbJSHNCesAh7EeopackUdjutTJznum1Fn7knPm873Fe', 'Name': 'fake_dir/test3/ppppoooooooooo'},
-            {'Hash': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU', 'Name': 'fake_dir/test2'},
-            {'Hash': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q', 'Name': 'fake_dir/test3'},
-            {'Hash': 'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi', 'Name': 'fake_dir'}]
+            {'Hash': 'QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi',
+             'Name': 'fake_dir',                       'Size': '610'},
+            {'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
+             'Name': 'fake_dir/fsdfgh',                'Size': '16'},
+            {'Hash': 'QmYAhvKYu46rh5NcHzeu6Bhc7NG9SqkF9wySj2jvB74Rkv',
+             'Name': 'fake_dir/popoiopiu',             'Size': '23'},
+            {'Hash': 'QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU',
+             'Name': 'fake_dir/test2',                 'Size': '297'},
+            {'Hash': 'Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD',
+             'Name': 'fake_dir/test2/fssdf',           'Size': '22'},
+            {'Hash': 'QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN',
+             'Name': 'fake_dir/test2/high',            'Size': '114'},
+            {'Hash': 'QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE',
+             'Name': 'fake_dir/test2/high/five',       'Size': '64'},
+            {'Hash': 'QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT',
+             'Name': 'fake_dir/test2/high/five/dummy', 'Size': '13'},
+            {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
+             'Name': 'fake_dir/test2/llllg',           'Size': '17'},
+            {'Hash': 'QmRphRr6ULDEj7YnXpLdnxhnPiVjv5RDtGX3er94Ec6v4Q',
+             'Name': 'fake_dir/test3',                 'Size': '76'},
+            {'Hash': 'QmeMbJSHNCesAh7EeopackUdjutTJznum1Fn7knPm873Fe',
+             'Name': 'fake_dir/test3/ppppoooooooooo',  'Size': '16'}]
 
     ## test_refs
     refs_res = [{'Err': '', 'Ref': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX'},
