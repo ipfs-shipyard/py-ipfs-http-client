@@ -2345,7 +2345,8 @@ class Client(object):
             >>> sub = c.pubsub_sub('testing')
             >>> for message in sub:
             ...     print(message)
-            ...     sub.close() # close the subscription after we read one publication
+            ...     # close the subscription after we read one publication
+            ...     sub.close()
             {'from': '<base64encoded IPFS id>',
              'data': 'aGVsbG8=',
              'topicIDs': ['testing']}
