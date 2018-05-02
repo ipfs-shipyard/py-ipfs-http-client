@@ -2327,9 +2327,13 @@ class Client(object):
 
         The connection with the pubsub topic is opened and read
         as a stream. The returned value of this function is a
-        generator that, when iterated over, reads the stream.
+        generator (referred to as subscription)
+        that, when iterated over, reads the stream.
         If there are no publications available than the iterator
         will block until another publication is received.
+
+        The generator returned is wrapped in a context manager
+        and can be manually closed by calling its `.close()` method.
 
         .. code-block:: python
             # publish a message 'hello' to the topic 'testing'
@@ -2338,8 +2342,10 @@ class Client(object):
             # so we won't be able to read. For the sake
             # of this example we're going to ignore that
             >>> c.pubsub_pub('testing', 'hello')
-            >>> for message in c.pubsub_sub('testing'):
+            >>> sub = c.pubsub_sub('testing')
+            >>> for message in sub:
             ...     print(message)
+            ...     sub.close() # close the subscription after we read one publication
             {'from': '<base64encoded IPFS id>',
              'data': 'aGVsbG8=',
              'topicIDs': ['testing']}
@@ -2359,8 +2365,9 @@ class Client(object):
 
         Returns
         -------
-            Generator that maintains a connection
-            stream to the given topic.
+            Generator wrapped in a context
+            manager that maintains a connection
+            stream to the given topic. 
         """
         args = (topic, discover)
         return self._client.request('/pubsub/sub', args,

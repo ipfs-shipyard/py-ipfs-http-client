@@ -870,8 +870,11 @@ class IpfsApiPubSubTest(unittest.TestCase):
         # publish a message to topic
         self.api.pubsub_pub(topic, message)
 
-        # get the 
+        # get the message
         sub_data = next(sub)
+
+        # end the subscription
+        sub.close()
 
         # assert that the returned dict has the following keys
         assert 'data' in sub_data
@@ -889,11 +892,13 @@ class IpfsApiPubSubTest(unittest.TestCase):
         expected_return = { 'Strings': [topic] }
 
         # subscribe to the topic testing
-        # in this test we don't care about the return value
-        a = self.api.pubsub_sub(topic)   
+        sub = self.api.pubsub_sub(topic)   
 
         # grab the channels we're subscribed to
         channels = self.api.pubsub_ls()
+
+        # unsubscribe (cleanup)
+        sub.close()
 
         assert channels == expected_return
 
