@@ -2056,7 +2056,12 @@ class Client(object):
         ``ipfsapi.exceptions.ConnectionError``, until you start another IPFS
         daemon instance.
         """
-        return self._client.request('/shutdown')
+        try:
+            return self._client.request('/shutdown')
+        except exceptions.ConnectionError:
+            # Sometimes the daemon kills the connection before sending a
+            # response causing an incorrect `ConnectionError` to bubble
+            pass
 
     ###########
     # HELPERS #
