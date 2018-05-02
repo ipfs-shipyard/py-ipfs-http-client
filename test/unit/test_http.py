@@ -15,6 +15,10 @@ import os
 from httmock import urlmatch, HTTMock
 import pytest
 import requests
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 import ipfsapi.http
 import ipfsapi.exceptions
@@ -214,3 +218,19 @@ class TestHttp(unittest.TestCase):
                 res = self.client.request('/okay')
                 assert res == b'okay'
             assert self.client._session is None
+
+def test_stream_close(mocker):
+    client = ipfsapi.http.HTTPClient("localhost", 5001, "api/v0")
+    mocker.patch("ipfsapi.http._notify_stream_iter_closed")
+    with HTTMock(return_okay):
+        with client.request("/okay", stream=True) as response_iter:
+            assert ipfsapi.http._notify_stream_iter_closed.call_count == 0
+        assert ipfsapi.http._notify_stream_iter_closed.call_count == 1
+        
+        response_iter = client.request("/okay", stream=True)
+        assert ipfsapi.http._notify_stream_iter_closed.call_count == 1
+        response_iter.close()
+        assert ipfsapi.http._notify_stream_iter_closed.call_count == 2
+        
+        client.request("/okay")
+        assert ipfsapi.http._notify_stream_iter_closed.call_count == 3
