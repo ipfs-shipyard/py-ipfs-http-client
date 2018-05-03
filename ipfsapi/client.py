@@ -2368,7 +2368,7 @@ class Client(object):
         -------
             Generator wrapped in a context
             manager that maintains a connection
-            stream to the given topic. 
+            stream to the given topic.
         """
         args = (topic, discover)
         return self._client.request('/pubsub/sub', args,
