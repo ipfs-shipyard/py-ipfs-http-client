@@ -889,12 +889,16 @@ class IpfsApiPubSubTest(unittest.TestCase):
         expected_return = { 'Strings': [topic] }
 
         # subscribe to the topic testing
-        with self.api.pubsub_sub(topic) as sub:
+        sub = self.api.pubsub_sub(topic)
 
+        channels = None
+        try:
             # grab the channels we're subscribed to
             channels = self.api.pubsub_ls()
+        finally:
+            sub.close()
 
-            assert channels == expected_return
+        assert channels == expected_return
 
     def test_pubsub_peers(self):
         """
