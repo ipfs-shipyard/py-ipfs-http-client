@@ -76,6 +76,30 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 
     return client
 
+class SubChannel:
+    """
+    Wrapper for a pubsub subscription object that allows for easy
+    closing of subscriptions.
+    """
+
+    def __init__(self, sub):
+        self.__sub = sub
+
+    def read_message(self):
+        return next(self.__sub)
+
+    def __next__(self):
+        return next(self.__sub)
+
+    def __iter__(self):
+        for msg in self.__sub:
+            return msg
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, *a):
+        self.__sub.close()
 
 class Client(object):
     """A TCP client for interacting with an IPFS daemon.
@@ -2228,8 +2252,8 @@ class Client(object):
         .. code-block:: python
 
             # subscribe to a channel
-            >>> c.pubsub_sub("hello")
-            >>> c.pubsub_ls()
+            >>> with c.pubsub_sub("hello") as sub:
+            ...     c.pubsub_ls()
             {
                 'Strings' : ["hello"]
             }
@@ -2265,8 +2289,8 @@ class Client(object):
             ## with a topic
 
             # subscribe to a channel
-            >>> c.pubsub_sub('hello')
-            >>> c.pubsub_peers(topic='hello')
+            >>> with c.pubsub_sub('hello') as sub:
+            ...     c.pubsub_peers(topic='hello')
             {'String':
                     [
                         'QmPbZ3SDgmTNEB1gNSE9DEf4xT8eag3AFn5uo7X39TbZM8',
@@ -2325,28 +2349,20 @@ class Client(object):
         a message is published to a topic, the subscribers
         will be notified of the publication.
 
-        The connection with the pubsub topic is opened and read
-        as a stream. The returned value of this function is a
-        generator (referred to as subscription)
-        that, when iterated over, reads the stream.
-        If there are no publications available than the iterator
-        will block until another publication is received.
-
-        The generator returned is wrapped in a context manager
-        and can be manually closed by calling its `.close()` method.
+        The connection with the pubsub topic is opened and read.
+        The Subscription returned should be used inside a context
+        manager to ensure that it is closed properly and not left
+        hanging.
 
         .. code-block:: python
-            # publish a message 'hello' to the topic 'testing'
-            # Publication should be done on another thread
-            # as it will be published before we subscribe
-            # so we won't be able to read. For the sake
-            # of this example we're going to ignore that
-            >>> c.pubsub_pub('testing', 'hello')
             >>> sub = c.pubsub_sub('testing')
-            >>> for message in sub:
+            >>> with c.pubsub_sub('testing') as sub:
+            # publish a message 'hello' to the topic 'testing'
+            ... c.pubsub_pub('testing', 'hello')
+            ... for message in sub:
             ...     print(message)
-            ...     # close the subscription after we read one publication
-            ...     sub.close()
+            ...     # Stop reading the subscription after we receive one publication
+            ...     break
             {'from': '<base64encoded IPFS id>',
              'data': 'aGVsbG8=',
              'topicIDs': ['testing']}
@@ -2371,5 +2387,5 @@ class Client(object):
             stream to the given topic.
         """
         args = (topic, discover)
-        return self._client.request('/pubsub/sub', args,
-                                    stream=True, decoder='json')
+        return SubChannel(self._client.request('/pubsub/sub', args,
+            stream=True, decoder='json'))

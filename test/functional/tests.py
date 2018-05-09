@@ -862,26 +862,23 @@ class IpfsApiPubSubTest(unittest.TestCase):
 
 
         # get the subscription stream
-        sub = self.api.pubsub_sub(topic)
+        with self.api.pubsub_sub(topic) as sub:
 
-        # make sure something was actually returned from the subscription
-        assert sub is not None
+            # make sure something was actually returned from the subscription
+            assert sub is not None
 
-        # publish a message to topic
-        self.api.pubsub_pub(topic, message)
+            # publish a message to topic
+            self.api.pubsub_pub(topic, message)
 
-        # get the message
-        sub_data = next(sub)
+            # get the message
+            sub_data = sub.read_message()
 
-        # end the subscription
-        sub.close()
+            # assert that the returned dict has the following keys
+            assert 'data' in sub_data
+            assert 'topicIDs' in sub_data
 
-        # assert that the returned dict has the following keys
-        assert 'data' in sub_data
-        assert 'topicIDs' in sub_data
-
-        assert sub_data['data'] == expected_data
-        assert sub_data['topicIDs'] == expected_topicIDs
+            assert sub_data['data'] == expected_data
+            assert sub_data['topicIDs'] == expected_topicIDs
 
     def test_pubsub_ls(self):
         """
@@ -892,15 +889,12 @@ class IpfsApiPubSubTest(unittest.TestCase):
         expected_return = { 'Strings': [topic] }
 
         # subscribe to the topic testing
-        sub = self.api.pubsub_sub(topic)   
+        with self.api.pubsub_sub(topic) as sub:
 
-        # grab the channels we're subscribed to
-        channels = self.api.pubsub_ls()
+            # grab the channels we're subscribed to
+            channels = self.api.pubsub_ls()
 
-        # unsubscribe (cleanup)
-        sub.close()
-
-        assert channels == expected_return
+            assert channels == expected_return
 
     def test_pubsub_peers(self):
         """
