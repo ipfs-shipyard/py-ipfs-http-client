@@ -16,8 +16,9 @@
 /+junk
 
 # Build artefacts
-build/
-dist/
+/coverage/
+/build/
+/dist/
 
 # Documentation build artefacts
 docs/build/

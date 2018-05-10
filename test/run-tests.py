@@ -9,7 +9,6 @@ import random
 import shutil
 import subprocess
 import sys
-import time
 
 
 if not hasattr(contextlib, "suppress"):
@@ -82,10 +81,11 @@ elif sys.version_info >= (3, 0, 0):  #PY35: `subprocess.Popen` encoding paramete
 
 # Spawn IPFS daemon in data directory
 print("Starting IPFS daemon on /ip4/{0}/tcp/{1}…".format(HOST, PORT), file=sys.stderr)
-DAEMON = subprocess.Popen(["ipfs", "daemon", "--enable-pubsub-experiment"],
-		stdout = subprocess.PIPE,
-		stderr = subprocess.STDOUT,
-		**extra_args
+DAEMON = subprocess.Popen(
+	["ipfs", "daemon", "--enable-pubsub-experiment"],
+	stdout=subprocess.PIPE,
+	stderr=subprocess.STDOUT,
+	**extra_args
 )
 os.environ["PY_IPFS_HTTP_CLIENT_TEST_DAEMON_PID"] = str(DAEMON.pid)
 
@@ -130,6 +130,10 @@ try:
 		"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml"))
 	] + sys.argv[1:])
 finally:
+	# Move coverage file to test directory (so that the coverage files of different
+	# versions can be merged later on)
+	shutil.move(str(BASE_PATH / ".coverage"), str(TEST_PATH / "cov_raw"))
+	
 	# Make sure daemon was terminated during the tests
 	if DAEMON.poll() is None:  # "if DAEMON is running"
 		DAEMON.kill()
