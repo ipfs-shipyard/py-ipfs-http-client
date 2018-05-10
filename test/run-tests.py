@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import contextlib
+import locale
 import pathlib
 import os
 import random
@@ -72,10 +73,20 @@ subprocess.call(["ipfs", "config", "Addresses.API",     "/ip4/{}/tcp/{}".format(
 # Start daemon #
 ################
 
-import ipfshttpclient  # noqa
+#PY2: Only add `encoding` parameter on Python 3 as it's not available on Unicode-hostile versions
+extra_args = {}
+if sys.version_info >= (3, 6, 0):
+	extra_args["encoding"] = locale.getpreferredencoding()
+elif sys.version_info >= (3, 0, 0):  #PY35: `subprocess.Popen` encoding parameter missing
+	extra_args["universal_newlines"] = True
 
 # Spawn IPFS daemon in data directory
-DAEMON = subprocess.Popen(["ipfs", "daemon", "--enable-pubsub-experiment"])
+print("Starting IPFS daemon on /ip4/{0}/tcp/{1}…".format(HOST, PORT), file=sys.stderr)
+DAEMON = subprocess.Popen(["ipfs", "daemon", "--enable-pubsub-experiment"],
+		stdout = subprocess.PIPE,
+		stderr = subprocess.STDOUT,
+		**extra_args
+)
 os.environ["PY_IPFS_HTTP_CLIENT_TEST_DAEMON_PID"] = str(DAEMON.pid)
 
 # Collect the exit code of `DAEMON` when `SIGCHLD` is received
@@ -85,13 +96,16 @@ if os.name == "posix":
 	signal.signal(signal.SIGCHLD, lambda *a: DAEMON.poll())
 
 # Wait for daemon to start up
-while True:
-	try:
-		ipfshttpclient.connect(HOST, PORT)
-	except ipfshttpclient.exceptions.ConnectionError:
-		time.sleep(0.05)
-	else:
+#PY2: Using `for line in DAEMON.stdout` hangs the process
+line = DAEMON.stdout.readline()
+while line is not None:
+	print("\t{0}".format(line), end="", file=sys.stderr)
+	if line.strip() == "Daemon is ready":
 		break
+	line = DAEMON.stdout.readline()
+
+#XXX: This design will deadlock the test run if the daemon were to produce more output than fits
+#     into its output pipe before shutdown
 
 
 ##################
@@ -121,5 +135,11 @@ finally:
 		DAEMON.kill()
 		
 		print("IPFS daemon was still running after test!", file=sys.stderr)
+	
+	output = list(DAEMON.stdout)
+	if output:
+		print("IPFS daemon printed extra messages:", file=sys.stderr)
+		for line in output:
+			print("\t{0}".format(line), end="", file=sys.stderr)
 
 sys.exit(PYTEST_CODE)
