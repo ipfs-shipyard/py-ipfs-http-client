@@ -1130,10 +1130,14 @@ class Client(object):
         from datastore corruptions (such as when accidentally deleting
         files added using the filestore backend).
 
+        This function returns an iterator needs to be closed using a context
+        manager (``with``-statement) or using the ``.close()`` method.
+
         .. code-block:: python
 
-            >>> for item in c.pin_verify("QmNuvmuFeeWWpx…wTTZ", verbose=True):
-            ...     print(item)
+            >>> with c.pin_verify("QmN…TTZ", verbose=True) as pin_verify_iter:
+            ...     for item in pin_verify_iter:
+            ...         print(item)
             ...
             {"Cid":"QmVkNdzCBukBRdpyFiKPyL2R15qPExMr9rV9RFV2kf9eeV","Ok":True}
             {"Cid":"QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm","Ok":True}
@@ -1798,14 +1802,14 @@ class Client(object):
     def log_tail(self, **kwargs):
         r"""Reads log outputs as they are written.
 
-        This function returns a reponse object that can be iterated over
-        by the user. The user should make sure to close the response object
-        when they are done reading from it.
+        This function returns an iterator needs to be closed using a context
+        manager (``with``-statement) or using the ``.close()`` method.
 
         .. code-block:: python
 
-            >>> for item in c.log_tail():
-            ...     print(item)
+            >>> with c.log_tail() as log_tail_iter:
+            ...     for item in log_tail_iter:
+            ...         print(item)
             ...
             {"event":"updatePeer","system":"dht",
              "peerID":"QmepsDPxWtLDuKvEoafkpJxGij4kMax11uTH7WnKqD25Dq",

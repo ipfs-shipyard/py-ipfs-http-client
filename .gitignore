@@ -24,4 +24,5 @@ docs/build/
 
 # Testing artefacts
 .coverage
+.pytest_cache/
 .tox/
