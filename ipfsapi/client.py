@@ -76,6 +76,7 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 
     return client
 
+
 class SubChannel:
     """
     Wrapper for a pubsub subscription object that allows for easy
@@ -96,9 +97,10 @@ class SubChannel:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, *a):
         self.close()
+
 
 class Client(object):
     """A TCP client for interacting with an IPFS daemon.
@@ -2360,7 +2362,8 @@ class Client(object):
             ... c.pubsub_pub('testing', 'hello')
             ... for message in sub:
             ...     print(message)
-            ...     # Stop reading the subscription after we receive one publication
+            ...     # Stop reading the subscription after 
+            ...     # we receive one publication
             ...     break
             {'from': '<base64encoded IPFS id>',
              'data': 'aGVsbG8=',
@@ -2387,4 +2390,4 @@ class Client(object):
         """
         args = (topic, discover)
         return SubChannel(self._client.request('/pubsub/sub', args,
-            stream=True, decoder='json'))
+                          stream=True, decoder='json'))
