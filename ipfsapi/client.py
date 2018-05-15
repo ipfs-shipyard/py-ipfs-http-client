@@ -88,18 +88,17 @@ class SubChannel:
     def read_message(self):
         return next(self.__sub)
 
-    def __next__(self):
-        return next(self.__sub)
-
     def __iter__(self):
-        for msg in self.__sub:
-            return msg
+        return self.__sub
+
+    def close(self):
+        self.__sub.close()
 
     def __enter__(self):
         return self
     
     def __exit__(self, *a):
-        self.__sub.close()
+        self.close()
 
 class Client(object):
     """A TCP client for interacting with an IPFS daemon.

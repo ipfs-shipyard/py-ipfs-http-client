@@ -601,7 +601,7 @@ class IpfsApiMFSTest(unittest.TestCase):
             self.api.files_stat(self.test_directory_path)
 
 
-@skipIfOffline()
+skipIfOffline()
 class TestBlockFunctions(unittest.TestCase):
     def setUp(self):
         self.api = ipfsapi.Client()
