@@ -7,6 +7,7 @@ import sys
 import time
 import unittest
 import logging
+import uuid
 
 import pytest
 
@@ -600,7 +601,7 @@ class IpfsApiMFSTest(unittest.TestCase):
             self.api.files_stat(self.test_directory_path)
 
 
-@skipIfOffline()
+skipIfOffline()
 class TestBlockFunctions(unittest.TestCase):
     def setUp(self):
         self.api = ipfsapi.Client()
@@ -828,6 +829,96 @@ class IpfsApiBitswapTest(unittest.TestCase):
 
         result = self.api.bitswap_unwant(key='QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V')
         self.assertTrue(result is not None)
+
+@skipIfOffline()
+class IpfsApiPubSubTest(unittest.TestCase):
+
+    def setUp(self):
+        self.api = ipfsapi.Client()
+
+    def createTestChannel(self):
+        """
+        Creates a unique topic for testing purposes
+        """
+        return "{}.testing".format(uuid.uuid4())
+
+    def test_pubsub_pub_sub(self):
+        """
+        We test both publishing and subscribing at
+        the same time because we cannot verify that
+        something has been properly published unless
+        we subscribe to that channel and receive it.
+        Likewise, we cannot accurately test a subscription 
+        without publishing something on the topic we are subscribed
+        to.
+        """
+        # the topic that will be published/subscribed to
+        topic = self.createTestChannel()
+        # the message that will be published
+        message = 'hello'
+
+        expected_data = 'aGVsbG8='	
+        expected_topicIDs = [topic]
+
+
+        # get the subscription stream
+        with self.api.pubsub_sub(topic) as sub:
+
+            # make sure something was actually returned from the subscription
+            assert sub is not None
+
+            # publish a message to topic
+            self.api.pubsub_pub(topic, message)
+
+            # get the message
+            sub_data = sub.read_message()
+
+            # assert that the returned dict has the following keys
+            assert 'data' in sub_data
+            assert 'topicIDs' in sub_data
+
+            assert sub_data['data'] == expected_data
+            assert sub_data['topicIDs'] == expected_topicIDs
+
+    def test_pubsub_ls(self):
+        """
+        Testing the ls, assumes we are able
+        to at least subscribe to a topic
+        """
+        topic = self.createTestChannel()
+        expected_return = { 'Strings': [topic] }
+
+        # subscribe to the topic testing
+        sub = self.api.pubsub_sub(topic)
+
+        channels = None
+        try:
+            # grab the channels we're subscribed to
+            channels = self.api.pubsub_ls()
+        finally:
+            sub.close()
+
+        assert channels == expected_return
+
+    def test_pubsub_peers(self):
+        """
+        Not sure how to test this since it fully depends
+        on who we're connected to. We may not even have
+        any peers
+        """
+        peers = self.api.pubsub_peers()
+
+        expected_return = {
+                'Strings': []
+                }
+
+        # make sure the Strings key is in the map thats returned
+        assert 'Strings' in peers
+
+        # ensure the value of 'Strings' is a list.
+        # The list may or may not be empty.
+        assert isinstance(peers['Strings'], list)
+
 
 # Run test for `.shutdown()` only as the last test in CI environments – it would be to annoying
 # during normal testing
