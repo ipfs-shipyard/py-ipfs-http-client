@@ -44,13 +44,9 @@ extensions = [
     'sphinx.ext.viewcode',
 ]
 
-import recommonmark
-from recommonmark.parser    import CommonMarkParser
-from recommonmark.transform import AutoStructify
-
 # Use reCommonMark for parsing text documents as MarkDown
 source_parsers = {
-    '.md': CommonMarkParser
+    '.md': 'recommonmark.parser.CommonMarkParser',
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -162,7 +158,7 @@ html_theme = 'nature'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -364,6 +360,7 @@ napoleon_use_rtype = False
 
 # app setup hook for reCommonMark's AutoStructify
 def setup(app):
+	from recommonmark.transform import AutoStructify
 	app.add_config_value('recommonmark_config', {
 			'auto_toc_tree_section': 'Contents',
 		}, True)
