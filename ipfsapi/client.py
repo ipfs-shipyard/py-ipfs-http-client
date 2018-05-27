@@ -2281,6 +2281,7 @@ class Client(object):
         topic will be returned in the data.
 
         .. code-block:: python
+
             >>> c.pubsub_peers()
             {'Strings':
                     [
@@ -2329,6 +2330,7 @@ class Client(object):
         base64 encoded when published.
 
         .. code-block:: python
+
             # publishes the message 'message' to the topic 'hello'
             >>> c.pubsub_pub('hello', 'message')
             []
@@ -2360,6 +2362,7 @@ class Client(object):
         hanging.
 
         .. code-block:: python
+
             >>> sub = c.pubsub_sub('testing')
             >>> with c.pubsub_sub('testing') as sub:
             # publish a message 'hello' to the topic 'testing'
