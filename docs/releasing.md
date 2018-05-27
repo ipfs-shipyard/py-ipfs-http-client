@@ -1,24 +1,18 @@
 Since releasing new versions is currently a somewhat complicated task, the current procedure
-(07.08.2017) will be outlined in this document.
+(27.04.2018) will be outlined in this document.
 
-All of this has only been tested on Debian 9 & Fedora 26 (Linux).
+All of this has only been tested on Debian 10 & Fedora 28 (Linux).
 
 # Prerequirements
 
 ## Building and updating the project
 
-### Python 3 with `setuptools` and `wheel` support
+### Python 3 with the `flit` project manager
 
-APT line: `sudo apt install python3-setuptools python3-wheel`  
-DNF line: `sudo dnf install python3-setuptools python3-wheel`
+APT line: `sudo apt install python3-pip && sudo pip3 install flit`  
+DNF line: `sudo dnf install python3-flit`
 
-### PanDoc
-
-PanDoc is used to on-the-fly convert the `README.md` to reStructuredText when running `./setup.py`.
-This way we can keep all the project documentation in one (nice) format.
-
-APT line: `sudo apt install pandoc`  
-DNF line: `sudo dnf install pandoc`
+*Note*: Version `1.0+` of `flit` is required!
 
 ## Building the documentation
 
@@ -62,9 +56,7 @@ You can download it at:
 
 ## Upload the new version to PyPI
 
-Run: `./setup.py sdist bdist_wheel upload`
-
-**You must have `pandoc` installed or the description PyPI will be replaced with nothingness!**
+Run: `flit build && flit upload`
 
 ## Re-generate the documentation
 
