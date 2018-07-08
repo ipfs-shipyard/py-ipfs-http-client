@@ -201,7 +201,7 @@ class Client(object):
         args = (multihash,)
         return self._client.download('/get', args, **kwargs)
 
-    def cat(self, multihash, **kwargs):
+    def cat(self, multihash, offset=0, length=-1, **kwargs):
         r"""Retrieves the contents of a file identified by hash.
 
         .. code-block:: python
@@ -217,13 +217,22 @@ class Client(object):
         ----------
         multihash : str
             The path to the IPFS object(s) to be retrieved
+        offset : int
+            Byte offset to begin reading from
+        length : int
+            Maximum number of bytes to read(-1 for all)
 
         Returns
         -------
             str : File contents
         """
+        opts = {}
+        if offset != 0:
+            opts['offset'] = offset
+        if length != -1:
+            opts['length'] = length
         args = (multihash,)
-        return self._client.request('/cat', args, **kwargs)
+        return self._client.request('/cat', args, opts=opts, **kwargs)
 
     def ls(self, multihash, **kwargs):
         """Returns a list of objects linked to by the given hash.
