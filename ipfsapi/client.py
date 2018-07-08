@@ -2378,7 +2378,7 @@ class Client(object):
             ... c.pubsub_pub('testing', 'hello')
             ... for message in sub:
             ...     print(message)
-            ...     # Stop reading the subscription after 
+            ...     # Stop reading the subscription after
             ...     # we receive one publication
             ...     break
             {'from': '<base64encoded IPFS id>',
