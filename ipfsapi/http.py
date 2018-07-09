@@ -113,6 +113,8 @@ class StreamDecodeIterator(object):
 def stream_decode_full(response, parser):
     with StreamDecodeIterator(response, parser) as response_iter:
         result = list(response_iter)
+        if len(result) == 0:
+            return b''
         if len(result) == 1:
             return result[0]
         else:
