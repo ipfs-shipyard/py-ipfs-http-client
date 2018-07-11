@@ -386,6 +386,18 @@ class IpfsApiTest(unittest.TestCase):
         finally:
             self._clean_up_pins()
 
+    def test_cat_file_block(self):
+        self.api.add(self.fake_file)
+
+        content = b"dsadsad\n"
+        try:
+            for offset in range(len(content)):
+                for length in range(len(content)):
+                    block = self.api.cat('QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX', offset=offset, length=length)
+                    assert block == content[offset:offset+length]
+        finally:
+            self._clean_up_pins()
+
 
 @skipIfOffline()
 class IpfsApiLogTest(unittest.TestCase):
