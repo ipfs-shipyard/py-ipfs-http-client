@@ -36,26 +36,6 @@ class TestUtils(unittest.TestCase):
                             "..", "..", "requirements.txt")
         assert utils.guess_mimetype(path) == "text/plain"
 
-    def test_ls_dir(self):
-        """Tests utils.ls_dir()
-
-        This test is dependent on the contents of the directory 'fake_dir'
-        located in 'test/functional' not being modified.
-        """
-        path = os.path.join(os.path.dirname(__file__),
-                            "..", "functional", "fake_dir")
-        dirs = ['test2', 'test3']
-        files = ['fsdfgh', 'popoiopiu']
-        contents = (files, dirs)
-        
-        # Sort items before comparing as the ordering of files returned by
-        # the file system is not stable
-        result = utils.ls_dir(path)
-        result[0].sort()
-        result[1].sort()
-        
-        assert result == contents
-
     def test_clean_file_opened(self):
         """Tests utils.clean_file() with a stringIO object."""
         string_io = io.StringIO(u'Mary had a little lamb')
@@ -111,16 +91,6 @@ class TestUtils(unittest.TestCase):
             # Closing files/stringIO objects after test assertions.
             tup[0].close()
 
-    def test_file_size(self):
-        """Tests utils.file_size().
-
-        This test relies on the content size of the file 'fsdfgh'
-        located in 'test/functional/fake_dir' not being modified.
-        """
-        path = os.path.join(os.path.dirname(__file__),
-                            "..", "functional", "fake_dir", "fsdfgh")
-        assert utils.file_size(path) == 8
-
     def test_return_field_init(self):
         """Tests utils.return_field.__init__()."""
         return_field = utils.return_field('Hash')
@@ -129,7 +99,7 @@ class TestUtils(unittest.TestCase):
     def test_return_field_call(self):
         """Tests utils.return_field.__call__()."""
         expected_hash = u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
-        
+
         @utils.return_field('Hash')
         def wrapper(string, *args, **kwargs):
             resp = {'Hash': expected_hash, 'string': string}
