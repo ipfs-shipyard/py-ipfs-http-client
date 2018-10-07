@@ -1,1 +1,2 @@
-flake8
+flake8~=3.0
+flake8-tabs~=1.0
