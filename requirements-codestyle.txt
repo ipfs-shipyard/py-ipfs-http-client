@@ -1,1 +1,2 @@
 flake8
+flake8-expandtab~=0.3
