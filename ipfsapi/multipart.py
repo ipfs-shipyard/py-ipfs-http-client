@@ -2,6 +2,7 @@
 """
 from __future__ import absolute_import
 
+import abc
 import inspect
 import os
 import re
@@ -36,10 +37,10 @@ def content_disposition_headers(filename, disptype="form-data"):
 
 	.. code-block:: python
 
-		>>> content_disposition('example.txt')
+		>>> content_disposition_headers('example.txt')
 		{'Content-Disposition': 'form-data; filename="example.txt"'}
 
-		>>> content_disposition('example.txt', 'attachment')
+		>>> content_disposition_headers('example.txt', 'attachment')
 		{'Content-Disposition': 'attachment; filename="example.txt"'}
 
 	Parameters
@@ -64,13 +65,13 @@ def content_type_headers(filename, content_type=None):
 
 	.. code-block:: python
 
-		>>> content_type('example.txt')
+		>>> content_type_headers('example.txt')
 		{'Content-Type': 'text/plain'}
 
-		>>> content_type('example.jpeg')
+		>>> content_type_headers('example.jpeg')
 		{'Content-Type': 'image/jpeg'}
 
-		>>> content_type('example')
+		>>> content_type_headers('example')
 		{'Content-Type': 'application/octet-stream'}
 
 	Parameters
@@ -83,7 +84,7 @@ def content_type_headers(filename, content_type=None):
 	return {'Content-Type': content_type if content_type else utils.guess_mimetype(filename)}
 
 
-def multipart_content_type(boundary, subtype='mixed'):
+def multipart_content_type_headers(boundary, subtype='mixed'):
 	"""Creates a MIME multipart header with the given configuration.
 
 	Returns a dict containing a MIME multipart header with the given
@@ -91,10 +92,10 @@ def multipart_content_type(boundary, subtype='mixed'):
 
 	.. code-block:: python
 
-		>>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg')
+		>>> multipart_content_type_headers('8K5rNKlLQVyreRNncxOTeg')
 		{'Content-Type': 'multipart/mixed; boundary="8K5rNKlLQVyreRNncxOTeg"'}
 
-		>>> multipart_content_type('8K5rNKlLQVyreRNncxOTeg', 'alt')
+		>>> multipart_content_type_headers('8K5rNKlLQVyreRNncxOTeg', 'alt')
 		{'Content-Type': 'multipart/alt; boundary="8K5rNKlLQVyreRNncxOTeg"'}
 
 	Parameters
@@ -126,6 +127,8 @@ class StreamBase(object):
 		The maximum size that any single file chunk may have in bytes
 	"""
 
+	__metaclass__ = abc.ABCMeta
+
 	def __init__(self, name, chunk_size=default_chunk_size):
 		self.chunk_size = chunk_size
 		self.name = name
@@ -133,7 +136,7 @@ class StreamBase(object):
 		self._boundary = uuid.uuid4().hex
 
 		self._headers = content_disposition_headers(name, disptype='form-data')
-		self._headers.update(multipart_content_type(self._boundary, subtype='form-data'))
+		self._headers.update(multipart_content_type_headers(self._boundary, subtype='form-data'))
 
 		#WORKAROUND: Go-IPFS randomly fucks up streaming requests if they are not
 		#            `Connection: close` (https://github.com/ipfs/go-ipfs/issues/5168)
@@ -144,12 +147,17 @@ class StreamBase(object):
 	def headers(self):
 		return self._headers.copy()
 
-	def body(self, *args, **kwargs):
-		"""Returns the body of the buffered file.
-
-		.. note:: This function is not actually implemented.
+	@abc.abstractmethod
+	def _body(self, *args, **kwargs):
+		"""Yields the body of this stream with chunks of undefined size.
 		"""
-		raise NotImplementedError
+
+	def body(self, *args, **kwargs):
+		"""Yields the body of this stream.
+		"""
+		# Cap all returned body chunks to the given chunk size
+		#PY2: Use `yield from` instead
+		for chunk in self._gen_chunks(self._body()): yield chunk
 
 	def _gen_headers(self, headers):
 		"""Yields the HTTP header text for some content.
@@ -159,7 +167,7 @@ class StreamBase(object):
 		headers : dict
 			The headers to yield
 		"""
-		for name, value in headers.items():
+		for name, value in sorted(headers.items(), key=lambda i: i[0]):
 			yield bytes_fmt(b"%s: %s\r\n", name.encode("ascii"), value.encode("utf-8"))
 		yield b"\r\n"
 
@@ -273,7 +281,7 @@ class FilesStream(StreamBase, StreamFileMixin):
 
 		super(FilesStream, self).__init__(name, chunk_size=chunk_size)
 
-	def body(self):
+	def _body(self):
 		"""Yields the body of the buffered file."""
 		for file, need_close in self.files:
 			try:
@@ -420,7 +428,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 			# File might have disappeared between `os.walk()` and `open()`
 			pass
 
-	def body(self):
+	def _body(self):
 		"""Streams the contents of the selected directory as binary chunks."""
 		def match_short_path(short_path):
 			# Remove initial path component so that all files are based in
