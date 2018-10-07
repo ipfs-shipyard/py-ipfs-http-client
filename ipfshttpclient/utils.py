@@ -3,11 +3,22 @@
 
 from __future__ import absolute_import
 
+try:
+    import collections.abc
+except ImportError:
+    #PY2: The relevant classes used to be somewhere else
+    class collections:
+        import collections as abc
 import mimetypes
 import os
+import six
 from functools import wraps
 
-import six
+
+
+path_types = (six.text_type, six.binary_type)
+if hasattr(os, "PathLike"):  #PY36+
+    path_types += (os.PathLike,)
 
 
 def guess_mimetype(filename):
@@ -29,27 +40,6 @@ def guess_mimetype(filename):
     return mimetypes.guess_type(fn)[0] or 'application/octet-stream'
 
 
-def ls_dir(dirname):
-    """Returns files and subdirectories within a given directory.
-
-    Returns a pair of lists, containing the names of directories and files
-    in ``dirname``.
-
-    Raises
-    ------
-    OSError : Accessing the given directory path failed
-
-    Parameters
-    ----------
-    dirname : str
-        The path of the directory to be listed
-    """
-    ls = os.listdir(dirname)
-    files = [p for p in ls if os.path.isfile(os.path.join(dirname, p))]
-    dirs = [p for p in ls if os.path.isdir(os.path.join(dirname, p))]
-    return files, dirs
-
-
 def clean_file(file):
     """Returns a tuple containing a ``file``-like object and a close indicator.
 
@@ -62,11 +52,13 @@ def clean_file(file):
 
     Parameters
     ----------
-    file : str | io.IOBase
+    file : str | bytes | os.PathLike | io.IOBase | int
         A filepath or ``file``-like object that may or may not need to be
         opened
     """
-    if not hasattr(file, 'read'):
+    if isinstance(file, int):
+        return os.fdopen(file, 'rb', closefd=False), True
+    elif not hasattr(file, 'read'):
         return open(file, 'rb'), True
     else:
         return file, False
@@ -85,36 +77,14 @@ def clean_files(files):
 
     Parameters
     ----------
-    files : list | io.IOBase | str
+    files : str | bytes | os.PathLike | io.IOBase | int | collections.abc.Iterable
         Collection or single instance of a filepath and file-like object
     """
-    if isinstance(files, (list, tuple)):
+    if not isinstance(files, path_types) and not hasattr(files, "read"):
         for f in files:
             yield clean_file(f)
     else:
         yield clean_file(files)
-
-
-def file_size(f):
-    """Returns the size of a file in bytes.
-
-    Raises
-    ------
-    OSError : Accessing the given file path failed
-
-    Parameters
-    ----------
-    f : io.IOBase | str
-        The file path or object for which the size should be determined
-    """
-    if isinstance(f, (six.string_types, six.text_type)):
-        return os.path.getsize(f)
-    else:
-        cur = f.tell()
-        f.seek(0, 2)
-        size = f.tell()
-        f.seek(cur)
-        return size
 
 
 class return_field(object):
