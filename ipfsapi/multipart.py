@@ -441,14 +441,14 @@ class DirectoryStream(BufferedGenerator):
                 mock_file.write(u'')
                 # Add this directory to those that will be sent
                 names.append(('files',
-                             (dir_base, mock_file, 'application/x-directory')))
+                             (dir_base.replace(os.sep, '/'), mock_file, 'application/x-directory')))
                 # Remember that this directory has already been sent
                 added_directories.add(dir_base)
 
         def add_file(short_path, full_path):
             try:
                 # Always add files in wildcard directories
-                names.append(('files', (short_name,
+                names.append(('files', (short_name.replace(os.sep, '/'),
                                         open(full_path, 'rb'),
                                         'application/octet-stream')))
             except OSError:
