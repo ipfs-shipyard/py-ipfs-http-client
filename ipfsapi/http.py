@@ -177,10 +177,10 @@ class HTTPClient(object):
                 six.raise_from(exceptions.StatusError(error), error)
 
     def _request(self, method, url, params, parser, stream=False, files=None,
-                 headers={}, data=None):
+                 headers={}, data=None, timeout=120):
         # Do HTTP request (synchronously)
         res = self._do_request(method, url, params=params, stream=stream,
-                               files=files, headers=headers, data=data)
+                               files=files, headers=headers, data=data, timeout=timeout)
 
         if stream:
             # Raise exceptions for response status
@@ -201,7 +201,7 @@ class HTTPClient(object):
     @pass_defaults
     def request(self, path,
                 args=[], files=[], opts={}, stream=False,
-                decoder=None, headers={}, data=None):
+                decoder=None, headers={}, data=None, timeout=120):
         """Makes an HTTP request to the IPFS daemon.
 
         This function returns the contents of the HTTP response from the IPFS
@@ -229,6 +229,11 @@ class HTTPClient(object):
             The encoder to use to parse the HTTP response
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
+        timeout : float, or a `(connect timeout, read timeout) <timeouts>` tuple
+            How many seconds to wait for the server to send data
+            before giving up
+            
+            Defaults to 120
         """
         url = self.base + path
 
@@ -244,11 +249,11 @@ class HTTPClient(object):
         parser = encoding.get_encoding(decoder if decoder else "none")
 
         return self._request(method, url, params, parser, stream,
-                             files, headers, data)
+                             files, headers, data, timeout)
 
     @pass_defaults
     def download(self, path, args=[], filepath=None, opts={},
-                 compress=True, **kwargs):
+                 compress=True, timeout=120, **kwargs):
         """Makes a request to the IPFS daemon to download a file.
 
         Downloads a file or files from IPFS into the current working
@@ -277,6 +282,11 @@ class HTTPClient(object):
         compress : bool
             Whether the downloaded file should be GZip compressed by the
             daemon before being sent to the client
+        timeout : float, or a `(connect timeout, read timeout) <timeouts>` tuple
+            How many seconds to wait for the server to send data
+            before giving up
+
+            Defaults to 120
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
         """
@@ -296,7 +306,7 @@ class HTTPClient(object):
 
         method = 'get'
 
-        res = self._do_request(method, url, params=params, stream=True,
+        res = self._do_request(method, url, params=params, stream=True, timeout=timeout, 
                                **kwargs)
 
         self._do_raise_for_status(res)

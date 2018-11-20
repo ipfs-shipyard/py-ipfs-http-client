@@ -59,6 +59,26 @@ def return_fail(url, request):
         'content': 'fail'.encode('utf-8'),
     }
 
+@urlmatch(netloc='localhost:5001', path=r'.*/fail')
+def return_timeout_2_sec(url, request):
+    """Defines an endpoint for timed-out http requests.
+
+    This endpoint will listen at http://localhost:5001/*/timeout for incoming
+    requests and will always respond with a 500 status code and a Message of
+    "fail", but after `timeout` seconds.
+
+    Keyword arguments:
+    url -- the url of the incoming request
+    request -- the request that is being responded to
+    timeout -- the time (seconds) after which to return
+    """
+    import time
+    time.sleep(2)
+    return {
+        'status_code': 500,
+        'content': 'fail'.encode('utf-8'),
+    }
+
 
 @urlmatch(netloc='localhost:5001', path=r'.*/apiokay')
 def api_okay(url, request):
@@ -135,6 +155,8 @@ class TestHttp(unittest.TestCase):
     test_failed_decoder -- tests that a failed encoding parse returns response
                             text
     test_failed_download -- tests that a failed download raises an HTTPError
+    test_download_timeout -- Tests that a timed-out download raises a TimeoutError
+    test_request_timeout -- Tests that a timed-out request raises a TimeoutError
     test_session -- tests that a session is established and then closed
     """
     def setUp(self):
@@ -210,6 +232,22 @@ class TestHttp(unittest.TestCase):
         with HTTMock(return_fail):
             with pytest.raises(ipfsapi.exceptions.StatusError):
                 self.client.download('/fail')
+
+    def test_download_timeout(self):
+        """Tests that a timed-out download raises a TimeoutError."""
+        # Still left to check what happens when we send a timeout tuple
+        # i.e. (connect timeout, read timeout) <timeouts> tuple
+        with HTTMock(return_timeout_2_sec):
+            with pytest.raises(ipfsapi.exceptions.TimeoutError):
+                self.client.download('/timeout', timeout=1)
+    
+    def test_request_timeout(self):
+        """Tests that a timed-out request raises a TimeoutError."""
+        # Still left to check what happens when we send a timeout tuple
+        # i.e. (connect timeout, read timeout) <timeouts> tuple
+        with HTTMock(return_timeout_2_sec):
+            with pytest.raises(ipfsapi.exceptions.TimeoutError):
+                self.client.request('/timeout', timeout=1)
 
     def test_session(self):
         """Tests that a session is established and then closed."""
