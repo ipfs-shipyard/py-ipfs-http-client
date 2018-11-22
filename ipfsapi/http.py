@@ -180,7 +180,8 @@ class HTTPClient(object):
                  headers={}, data=None, timeout=120):
         # Do HTTP request (synchronously)
         res = self._do_request(method, url, params=params, stream=stream,
-                               files=files, headers=headers, data=data, timeout=timeout)
+                               files=files, headers=headers, data=data,
+                               timeout=timeout)
 
         if stream:
             # Raise exceptions for response status
@@ -229,10 +230,10 @@ class HTTPClient(object):
             The encoder to use to parse the HTTP response
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
-        timeout : float, or a `(connect timeout, read timeout) <timeouts>` tuple
+        timeout : float
             How many seconds to wait for the server to send data
             before giving up
-            
+
             Defaults to 120
         """
         url = self.base + path
@@ -249,7 +250,7 @@ class HTTPClient(object):
         parser = encoding.get_encoding(decoder if decoder else "none")
 
         return self._request(method, url, params, parser, stream,
-                             files, headers, data, timeout)
+                             files, headers, data, timeout=timeout)
 
     @pass_defaults
     def download(self, path, args=[], filepath=None, opts={},
@@ -282,7 +283,7 @@ class HTTPClient(object):
         compress : bool
             Whether the downloaded file should be GZip compressed by the
             daemon before being sent to the client
-        timeout : float, or a `(connect timeout, read timeout) <timeouts>` tuple
+        timeout : float
             How many seconds to wait for the server to send data
             before giving up
 
@@ -306,8 +307,8 @@ class HTTPClient(object):
 
         method = 'get'
 
-        res = self._do_request(method, url, params=params, stream=True, timeout=timeout, 
-                               **kwargs)
+        res = self._do_request(method, url, params=params,
+                               stream=True, timeout=timeout, **kwargs)
 
         self._do_raise_for_status(res)
 

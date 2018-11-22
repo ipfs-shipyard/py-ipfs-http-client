@@ -59,6 +59,7 @@ def return_fail(url, request):
         'content': 'fail'.encode('utf-8'),
     }
 
+
 @urlmatch(netloc='localhost:5001', path=r'.*/fail')
 def return_timeout_2_sec(url, request):
     """Defines an endpoint for timed-out http requests.
@@ -235,16 +236,16 @@ class TestHttp(unittest.TestCase):
 
     def test_download_timeout(self):
         """Tests that a timed-out download raises a TimeoutError."""
-        # Still left to check what happens when we send a timeout tuple
-        # i.e. (connect timeout, read timeout) <timeouts> tuple
+        try:
+            self.client.download('/timeout', timeout=1)
+        except Exception as e:
+            print(e)
         with HTTMock(return_timeout_2_sec):
             with pytest.raises(ipfsapi.exceptions.TimeoutError):
                 self.client.download('/timeout', timeout=1)
     
     def test_request_timeout(self):
         """Tests that a timed-out request raises a TimeoutError."""
-        # Still left to check what happens when we send a timeout tuple
-        # i.e. (connect timeout, read timeout) <timeouts> tuple
         with HTTMock(return_timeout_2_sec):
             with pytest.raises(ipfsapi.exceptions.TimeoutError):
                 self.client.request('/timeout', timeout=1)
@@ -256,6 +257,7 @@ class TestHttp(unittest.TestCase):
                 res = self.client.request('/okay')
                 assert res == b'okay'
             assert self.client._session is None
+
 
 def test_stream_close(mocker):
     client = ipfsapi.http.HTTPClient("localhost", 5001, "api/v0")
@@ -272,3 +274,7 @@ def test_stream_close(mocker):
         
         client.request("/okay")
         assert ipfsapi.http._notify_stream_iter_closed.call_count == 3
+
+
+t = TestHttp()
+t.test_download_timeout()
