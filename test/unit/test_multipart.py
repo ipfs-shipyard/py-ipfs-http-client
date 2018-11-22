@@ -1,4 +1,5 @@
 """Test the file multipart.py
+
 Classes:
 TestContentHelpers -- test the three content-header helper functions
 TestBodyGenerator -- test the BodyGenerator helper class
@@ -21,6 +22,7 @@ import ipfsapi.multipart
 
 class TestContentHelpers(unittest.TestCase):
     """Tests the functionality of the three content-oriented helper functions.
+
     Public methods:
     test_content_disposition -- check the content_disposition defaults
     test_content_disposition_with_type -- check that content_disposition
@@ -74,6 +76,7 @@ class TestContentHelpers(unittest.TestCase):
 
 class TestBodyGenerator(unittest.TestCase):
     """Tests the functionality of the BodyGenerator class.
+
     Public methods:
     test_init_defaults -- tests the constructor and its behavior with only the
                             required argument
@@ -207,6 +210,7 @@ def _generate_test_chunks(chunk_size, interations):
 
 class TestBufferedGenerator(unittest.TestCase):
     """Test the BufferedGenerator class.
+
     Public methods:
     test_init -- test the default arguments of the constructor
     test_file_chunks -- test the file_chunks function against example output
@@ -223,6 +227,7 @@ class TestBufferedGenerator(unittest.TestCase):
 
     def test_file_chunks(self):
         """Test the file_chunks function against example output.
+
         Warning: This test depends on the contents of
         test/functional/fake_dir/fsdfgh
         Changing that file could break the test.
@@ -277,12 +282,14 @@ class TestBufferedGenerator(unittest.TestCase):
 
 class TestFileStream(unittest.TestCase):
     """Test the FileStream class
+
     Public methods:
     test_body -- check file stream body for proper structure
     """
 
     def test_body(self):
         """Test the body function against expected output.
+
         Warning: This test depends on the contents of
         test/functional/fake_dir
         Changing that directory or its contents could break the test.
@@ -316,6 +323,7 @@ class TestFileStream(unittest.TestCase):
 
 class TestDirectoryStream(unittest.TestCase):
     """Test the DirectoryStream class.
+
     Public methods:
     test_body -- check that the HTTP body for the directory is correct
     test_body_recursive -- check body structure when recursive directory
@@ -345,6 +353,7 @@ class TestDirectoryStream(unittest.TestCase):
 
 class TestTextStream(unittest.TestCase):
     """Test the TextStream class.
+
     Public methods:
     test_body -- check that the HTTP body for the text is correct
     """
@@ -369,9 +378,11 @@ class TestTextStream(unittest.TestCase):
 
 class TestStreamHelpers(unittest.TestCase):
     """Test stream_files, stream_directory, and stream_text.
+
     TODO: These functions are just wrappers around other,
     already-tested functions. Maybe they should be tested,
     but it is unclear how.
+
     Public Methods:
     test_stream_files -- unimplemented
     test_stream_directory -- unimplemented
