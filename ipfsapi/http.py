@@ -156,12 +156,12 @@ class HTTPClient(object):
                 return self._session.request(*args, **kwargs)
             else:
                 return requests.request(*args, **kwargs)
+        except (requests.ConnectTimeout, requests.Timeout) as error:
+            six.raise_from(exceptions.TimeoutError(error), error)
         except requests.ConnectionError as error:
             six.raise_from(exceptions.ConnectionError(error), error)
         except http_client.HTTPException as error:
             six.raise_from(exceptions.ProtocolError(error), error)
-        except requests.Timeout as error:
-            six.raise_from(exceptions.TimeoutError(error), error)
 
     def _do_raise_for_status(self, response, content=None):
         try:

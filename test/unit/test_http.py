@@ -236,10 +236,6 @@ class TestHttp(unittest.TestCase):
 
     def test_download_timeout(self):
         """Tests that a timed-out download raises a TimeoutError."""
-        try:
-            self.client.download('/timeout', timeout=1)
-        except Exception as e:
-            print(e)
         with HTTMock(return_timeout_2_sec):
             with pytest.raises(ipfsapi.exceptions.TimeoutError):
                 self.client.download('/timeout', timeout=1)
@@ -274,7 +270,3 @@ def test_stream_close(mocker):
         
         client.request("/okay")
         assert ipfsapi.http._notify_stream_iter_closed.call_count == 3
-
-
-t = TestHttp()
-t.test_download_timeout()
