@@ -1,10 +1,10 @@
-Internal API Reference
+Internal HTTP Client Reference
 ----------------------
 
 ### `encoding`
 
 ```eval_rst
-.. automodule:: ipfsapi.encoding
+.. automodule:: ipfshttpclient.encoding
     :members:
     :show-inheritance:
 
@@ -13,7 +13,7 @@ Internal API Reference
 ### `http`
 
 ```eval_rst
-.. automodule:: ipfsapi.http
+.. automodule:: ipfshttpclient.http
     :members:
     :show-inheritance:
 
@@ -22,7 +22,7 @@ Internal API Reference
 ### `multipart`
 
 ```eval_rst
-.. automodule:: ipfsapi.multipart
+.. automodule:: ipfshttpclient.multipart
     :members:
     :show-inheritance:
 
@@ -31,7 +31,7 @@ Internal API Reference
 ### `utils`
 
 ```eval_rst
-.. automodule:: ipfsapi.utils
+.. automodule:: ipfshttpclient.utils
     :members:
     :show-inheritance:
 
