@@ -20,8 +20,8 @@ try:
 except ImportError:
     import mock
 
-import ipfsapi.http
-import ipfsapi.exceptions
+import ipfshttpclient.http
+import ipfshttpclient.exceptions
 
 
 @urlmatch(netloc='localhost:5001', path=r'.*/okay')
@@ -60,11 +60,11 @@ def return_fail(url, request):
     }
 
 
-@urlmatch(netloc='localhost:5001', path=r'.*/apiokay')
-def api_okay(url, request):
-    """Defines an endpoint for successful api requests.
+@urlmatch(netloc='localhost:5001', path=r'.*/http_client_okay')
+def http_client_okay(url, request):
+    """Defines an endpoint for successful http client requests.
 
-    This endpoint will listen at http://localhost:5001/*/apiokay for incoming
+    This endpoint will listen at http://localhost:5001/*/http_client_okay for incoming
     requests and will always respond with a 200 status code and a json encoded
     Message of "okay".
 
@@ -79,11 +79,11 @@ def api_okay(url, request):
     }
 
 
-@urlmatch(netloc='localhost:5001', path=r'.*/apifail')
-def api_fail(url, request):
-    """Defines an endpoint for failed api requests.
+@urlmatch(netloc='localhost:5001', path=r'.*/http_client_fail')
+def http_client_fail(url, request):
+    """Defines an endpoint for failed http client requests.
 
-    This endpoint will listen at http://localhost:5001/*/apifail for incoming
+    This endpoint will listen at http://localhost:5001/*/http_client_fail for incoming
     requests and will always respond with a 500 status code and a json encoded
     Message of "Someone set us up the bomb".
 
@@ -99,7 +99,7 @@ def api_fail(url, request):
 
 
 @urlmatch(netloc='localhost:5001', path=r'.*/cat')
-def api_cat(url, request):
+def http_client_cat(url, request):
     """Defines an endpoint for a request to cat a file.
 
     This endpoint will listen at http://localhost:5001/*/cat for incoming
@@ -125,7 +125,7 @@ class TestHttp(unittest.TestCase):
     test_successful_request -- tests that a successful http request returns the
                                 proper message
     test_generic_failure -- tests that a failed http request raises an HTTPError
-    test_api_failure -- tests that an api failure raises an ispfApiError
+    test_http_client_failure -- tests that an http client failure raises an ipfsHTTPClientError
     test_stream -- tests that the stream flag being set returns the raw response
     test_cat -- tests that paths ending in /cat are not parsed
     test_default_decoder -- tests that the default encoding is set to json
@@ -139,10 +139,10 @@ class TestHttp(unittest.TestCase):
     """
     def setUp(self):
         """Creates an instance of HTTPClient to test against."""
-        self.client = ipfsapi.http.HTTPClient(
+        self.client = ipfshttpclient.http.HTTPClient(
             'localhost',
             5001,
-            'api/v0')
+            'http_client/v0')
 
     def test_successful_request(self):
         """Tests that a successful http request returns the proper message."""
@@ -153,14 +153,14 @@ class TestHttp(unittest.TestCase):
     def test_generic_failure(self):
         """Tests that a failed http request raises an HTTPError."""
         with HTTMock(return_fail):
-            with pytest.raises(ipfsapi.exceptions.StatusError):
+            with pytest.raises(ipfshttpclient.exceptions.StatusError):
                 self.client.request('/fail')
 
-    def test_api_failure(self):
-        """Tests that an api failure raises an ispfApiError."""
-        with HTTMock(api_fail):
-            with pytest.raises(ipfsapi.exceptions.Error):
-                self.client.request('/apifail')
+    def test_http_client_failure(self):
+        """Tests that an http client failure raises an ipfsHTTPClientError."""
+        with HTTMock(http_client_fail):
+            with pytest.raises(ipfshttpclient.exceptions.Error):
+                self.client.request('/http_client_fail')
 
     def test_stream(self):
         """Tests that the stream flag being set returns the raw response."""
@@ -170,45 +170,45 @@ class TestHttp(unittest.TestCase):
 
     def test_cat(self):
         """Tests that paths ending in /cat are not parsed."""
-        with HTTMock(api_cat):
+        with HTTMock(http_client_cat):
             res = self.client.request('/cat')
             assert res == b'{"Message": "do not parse"}'
 
     def test_default_decoder(self):
         """Tests that the default encoding is set to json."""
-        with HTTMock(api_okay):
-            res = self.client.request('/apiokay')
+        with HTTMock(http_client_okay):
+            res = self.client.request('/http_client_fail')
             assert res == b'{"Message": "okay"}'
 
     def test_explicit_decoder(self):
         """Tests that an explicit decoder is handled correctly."""
-        with HTTMock(api_okay):
-            res = self.client.request('/apiokay',
+        with HTTMock(http_client_okay):
+            res = self.client.request('/http_client_fail',
                                       decoder='json')
             assert res['Message'] == 'okay'
 
     def test_unsupported_decoder(self):
         """Tests that unsupported encodings raise an exception."""
-        with HTTMock(api_fail):
-            with pytest.raises(ipfsapi.exceptions.EncoderMissingError):
-                self.client.request('/apifail', decoder='xyz')
+        with HTTMock(http_client_fail):
+            with pytest.raises(ipfshttpclient.exceptions.EncoderMissingError):
+                self.client.request('/http_client_fail', decoder='xyz')
 
     def test_failed_decoder(self):
         """Tests that a failed encoding parse raises an exception."""
         with HTTMock(return_okay):
-            with pytest.raises(ipfsapi.exceptions.DecodingError):
+            with pytest.raises(ipfshttpclient.exceptions.DecodingError):
                 self.client.request('/okay', decoder='json')
 
     """TODO: Test successful download
     Need to determine correct way to mock an http request that returns a tar
     file. tarfile.open expects the tar to be in the form of an octal escaped
-    string, but internal functionality keeps resulting in hexidecimal.
+    string, but internal functionality keeps resulting in hexadecimal.
     """
 
     def test_failed_download(self):
         """Tests that a failed download raises an HTTPError."""
         with HTTMock(return_fail):
-            with pytest.raises(ipfsapi.exceptions.StatusError):
+            with pytest.raises(ipfshttpclient.exceptions.StatusError):
                 self.client.download('/fail')
 
     def test_session(self):
@@ -219,18 +219,19 @@ class TestHttp(unittest.TestCase):
                 assert res == b'okay'
             assert self.client._session is None
 
+
 def test_stream_close(mocker):
-    client = ipfsapi.http.HTTPClient("localhost", 5001, "api/v0")
-    mocker.patch("ipfsapi.http._notify_stream_iter_closed")
+    client = ipfshttpclient.http.HTTPClient("localhost", 5001, "http_client/v0")
+    mocker.patch("ipfshttpclient.http._notify_stream_iter_closed")
     with HTTMock(return_okay):
         with client.request("/okay", stream=True) as response_iter:
-            assert ipfsapi.http._notify_stream_iter_closed.call_count == 0
-        assert ipfsapi.http._notify_stream_iter_closed.call_count == 1
-        
+            assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 0
+        assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 1
+
         response_iter = client.request("/okay", stream=True)
-        assert ipfsapi.http._notify_stream_iter_closed.call_count == 1
+        assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 1
         response_iter.close()
-        assert ipfsapi.http._notify_stream_iter_closed.call_count == 2
-        
+        assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 2
+
         client.request("/okay")
-        assert ipfsapi.http._notify_stream_iter_closed.call_count == 3
+        assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 3

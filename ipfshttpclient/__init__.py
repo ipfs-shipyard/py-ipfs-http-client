@@ -1,12 +1,12 @@
-"""Python IPFS API client library"""
+"""Python IPFS HTTP CLIENT library"""
 
 from __future__ import absolute_import
 
 from .version import __version__
 
-###########################
-# Import stable API parts #
-###########################
+###################################
+# Import stable HTTP CLIENT parts #
+###################################
 from . import exceptions
 
 from .client import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_BASE

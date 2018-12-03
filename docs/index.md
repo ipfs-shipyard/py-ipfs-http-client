@@ -1,11 +1,11 @@
-Python IPFS API's documentation!
+Python IPFS HTTP Client's documentation!
 ================================
 
 Contents
 --------
 
-* [Client API Reference](api_ref.md)
-* [Internal API Reference](internal_ref.md)
+* [HTTP Client Reference](http_client_ref.md)
+* [Internal HTTP Client Reference](internal_ref.md)
 
 Indices and tables
 ------------------

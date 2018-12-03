@@ -134,7 +134,7 @@ class HTTPClient(object):
         The path prefix for API calls
     defaults : dict
         The default parameters to be passed to
-        :meth:`~ipfsapi.http.HTTPClient.request`
+        :meth:`~ipfshttpclient.http.HTTPClient.request`
     """
 
     __metaclass__ = abc.ABCMeta
@@ -209,11 +209,11 @@ class HTTPClient(object):
 
         Raises
         ------
-        ~ipfsapi.exceptions.ErrorResponse
-        ~ipfsapi.exceptions.ConnectionError
-        ~ipfsapi.exceptions.ProtocolError
-        ~ipfsapi.exceptions.StatusError
-        ~ipfsapi.exceptions.TimeoutError
+        ~ipfshttpclient.exceptions.ErrorResponse
+        ~ipfshttpclient.exceptions.ConnectionError
+        ~ipfshttpclient.exceptions.ProtocolError
+        ~ipfshttpclient.exceptions.StatusError
+        ~ipfshttpclient.exceptions.TimeoutError
 
         Parameters
         ----------
@@ -256,11 +256,11 @@ class HTTPClient(object):
 
         Raises
         ------
-        ~ipfsapi.exceptions.ErrorResponse
-        ~ipfsapi.exceptions.ConnectionError
-        ~ipfsapi.exceptions.ProtocolError
-        ~ipfsapi.exceptions.StatusError
-        ~ipfsapi.exceptions.TimeoutError
+        ~ipfshttpclient.exceptions.ErrorResponse
+        ~ipfshttpclient.exceptions.ConnectionError
+        ~ipfshttpclient.exceptions.ProtocolError
+        ~ipfshttpclient.exceptions.StatusError
+        ~ipfshttpclient.exceptions.TimeoutError
 
         Parameters
         ----------

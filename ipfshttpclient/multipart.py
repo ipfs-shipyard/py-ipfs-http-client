@@ -282,7 +282,7 @@ class FileStream(BufferedGenerator):
 
     A buffered generator that encodes an array of files as
     :mimetype:`multipart/form-data`. This is a concrete implementation of
-    :class:`~ipfsapi.multipart.BufferedGenerator`.
+    :class:`~ipfshttpclient.multipart.BufferedGenerator`.
 
     Parameters
     ----------
@@ -371,7 +371,7 @@ class DirectoryStream(BufferedGenerator):
 
     A buffered generator that encodes an array of files as
     :mimetype:`multipart/form-data`. This is a concrete implementation of
-    :class:`~ipfsapi.multipart.BufferedGenerator`.
+    :class:`~ipfshttpclient.multipart.BufferedGenerator`.
 
     Parameters
     ----------

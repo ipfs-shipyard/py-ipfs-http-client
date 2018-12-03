@@ -52,8 +52,8 @@ os.chdir(str(BASE_PATH))
 
 # Export environment variables required for testing
 os.environ["IPFS_PATH"] = str(IPFS_PATH)
-os.environ["PY_IPFSAPI_DEFAULT_HOST"] = str(HOST)
-os.environ["PY_IPFSAPI_DEFAULT_PORT"] = str(PORT)
+os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_HOST"] = str(HOST)
+os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_PORT"] = str(PORT)
 
 # Make sure the IPFS data directory exists and is empty
 with contextlib.suppress(OSError):  #PY2: Replace with `FileNotFoundError`
@@ -74,7 +74,7 @@ subprocess.call(["ipfs", "config", "Addresses.API",     "/ip4/{}/tcp/{}".format(
 
 # Spawn IPFS daemon in data directory
 DAEMON = subprocess.Popen(["ipfs", "daemon", "--enable-pubsub-experiment"])
-os.environ["PY_IPFSAPI_TEST_DAEMON_PID"] = str(DAEMON.pid)
+os.environ["PY_IPFS_HTTP_CLIENT_TEST_DAEMON_PID"] = str(DAEMON.pid)
 
 # Collect the exit code of `DAEMON` when `SIGCHLD` is received
 # (otherwise the shutdown test fails to recognize that the daemon process is dead)
@@ -83,11 +83,11 @@ if os.name == "posix":
 	signal.signal(signal.SIGCHLD, lambda *a: DAEMON.poll())
 
 # Wait for daemon to start up
-import ipfsapi
+import ipfshttpclient
 while True:
 	try:
-		ipfsapi.connect(HOST, PORT)
-	except ipfsapi.exceptions.ConnectionError:
+		ipfshttpclient.connect(HOST, PORT)
+	except ipfshttpclient.exceptions.ConnectionError:
 		time.sleep(0.05)
 	else:
 		break
@@ -109,7 +109,7 @@ try:
 	import pytest
 	PYTEST_CODE = pytest.main([
 		"--verbose",
-		"--cov=ipfsapi",
+		"--cov=ipfshttpclient",
 		"--cov-report=term",
 		"--cov-report=html:{}".format(str(TEST_PATH / "cov_html")),
 		"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml"))

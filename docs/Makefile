@@ -91,9 +91,9 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/PythonIPFSAPI.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/PythonIPFSHTTPClient.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/PythonIPFSAPI.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/PythonIPFSHTTPClient.qhc"
 
 .PHONY: applehelp
 applehelp:
@@ -110,8 +110,8 @@ devhelp:
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/PythonIPFSAPI"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/PythonIPFSAPI"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/PythonIPFSHTTPClient"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/PythonIPFSHTTPClient"
 	@echo "# devhelp"
 
 .PHONY: epub

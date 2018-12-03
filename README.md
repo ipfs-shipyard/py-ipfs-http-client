@@ -1,16 +1,16 @@
-# py-ipfs-api
+# py-ipfs-http-client
 
 [![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.io/)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![](https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square)](https://pypi.python.org/pypi/ipfsapi)
-[![Build Status](https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-api)
+[![](https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
+[![Build Status](https://travis-ci.org/ipfs/py-ipfs-http-client.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-http-client)
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
-Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/) for the full command reference.
+Check out [the HTTP Client reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/) for the full command reference.
 
-**Important:** The `py-ipfs-api` PIP package and Python module have both been renamed to `ipfsapi` (no dash, lower-case `a`).  
+**Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`  
 The legacy `ipfs-api`/`ipfsApi` package/module will only work for IPFS 0.3.x and Python 2 and is deprecated. [Please upgrade](#important-changes-from-ipfsapi-02x)!
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
@@ -35,7 +35,7 @@ You may experience compatibility issues when attempting to use it with other ver
 Install with pip:
 
 ```sh
-pip install ipfsapi
+pip install ipfshttpclient
 ```
 
 ## Usage
@@ -43,19 +43,19 @@ pip install ipfsapi
 Basic use-case (requires a running instance of IPFS daemon):
 
 ```py
->>> import ipfsapi
->>> api = ipfsapi.connect('127.0.0.1', 5001)
->>> res = api.add('test.txt')
+>>> import ipfshttpclient
+>>> http_client = ipfshttpclient.connect('127.0.0.1', 5001)
+>>> res = http_client.add('test.txt')
 >>> res
 {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
->>> api.cat(res['Hash'])
+>>> http_client.cat(res['Hash'])
 'fdsafkljdskafjaksdjf\n'
 ```
 
 Administrative functions:
 
 ```py
->>> api.id()
+>>> http_client.id()
 {'Addresses': ['/ip4/127.0.0.1/tcp/4001/ipfs/QmS2C4MjZsv2iP1UDMMLCYqJ4WeJw8n3vXx1VKxW1UbqHS',
                '/ip6/::1/tcp/4001/ipfs/QmS2C4MjZsv2iP1UDMMLCYqJ4WeJw8n3vXx1VKxW1UbqHS'],
  'AgentVersion': 'go-ipfs/0.4.10',
@@ -67,7 +67,7 @@ Administrative functions:
 Pass in API options:
 
 ```py
->>> api.pin_ls(type='all')
+>>> http_client.pin_ls(type='all')
 {'Keys': {'QmNMELyizsfFdNZW3yKTi1SE2pErifwDTXx6vvQBfwcJbU': {'Count': 1,
                                                              'Type': 'indirect'},
           'QmNQ1h6o1xJARvYzwmySPsuv9L5XfzS4WTvJSTAWwYRSd8': {'Count': 1,
@@ -78,7 +78,7 @@ Pass in API options:
 Add a directory and match against a filename pattern:
 
 ```py
->>> api.add('photos', match='*.jpg')
+>>> http_client.add('photos', match='*.jpg')
 [{'Hash': 'QmcqBstfu5AWpXUqbucwimmWdJbu89qqYmE3WXVktvaXhX',
   'Name': 'photos/photo1.jpg'},
  {'Hash': 'QmSbmgg7kYwkSNzGLvWELnw1KthvTAMszN5TNg3XQ799Fu',
@@ -90,7 +90,7 @@ Add a directory and match against a filename pattern:
 Or add a directory recursively:
 
 ```py
->>> api.add('fake_dir', recursive=True)
+>>> http_client.add('fake_dir', recursive=True)
 [{'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
   'Name': 'fake_dir/fsdfgh'},
  {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
@@ -105,9 +105,9 @@ This module also contains some helper functions for adding strings and JSON to I
 
 ```py
 >>> lst = [1, 77, 'lol']
->>> client.add_json(lst)
+>>> http_client.add_json(lst)
 'QmQ4R5cCUYBWiJpNL7mFe4LDrwD6qBr5Re17BoRAY9VNpd'
->>> client.get_json(_)
+>>> http_client.get_json(_)
 [1, 77, 'lol']
 ```
 
@@ -137,7 +137,7 @@ The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) m
 
 ## Featured Projects
 
-Projects that currently use py-ipfs-api. If your project isn't here, feel free to submit a PR to add it!
+Projects that currently use py-ipfs-http-client. If your project isn't here, feel free to submit a PR to add it!
 
 - [git-remote-ipfs](https://github.com/larsks/git-remote-ipfs) allows users to push and pull git repositories from the IPFS network.
 - [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](https://www.iso.org/standard/44717.html)) files for distributed indexing and replay using IPFS.
@@ -151,7 +151,7 @@ or if you just want to discuss IPFS and python.
 
 ### Bug reports
 
-You can submit bug reports using the [GitHub issue tracker](https://github.com/ipfs/python-ipfs-api/issues).
+You can submit bug reports using the [GitHub issue tracker](https://github.com/ipfs/py-ipfs-http-client/issues).
 
 ### Pull requests
 

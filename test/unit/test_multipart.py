@@ -17,7 +17,7 @@ import re
 import pytest
 import six
 
-import ipfsapi.multipart
+import ipfshttpclient.multipart
 
 
 class TestContentHelpers(unittest.TestCase):
@@ -34,40 +34,40 @@ class TestContentHelpers(unittest.TestCase):
     def test_content_disposition(self):
         """Check that content_disposition defaults properly"""
         expected = {'Content-Disposition': 'file; filename="example.txt"'}
-        actual = ipfsapi.multipart.content_disposition('example.txt')
+        actual = ipfshttpclient.multipart.content_disposition('example.txt')
         assert expected == actual
 
     def test_content_disposition_with_type(self):
         """Check that content_disposition handles given disposition type"""
         expected = {'Content-Disposition':
                     'attachment; filename="example.txt"'}
-        actual = ipfsapi.multipart.content_disposition('example.txt',
+        actual = ipfshttpclient.multipart.content_disposition('example.txt',
                                                        'attachment')
         assert expected == actual
 
     def test_content_type(self):
         """Check the content_type guessing functionality."""
-        actual = ipfsapi.multipart.content_type('example.txt')
+        actual = ipfshttpclient.multipart.content_type('example.txt')
         expected = {'Content-Type': 'text/plain'}
         assert expected == actual
 
-        actual = ipfsapi.multipart.content_type('example.jpeg')
+        actual = ipfshttpclient.multipart.content_type('example.jpeg')
         expected = {'Content-Type': 'image/jpeg'}
         assert expected == actual
 
-        actual = ipfsapi.multipart.content_type('example')
+        actual = ipfshttpclient.multipart.content_type('example')
         expected = {'Content-Type': 'application/octet-stream'}
         assert expected == actual
 
     def test_multipart_content_type(self):
         """Check test_multipart_content_type functionality."""
-        actual = ipfsapi.multipart.multipart_content_type(
+        actual = ipfshttpclient.multipart.multipart_content_type(
             '8K5rNKlLQVyreRNncxOTeg')
         expected = {'Content-Type':
                     'multipart/mixed; boundary="8K5rNKlLQVyreRNncxOTeg"'}
         assert expected == actual
 
-        actual = ipfsapi.multipart.multipart_content_type(
+        actual = ipfshttpclient.multipart.multipart_content_type(
             '8K5rNKlLQVyreRNncxOTeg', 'alt')
         expected = {'Content-Type':
                     'multipart/alt; boundary="8K5rNKlLQVyreRNncxOTeg"'}
@@ -95,7 +95,7 @@ class TestBodyGenerator(unittest.TestCase):
         expected_disposition = 'file; filename="test_name"'
         expected_type = 'multipart/mixed; boundary="\S*"'
         expected_boundary_pattern = '\S*'
-        generator = ipfsapi.multipart.BodyGenerator(name)
+        generator = ipfshttpclient.multipart.BodyGenerator(name)
         assert generator.headers['Content-Disposition'] == expected_disposition
         assert re.search(expected_type,             generator.headers['Content-Type'])
         assert re.search(expected_boundary_pattern, generator.boundary)
@@ -106,8 +106,8 @@ class TestBodyGenerator(unittest.TestCase):
         disptype = "test_disp"
         subtype = "test_subtype"
         boundary = "test_boundary"
-        generator = ipfsapi.multipart.BodyGenerator(name, disptype,
-                                                    subtype, boundary)
+        generator = ipfshttpclient.multipart.BodyGenerator(name, disptype,
+                                                           subtype, boundary)
         assert generator.headers == {
             'Content-Disposition': 'test_disp; filename="test_name"',
             'Content-Type':
@@ -123,8 +123,8 @@ class TestBodyGenerator(unittest.TestCase):
         disptype = "test_disp"
         subtype = "test_subtype"
         boundary = "test_boundary"
-        generator = ipfsapi.multipart.BodyGenerator(name, disptype,
-                                                    subtype, boundary)
+        generator = ipfshttpclient.multipart.BodyGenerator(name, disptype,
+                                                           subtype, boundary)
         headers = ""
         for chunk in generator.write_headers():
             if type(chunk) is not str:
@@ -139,8 +139,8 @@ class TestBodyGenerator(unittest.TestCase):
         disptype = "test_disp"
         subtype = "test_subtype"
         boundary = "test_boundary"
-        generator = ipfsapi.multipart.BodyGenerator(name, disptype,
-                                                    subtype, boundary)
+        generator = ipfshttpclient.multipart.BodyGenerator(name, disptype,
+                                                           subtype, boundary)
         headers = ""
         for chunk in generator.open():
             if type(chunk) is not str:
@@ -157,8 +157,8 @@ class TestBodyGenerator(unittest.TestCase):
         disptype = "test_disp"
         subtype = "test_subtype"
         boundary = "test_boundary"
-        generator = ipfsapi.multipart.BodyGenerator(name, disptype,
-                                                    subtype, boundary)
+        generator = ipfshttpclient.multipart.BodyGenerator(name, disptype,
+                                                           subtype, boundary)
         headers = ""
         for chunk in generator.file_open(name):
             if type(chunk) is not str:
@@ -173,8 +173,8 @@ class TestBodyGenerator(unittest.TestCase):
         disptype = "test_disp"
         subtype = "test_subtype"
         boundary = "test_boundary"
-        generator = ipfsapi.multipart.BodyGenerator(name, disptype,
-                                                    subtype, boundary)
+        generator = ipfshttpclient.multipart.BodyGenerator(name, disptype,
+                                                           subtype, boundary)
         headers = ""
         for chunk in generator.file_close():
             if type(chunk) is not str:
@@ -189,8 +189,8 @@ class TestBodyGenerator(unittest.TestCase):
         disptype = "test_disp"
         subtype = "test_subtype"
         boundary = "test_boundary"
-        generator = ipfsapi.multipart.BodyGenerator(name, disptype,
-                                                    subtype, boundary)
+        generator = ipfshttpclient.multipart.BodyGenerator(name, disptype,
+                                                           subtype, boundary)
         headers = ""
         for chunk in generator.close():
             if type(chunk) is not str:
@@ -222,7 +222,7 @@ class TestBufferedGenerator(unittest.TestCase):
     def test_init(self):
         """Test the __init__ function for default parameter values."""
         name = "test_name"
-        instance = ipfsapi.multipart.BufferedGenerator(name)
+        instance = ipfshttpclient.multipart.BufferedGenerator(name)
         assert instance.name == name
 
     def test_file_chunks(self):
@@ -236,7 +236,7 @@ class TestBufferedGenerator(unittest.TestCase):
         chunk_size = 2
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
                             "functional", "fake_dir", "fsdfgh")
-        instance = ipfsapi.multipart.BufferedGenerator(name, chunk_size)
+        instance = ipfshttpclient.multipart.BufferedGenerator(name, chunk_size)
         expected = 'dsadsad\n'
         output = ""
         open_file = open(path)
@@ -252,13 +252,13 @@ class TestBufferedGenerator(unittest.TestCase):
         """Test the gen_chunks function against example output."""
         name = "fsdfgh"
         chunk_size = 2
-        instance = ipfsapi.multipart.BufferedGenerator(name, chunk_size)
+        instance = ipfshttpclient.multipart.BufferedGenerator(name, chunk_size)
         for i in instance.gen_chunks(_generate_test_chunks(5, 5)):
             assert len(i) <= chunk_size
 
     def test_body(self):
         """Ensure that body throws a NotImplemented exception."""
-        instance = ipfsapi.multipart.BufferedGenerator("name")
+        instance = ipfshttpclient.multipart.BufferedGenerator("name")
         with pytest.raises(NotImplementedError):
             instance.body()
 
@@ -266,7 +266,7 @@ class TestBufferedGenerator(unittest.TestCase):
         """Test the close function against example output."""
         name = "fsdfgh"
         chunk_size = 2
-        instance = ipfsapi.multipart.BufferedGenerator(name, chunk_size)
+        instance = ipfshttpclient.multipart.BufferedGenerator(name, chunk_size)
         expected = '--\S+--\r\n'
         actual = ''
         for i in instance.close():
@@ -306,7 +306,7 @@ class TestFileStream(unittest.TestCase):
         relative_paths_list = [os.path.relpath(cur_path, os.getcwd())
                                for cur_path in filenames_list]
 
-        instance = ipfsapi.multipart.FileStream(relative_paths_list)
+        instance = ipfshttpclient.multipart.FileStream(relative_paths_list)
 
         expected = "(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
             + "\r\nContent-Type: application/\S+\r\n"\
@@ -335,7 +335,7 @@ class TestDirectoryStream(unittest.TestCase):
         # Get OS-agnostic path to test files
         path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
                             "functional", "fake_dir")
-        instance = ipfsapi.multipart.DirectoryStream(path)
+        instance = ipfshttpclient.multipart.DirectoryStream(path)
         expected = b"^(--\S+\r\nContent-Disposition: form-data; name=\"\S+\"; filename=\"\S+\""\
             + b"\r\nContent-Type: application/\S+\r\n\r\n(.|\n)*"\
             + b"\r\n)+--\S+--\r\n$"
@@ -362,7 +362,7 @@ class TestTextStream(unittest.TestCase):
         """Check the multipart HTTP body for the streamed directory."""
         # Get OS-agnostic path to test files
         text = "Here is some text for this test."
-        instance = ipfsapi.multipart.BytesStream(text)
+        instance = ipfshttpclient.multipart.BytesStream(text)
         expected = "(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
             + "\r\nContent-Type: application/\S+\r\n"\
             + "\r\n(.|\n)*\r\n)+--\S+--\r\n"
