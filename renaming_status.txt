@@ -6,10 +6,12 @@ External Changes to be made:
 
 
 THESE MAY REFER TO THE ACTUAL API
-ipfshttpclient/client.py          All occurrences
 ipfshttpclient/encoding.py        Ln 392
 ipfshttpclient/http.py            Ln 2,4,134
 ipfshttpclient/version.py         Ln 7
+
+THESE MAY REFER TO THE ACTUAL API
+ipfshttpclient/client.py          All occurrences
 test/run-tests.py                 Ln 68,102
 
 

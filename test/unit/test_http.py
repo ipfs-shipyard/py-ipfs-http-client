@@ -142,7 +142,7 @@ class TestHttp(unittest.TestCase):
         self.client = ipfshttpclient.http.HTTPClient(
             'localhost',
             5001,
-            'http_client/v0')
+            'api/v0')
 
     def test_successful_request(self):
         """Tests that a successful http request returns the proper message."""
@@ -221,7 +221,7 @@ class TestHttp(unittest.TestCase):
 
 
 def test_stream_close(mocker):
-    client = ipfshttpclient.http.HTTPClient("localhost", 5001, "http_client/v0")
+    client = ipfshttpclient.http.HTTPClient("localhost", 5001, "api/v0")
     mocker.patch("ipfshttpclient.http._notify_stream_iter_closed")
     with HTTMock(return_okay):
         with client.request("/okay", stream=True) as response_iter:
