@@ -177,13 +177,13 @@ class TestHttp(unittest.TestCase):
     def test_default_decoder(self):
         """Tests that the default encoding is set to json."""
         with HTTMock(http_client_okay):
-            res = self.client.request('/http_client_fail')
+            res = self.client.request('/http_client_okay')
             assert res == b'{"Message": "okay"}'
 
     def test_explicit_decoder(self):
         """Tests that an explicit decoder is handled correctly."""
         with HTTMock(http_client_okay):
-            res = self.client.request('/http_client_fail',
+            res = self.client.request('/http_client_okay',
                                       decoder='json')
             assert res['Message'] == 'okay'
 
