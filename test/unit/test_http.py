@@ -249,13 +249,9 @@ def test_stream_close(mocker):
         with client.request("/okay", stream=True) as response_iter:
             assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 0
         assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 1
-
         response_iter = client.request("/okay", stream=True)
         assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 1
         response_iter.close()
         assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 2
-
         client.request("/okay")
-
-
-assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 3
+        assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 3
