@@ -12,9 +12,9 @@ import warnings
 
 from . import http, multipart, utils, exceptions, encoding
 
-DEFAULT_HOST = str(os.environ.get("PY_IPFSAPI_DEFAULT_HOST", 'localhost'))
-DEFAULT_PORT = int(os.environ.get("PY_IPFSAPI_DEFAULT_PORT", 5001))
-DEFAULT_BASE = str(os.environ.get("PY_IPFSAPI_DEFAULT_BASE", 'api/v0'))
+DEFAULT_HOST = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_HOST", 'localhost'))
+DEFAULT_PORT = int(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_PORT", 5001))
+DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
 VERSION_MINIMUM = "0.4.3"
 VERSION_MAXIMUM = "0.5.0"
@@ -26,7 +26,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 
     Raises
     ------
-    ~ipfsapi.exceptions.VersionMismatch
+    ~ipfshttpclient.exceptions.VersionMismatch
 
     Parameters
     ----------
@@ -48,25 +48,25 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
             chunk_size=multipart.default_chunk_size, **defaults):
-    """Create a new :class:`~ipfsapi.Client` instance and connect to the
+    """Create a new :class:`~ipfshttpclient.Client` instance and connect to the
     daemon to validate that its version is supported.
 
     Raises
     ------
-    ~ipfsapi.exceptions.VersionMismatch
-    ~ipfsapi.exceptions.ErrorResponse
-    ~ipfsapi.exceptions.ConnectionError
-    ~ipfsapi.exceptions.ProtocolError
-    ~ipfsapi.exceptions.StatusError
-    ~ipfsapi.exceptions.TimeoutError
+    ~ipfshttpclient.exceptions.VersionMismatch
+    ~ipfshttpclient.exceptions.ErrorResponse
+    ~ipfshttpclient.exceptions.ConnectionError
+    ~ipfshttpclient.exceptions.ProtocolError
+    ~ipfshttpclient.exceptions.StatusError
+    ~ipfshttpclient.exceptions.TimeoutError
 
 
     All parameters are identical to those passed to the constructor of the
-    :class:`~ipfsapi.Client` class.
+    :class:`~ipfshttpclient.Client` class.
 
     Returns
     -------
-        ~ipfsapi.Client
+        ~ipfshttpclient.Client
     """
     # Create client instance
     client = Client(host, port, base, chunk_size, **defaults)
@@ -105,7 +105,7 @@ class SubChannel:
 class Client(object):
     """A TCP client for interacting with an IPFS daemon.
 
-    A :class:`~ipfsapi.Client` instance will not actually establish a
+    A :class:`~ipfshttpclient.Client` instance will not actually establish a
     connection to the daemon until at least one of it's methods is called.
 
     Parameters
@@ -209,7 +209,7 @@ class Client(object):
             >>> c.cat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
             Traceback (most recent call last):
               ...
-            ipfsapi.exceptions.Error: this dag node is a directory
+            ipfshttpclient.exceptions.Error: this dag node is a directory
             >>> c.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')
             b'<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</…'
 
@@ -361,7 +361,7 @@ class Client(object):
         -------
             dict : Information about the new block
 
-                   See :meth:`~ipfsapi.Client.block_stat`
+                   See :meth:`~ipfshttpclient.Client.block_stat`
         """
         body, headers = multipart.stream_files(file, self.chunk_size)
         return self._client.request('/block/put', decoder='json',
@@ -574,7 +574,7 @@ class Client(object):
         -------
             dict : Hash and links of the created DAG object
 
-                   See :meth:`~ipfsapi.Object.object_links`
+                   See :meth:`~ipfshttpclient.Object.object_links`
         """
         body, headers = multipart.stream_files(file, self.chunk_size)
         return self._client.request('/object/put', decoder='json',
@@ -1122,8 +1122,8 @@ class Client(object):
 
         Updates one pin to another, making sure that all objects in the new pin
         are local. Then removes the old pin. This is an optimized version of
-        using first using :meth:`~ipfsapi.Client.pin_add` to add a new pin
-        for an object and then using :meth:`~ipfsapi.Client.pin_rm` to remove
+        using first using :meth:`~ipfshttpclient.Client.pin_add` to add a new pin
+        for an object and then using :meth:`~ipfshttpclient.Client.pin_rm` to remove
         the pin for the old object.
 
         .. code-block:: python
@@ -1289,7 +1289,7 @@ class Client(object):
         return self._client.request('/id', args, decoder='json', **kwargs)
 
     def bootstrap(self, **kwargs):
-        """Compatiblity alias for :meth:`~ipfsapi.Client.bootstrap_list`."""
+        """Compatiblity alias for :meth:`~ipfshttpclient.Client.bootstrap_list`."""
         self.bootstrap_list(**kwargs)
 
     def bootstrap_list(self, **kwargs):
@@ -1650,7 +1650,7 @@ class Client(object):
         You may only use keytypes that are supported in your ``ipfs`` binary:
         ``go-ipfs`` currently only supports the ``/ipns/`` keytype. Unless you
         have a relatively deep understanding of the key's internal structure,
-        you likely want to be using the :meth:`~ipfsapi.Client.name_publish`
+        you likely want to be using the :meth:`~ipfshttpclient.Client.name_publish`
         instead.
 
         Value is arbitrary text.
@@ -2091,7 +2091,7 @@ class Client(object):
         """Stop the connected IPFS daemon instance.
 
         Sending any further requests after this will fail with
-        ``ipfsapi.exceptions.ConnectionError``, until you start another IPFS
+        ``ipfshttpclient.exceptions.ConnectionError``, until you start another IPFS
         daemon instance.
         """
         try:
@@ -2196,10 +2196,10 @@ class Client(object):
 
         .. deprecated:: 0.4.2
            The ``*_pyobj`` APIs allow for arbitrary code execution if abused.
-           Either switch to :meth:`~ipfsapi.Client.add_json` or use
+           Either switch to :meth:`~ipfshttpclient.Client.add_json` or use
            ``client.add_bytes(pickle.dumps(py_obj))`` instead.
 
-        Please see :meth:`~ipfsapi.Client.get_pyobj` for the
+        Please see :meth:`~ipfshttpclient.Client.get_pyobj` for the
         **security risks** of using these methods!
 
         .. code-block:: python
@@ -2225,7 +2225,7 @@ class Client(object):
 
         .. deprecated:: 0.4.2
            The ``*_pyobj`` APIs allow for arbitrary code execution if abused.
-           Either switch to :meth:`~ipfsapi.Client.get_json` or use
+           Either switch to :meth:`~ipfshttpclient.Client.get_json` or use
            ``pickle.loads(client.cat(multihash))`` instead.
 
         .. caution::

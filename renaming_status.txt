@@ -1,0 +1,83 @@
+PROPOSED GITHUB REPO RENAME:    py-ipfs-api -> py-ipfs-http-client
+PROPOSED PIP MODULE RENAME:     ipfshttpclient
+PROPOSED PROJECT RENAME:        Python IPFS API -> Python IPFS HTTP Client
+External Changes to be made:
+(See the section under "FOR README.md")
+
+
+THESE MAY REFER TO THE ACTUAL API
+ipfshttpclient/encoding.py        Ln 392
+ipfshttpclient/http.py            Ln 2,4,134
+ipfshttpclient/version.py         Ln 7
+
+THESE MAY REFER TO THE ACTUAL API
+ipfshttpclient/client.py          All occurrences
+test/run-tests.py                 Ln 68,102
+
+
+FOR README.md:
+* I have made changes in the original file itself
+* External changes to be done by the project maintainers (I have already made the changes in the file, on the respective lines):
+    https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square -> https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square   line 6
+    https://pypi.python.org/pypi/ipfsapi -> https://pypi.python.org/pypi/ipfshttpclient                                                 line 6
+    https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master -> https://travis-ci.org/ipfs/py-ipfs-http-client.svg?branch=master        line 7
+    https://travis-ci.org/ipfs/py-ipfs-api -> https://travis-ci.org/ipfs/py-ipfs-http-client                                            line 7
+    https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/ ->
+                    https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/                 line 11,118
+    The PIP package and Python module: ipfshttpclient
+    The Github repo: py-ipfs-api -> py-ipfs-http-client
+    PROJECT RENAME:        Python IPFS API -> Python IPFS HTTP Client
+* Changes:  All the above changes +
+            py-ipfs-api -> py-ipfs-http-client      (Github repo name)
+            ipfsapi -> ipfshttpclient               (pip module)
+            api -> http_client                      (code)
+            client -> http_client                   (code)
+            client API -> HTTP Client               (text)
+* Doubtful :    Line 14
+                Line 67
+                Line 25, 122-136
+
+
+FOR docs/conf.py:
+* I have made changes in the original file itself
+* Changes:  API -> HTTP Client
+            PythonIPFSAPI -> PythonIPFSHTTPClient
+            py-ipfs-api -> py-ipfs-http-client
+
+
+FOR pyproject.toml:
+* I have made changes in the original file itself
+* Changes:  module = "ipfsapi" -> module = "ipfshttpclient"             Line 6
+            py-ipfs-api -> py-ipfs-http-client
+            https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/ ->
+                    https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/
+* Doubtful: Line 3
+
+
+RENAMING
+PY_IPFSAPI -> PY_IPFS_HTTP_CLIENT
+ipfsapi -> ipfshttpclient
+IpfsApiTest -> IpfsHttpClientTest
+api -> http_client
+IpfsApiLogTest -> IpfsHttpClientLogTest
+IpfsApiPinTest -> IpfsHttpClientPinTest
+IpfsApiMFSTest -> IpfsHttpClientMFSTest
+IpfsApiRepoTest -> IpfsHttpClientRepoTest
+IpfsApiKeyTest -> IpfsHttpClientKeyTest
+IpfsApiObjectTest -> IpfsHttpClientObjectTest
+IpfsApiBitswapTest -> IpfsHttpClientBitswapTest
+IpfsApiPubSubTest -> IpfsHttpClientPubSubTest
+IpfsApiShutdownTest -> IpfsHttpClientShutdownTest
+Client API -> HTTP Client
+API Client -> HTTP Client
+API -> HTTP Client
+PythonIPFSAPI -> PythonIPFSHTTPClient
+apiokay -> http_client_okay
+apifail -> http_client_fail
+api_cat -> http_client_cat
+test_api_failure -> test_http_client_failure
+api/v0 -> http_client/v0
+ipfsApiError -> ipfsHTTPClientError
+py-ipfs-api -> py-ipfs-http-client
+client -> http_client
+Python IPFS API -> Python IPFS HTTP Client

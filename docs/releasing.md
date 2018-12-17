@@ -48,8 +48,8 @@ You can download it at:
 
 ## Update the source code
 
- 1. Make a GIT commit incrementing the version number in `ipfsapi/version.py`:  
-    `git commit -m "Release version 0.4.X" ipfsapi/version.py`)
+ 1. Make a GIT commit incrementing the version number in `ipfshttpclient/version.py`:  
+    `git commit -m "Release version 0.4.X" ipfshttpclient/version.py`)
  2. Tag the GIT commit with the version number using an annotated and signed tag:  
     `git tag --sign -m "Release version 0.4.X" 0.4.X`
  3. Push the new version
@@ -64,4 +64,4 @@ Run: `make -C docs/ html`
 
 ## Publish the documentation
 
-Make sure an IPFS daemon is running and run: `ipfs-file-publish /Software/Python/ipfsapi/ docs/build/html/`
+Make sure an IPFS daemon is running and run: `ipfs-file-publish /Software/Python/ipfshttpclient/ docs/build/html/`

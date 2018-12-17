@@ -31,7 +31,7 @@ class Encoding(object):
 
         Raises
         ------
-        ~ipfsapi.exceptions.DecodingError
+        ~ipfshttpclient.exceptions.DecodingError
 
         Parameters
         ----------
@@ -49,7 +49,7 @@ class Encoding(object):
 
         Raises
         ------
-           ~ipfsapi.exceptions.DecodingError
+           ~ipfshttpclient.exceptions.DecodingError
 
         Returns
         -------
@@ -62,7 +62,7 @@ class Encoding(object):
 
         Raises
         ------
-        ~ipfsapi.exceptions.DecodingError
+        ~ipfshttpclient.exceptions.DecodingError
 
         Parameters
         ----------
@@ -83,7 +83,7 @@ class Encoding(object):
 
         Raises
         ------
-        ~ipfsapi.exceptions.EncodingError
+        ~ipfshttpclient.exceptions.EncodingError
 
         Parameters
         ----------
@@ -143,7 +143,7 @@ class Json(Encoding):
 
         Raises
         ------
-        ~ipfsapi.exceptions.DecodingError
+        ~ipfshttpclient.exceptions.DecodingError
 
         Returns
         -------
@@ -235,7 +235,7 @@ class Json(Encoding):
 
         Raises
         ------
-        ~ipfsapi.exceptions.DecodingError
+        ~ipfshttpclient.exceptions.DecodingError
 
         Returns
         -------
@@ -265,7 +265,7 @@ class Json(Encoding):
 
         Raises
         ------
-        ~ipfsapi.exceptions.EncodingError
+        ~ipfshttpclient.exceptions.EncodingError
 
         Parameters
         ----------
@@ -321,7 +321,7 @@ class Pickle(Encoding):
 
         Raises
         ------
-           ~ipfsapi.exceptions.DecodingError
+           ~ipfshttpclient.exceptions.DecodingError
 
         Returns
         -------
@@ -344,7 +344,7 @@ class Pickle(Encoding):
 
         Raises
         ------
-        ~ipfsapi.exceptions.DecodingError
+        ~ipfshttpclient.exceptions.DecodingError
 
         Parameters
         ----------
@@ -362,7 +362,7 @@ class Pickle(Encoding):
 
         Raises
         ------
-        ~ipfsapi.exceptions.EncodingError
+        ~ipfshttpclient.exceptions.EncodingError
 
         Parameters
         ----------
@@ -405,7 +405,7 @@ def get_encoding(name):
 
     Raises
     ------
-    ~ipfsapi.exceptions.EncoderMissingError
+    ~ipfshttpclient.exceptions.EncoderMissingError
 
     Parameters
     ----------

@@ -3,11 +3,11 @@ requires = ["flit"]
 build-backend = "flit.buildapi"
 
 [tool.flit.metadata]
-module = "ipfsapi"
+module = "ipfshttpclient"
 
-author       = "py-ipfs-api team"
+author       = "py-ipfs-http-client team"
 author-email = ""
-home-page    = "https://github.com/ipfs/py-ipfs-api"
+home-page    = "https://github.com/ipfs/py-ipfs-http-client"
 keywords     = "ipfs storage distribution development"
 license      = "MIT License"
 description-file = "README.md"
@@ -21,20 +21,20 @@ requires = [
 
 classifiers = [
 	"Development Status :: 3 - Alpha",
-	
+
 	# Indicate who your project is intended for
 	"Intended Audience :: Developers",
 	"Intended Audience :: Information Technology",
 	"Intended Audience :: Science/Research",
-	
+
 	"Topic :: Internet",
 	"Topic :: Scientific/Engineering",
 	"Topic :: System :: Filesystems",
 	"Topic :: System :: Networking",
-	
+
 	# Pick your license as you wish (should match "license" above)
 	"License :: OSI Approved :: MIT License",
-	
+
 	# Specify the Python versions you support here. In particular, ensure
 	# that you indicate whether you support Python 2, Python 3 or both.
 	"Programming Language :: Python :: 2",
@@ -46,5 +46,5 @@ classifiers = [
 ]
 
 [tool.flit.metadata.urls]
-Documentation = "https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/"
+Documentation = "https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/"
 

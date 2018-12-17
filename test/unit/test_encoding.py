@@ -12,8 +12,8 @@ import pytest
 import six
 from httmock import urlmatch, HTTMock
 
-import ipfsapi.encoding
-import ipfsapi.exceptions
+import ipfshttpclient.encoding
+import ipfshttpclient.exceptions
 
 
 class TestEncoding(unittest.TestCase):
@@ -31,8 +31,8 @@ class TestEncoding(unittest.TestCase):
     """
     def setUp(self):
         """create a Json encoder"""
-        self.encoder_json = ipfsapi.encoding.Json()
-        self.encoder_pickle = ipfsapi.encoding.Pickle()
+        self.encoder_json = ipfshttpclient.encoding.Json()
+        self.encoder_pickle = ipfshttpclient.encoding.Pickle()
 
     def test_json_parse(self):
         """Asserts parsed key/value json matches expected output."""
@@ -59,7 +59,7 @@ class TestEncoding(unittest.TestCase):
         assert list(self.encoder_json.parse_finalize()) == []
         
         # String containing broken UTF-8
-        with pytest.raises(ipfsapi.exceptions.DecodingError):
+        with pytest.raises(ipfshttpclient.exceptions.DecodingError):
             list(self.encoder_json.parse_partial(b'{"hello": "\xc3ber world!"}'))
         assert list(self.encoder_json.parse_finalize()) == []
     
@@ -77,11 +77,11 @@ class TestEncoding(unittest.TestCase):
     def test_json_parse_incomplete(self):
         """Tests if feeding the JSON parse incomplete data correctly produces an error."""
         list(self.encoder_json.parse_partial(b'{"bla":'))
-        with pytest.raises(ipfsapi.exceptions.DecodingError):
+        with pytest.raises(ipfshttpclient.exceptions.DecodingError):
             self.encoder_json.parse_finalize()
 
         list(self.encoder_json.parse_partial(b'{"\xc3')) # Incomplete UTF-8 sequence
-        with pytest.raises(ipfsapi.exceptions.DecodingError):
+        with pytest.raises(ipfshttpclient.exceptions.DecodingError):
             self.encoder_json.parse_finalize()
 
     def test_json_parse_chained(self):
@@ -129,10 +129,10 @@ class TestEncoding(unittest.TestCase):
 
     def test_get_encoder_by_name(self):
         """Tests the process of obtaining an Encoder object given the named encoding."""
-        encoder = ipfsapi.encoding.get_encoding('json')
+        encoder = ipfshttpclient.encoding.get_encoding('json')
         assert encoder.name == 'json'
 
     def test_get_invalid_encoder(self):
         """Tests the exception handling given an invalid named encoding."""
-        with pytest.raises(ipfsapi.exceptions.EncoderMissingError):
-            ipfsapi.encoding.get_encoding('fake')
+        with pytest.raises(ipfshttpclient.exceptions.EncoderMissingError):
+            ipfshttpclient.encoding.get_encoding('fake')
