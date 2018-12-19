@@ -9,12 +9,14 @@ matrix:
     env: TOXENV=py35
   - python: "3.6"
     env: TOXENV=py36
-  - python: "3.6"
+  - python: "3.7"
+    env: TOXENV=py37
+  - python: "3.7"
     env: TOXENV=codestyle
     before_install: true
 
 before_install:
-  - wget "https://dist.ipfs.io/go-ipfs/v0.4.14/go-ipfs_v0.4.14_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
+  - wget "https://dist.ipfs.io/go-ipfs/v0.4.18/go-ipfs_v0.4.18_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
   - mkdir -p $HOME/bin
   - pushd . && cd $HOME/bin && tar -xzvf /tmp/ipfs.tar.gz && popd
   - export PATH="$HOME/bin/go-ipfs:$PATH"
