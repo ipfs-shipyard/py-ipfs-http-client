@@ -55,7 +55,7 @@ def return_fail(url, request):
     }
 
 
-@urlmatch(netloc='localhost:5001', path=r'.*/fail')
+@urlmatch(netloc='localhost:5001', path=r'.*/timeout')
 def return_timeout_2_sec(url, request):
     """Defines an endpoint for timed-out http requests.
     This endpoint will listen at http://localhost:5001/*/timeout for incoming
@@ -70,7 +70,7 @@ def return_timeout_2_sec(url, request):
     time.sleep(2)
     return {
         'status_code': 500,
-        'content': 'fail'.encode('utf-8'),
+        'content': 'timeout'.encode('utf-8'),
     }
 
 
