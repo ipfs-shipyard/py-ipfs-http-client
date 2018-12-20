@@ -72,6 +72,8 @@ subprocess.call(["ipfs", "config", "Addresses.API",     "/ip4/{}/tcp/{}".format(
 # Start daemon #
 ################
 
+import ipfshttpclient  # noqa
+
 # Spawn IPFS daemon in data directory
 DAEMON = subprocess.Popen(["ipfs", "daemon", "--enable-pubsub-experiment"])
 os.environ["PY_IPFS_HTTP_CLIENT_TEST_DAEMON_PID"] = str(DAEMON.pid)
@@ -83,7 +85,6 @@ if os.name == "posix":
 	signal.signal(signal.SIGCHLD, lambda *a: DAEMON.poll())
 
 # Wait for daemon to start up
-import ipfshttpclient
 while True:
 	try:
 		ipfshttpclient.connect(HOST, PORT)
