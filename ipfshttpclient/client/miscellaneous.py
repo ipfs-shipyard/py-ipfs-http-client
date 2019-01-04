@@ -38,7 +38,7 @@ class Base(base.ClientBase):
 		-------
 			dict : Resource were a DNS entry points to
 		"""
-		kwargs.setdefault("opts", {"recursive": recursive})
+		kwargs.setdefault("opts", {})["recursive"] = recursive
 
 		args = (domain_name,)
 		return self._client.request('/dns', args, decoder='json', **kwargs)
@@ -112,7 +112,7 @@ class Base(base.ClientBase):
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "count" in kwargs:
-			kwargs.setdefault("opts", {"count": kwargs["count"]})
+			kwargs.setdefault("opts", {})["count"] = kwargs["count"]
 			del kwargs["count"]
 		
 		args = (peer,) + peers
@@ -145,7 +145,7 @@ class Base(base.ClientBase):
 		-------
 			dict : IPFS path of resource
 		"""
-		kwargs.setdefault("opts", {"recursive": recursive})
+		kwargs.setdefault("opts", {})["recursive"] = recursive
 		
 		args = (name,)
 		return self._client.request('/resolve', args, decoder='json', **kwargs)

@@ -88,7 +88,7 @@ class Section(base.SectionBase):
 			Create parent directories as needed and do not raise an exception
 			if the requested directory already exists
 		"""
-		kwargs.setdefault("opts", {"parents": parents})
+		kwargs.setdefault("opts", {})["parents"] = parents
 
 		args = (path,)
 		return self._client.request('/files/mkdir', args, **kwargs)
@@ -137,7 +137,7 @@ class Section(base.SectionBase):
 		opts = {"offset": offset}
 		if count is not None:
 			opts["count"] = count
-		kwargs.setdefault("opts", opts)
+		kwargs.setdefault("opts", {}).update(opts)
 
 		args = (path,)
 		return self._client.request('/files/read', args, **kwargs)
@@ -158,7 +158,7 @@ class Section(base.SectionBase):
 		recursive : bool
 			Recursively remove directories?
 		"""
-		kwargs.setdefault("opts", {"recursive": recursive})
+		kwargs.setdefault("opts", {})["recursive"] = recursive
 
 		args = (path,)
 		return self._client.request('/files/rm', args, **kwargs)
@@ -213,7 +213,7 @@ class Section(base.SectionBase):
 		opts = {"offset": offset, "create": create, "truncate": truncate}
 		if count is not None:
 			opts["count"] = count
-		kwargs.setdefault("opts", opts)
+		kwargs.setdefault("opts", {}).update(opts)
 
 		args = (path,)
 		body, headers = multipart.stream_files(file, self.chunk_size)
@@ -272,7 +272,7 @@ class Base(base.ClientBase):
 		}
 		if "chunker" in kwargs:
 			opts["chunker"] = kwargs.pop("chunker")
-		kwargs.setdefault("opts", opts)
+		kwargs.setdefault("opts", {}).update(opts)
 
 		body, headers = multipart.stream_filesystem_node(
 			files, recursive, pattern, self.chunk_size

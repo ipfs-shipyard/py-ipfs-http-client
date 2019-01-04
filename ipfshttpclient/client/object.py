@@ -36,7 +36,7 @@ class PatchSection(base.SectionBase):
 		-------
 			dict : Hash of new object
 		"""
-		kwargs.setdefault("opts", {"create": create})
+		kwargs.setdefault("opts", {})["create"] = create
 
 		args = ((root, name, ref),)
 		return self._client.request('/object/patch/add-link', args, decoder='json', **kwargs)

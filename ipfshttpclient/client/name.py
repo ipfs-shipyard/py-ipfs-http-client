@@ -50,7 +50,7 @@ class Section(base.SectionBase):
 			opts["ttl"] = ttl
 		if key:
 			opts["key"] = key
-		kwargs.setdefault("opts", opts)
+		kwargs.setdefault("opts", {}).update(opts)
 
 		args = (ipfs_path,)
 		return self._client.request('/name/publish', args, decoder='json', **kwargs)
@@ -81,6 +81,7 @@ class Section(base.SectionBase):
 		-------
 			dict : The IPFS path the IPNS hash points at
 		"""
-		kwargs.setdefault("opts", {"recursive": recursive, "nocache": nocache})
+		opts = {"recursive": recursive, "nocache": nocache}
+		kwargs.setdefault("opts", {}).update(opts)
 		args = (name,) if name is not None else ()
 		return self._client.request('/name/resolve', args, decoder='json', **kwargs)
