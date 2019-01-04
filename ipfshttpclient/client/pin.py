@@ -28,7 +28,7 @@ class Section(base.SectionBase):
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "recursive" in kwargs:
-			kwargs.setdefault("opts", {"recursive": kwargs.pop("recursive")})
+			kwargs.setdefault("opts", {})["recursive"] = kwargs.pop("recursive")
 
 		args = (path,) + paths
 		return self._client.request('/pin/add', args, decoder='json', **kwargs)
@@ -65,7 +65,7 @@ class Section(base.SectionBase):
 		-------
 			dict : Hashes of pinned IPFS objects and why they are pinned
 		"""
-		kwargs.setdefault("opts", {"type": type})
+		kwargs.setdefault("opts", {})["type"] = type
 
 		return self._client.request('/pin/ls', decoder='json', **kwargs)
 
@@ -94,8 +94,7 @@ class Section(base.SectionBase):
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "recursive" in kwargs:
-			kwargs.setdefault("opts", {"recursive": kwargs["recursive"]})
-			del kwargs["recursive"]
+			kwargs.setdefault("opts", {})["recursive"] = kwargs.pop("recursive")
 
 		args = (path,) + paths
 		return self._client.request('/pin/rm', args, decoder='json', **kwargs)
@@ -132,8 +131,7 @@ class Section(base.SectionBase):
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "unpin" in kwargs:
-			kwargs.setdefault("opts", {"unpin": kwargs["unpin"]})
-			del kwargs["unpin"]
+			kwargs.setdefault("opts", {})["unpin"] = kwargs.pop("unpin")
 
 		args = (from_path, to_path)
 		return self._client.request('/pin/update', args, decoder='json', **kwargs)
@@ -175,8 +173,7 @@ class Section(base.SectionBase):
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "verbose" in kwargs:
-			kwargs.setdefault("opts", {"verbose": kwargs["verbose"]})
-			del kwargs["verbose"]
+			kwargs.setdefault("opts", {})["verbose"] = kwargs.pop("verbose")
 
 		args = (path,) + paths
 		return self._client.request('/pin/verify', args, decoder='json', stream=True, **kwargs)

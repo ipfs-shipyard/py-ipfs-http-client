@@ -36,7 +36,7 @@ class Section(base.SectionBase):
 		"""
 
 		opts = {"type": type, "size": size}
-		kwargs.setdefault("opts", opts)
+		kwargs.setdefault("opts", {}).update(opts)
 		args = (key_name,)
 
 		return self._client.request('/key/gen', args, decoder='json', **kwargs)
