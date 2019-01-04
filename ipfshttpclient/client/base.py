@@ -8,14 +8,19 @@ from .. import multipart, http
 
 class SectionProperty(object):
 	def __init__(self, cls):
-		self.cls      = cls
-		self.instance = None
+		self.cls = cls
 
 	def __get__(self, client_object, type=None):
-		if not self.instance:
-			self.instance = self.cls(client_object)
-
-		return self.instance
+		try:
+			return client_object.__prop_objs__[self]
+		except AttributeError:
+			client_object.__prop_objs__ = {
+				self: self.cls(client_object)
+			}
+			return client_object.__prop_objs__[self]
+		except KeyError:
+			client_object.__prop_objs__[self] = self.cls(client_object)
+			return client_object.__prop_objs__[self]
 
 
 class SectionBase(object):
