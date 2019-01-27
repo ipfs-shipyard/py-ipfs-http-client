@@ -380,13 +380,13 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 		for pattern in patterns:
 			self.patterns.append(glob_compile(pattern) if isinstance(pattern, str) else pattern)
 
-		self.directory = directory
+		self.directory = utils.convert_path(directory)
 		if not isinstance(self.directory, int):
-			self.directory = os.path.normpath(directory)
+			self.directory = os.path.normpath(self.directory)
 		self.recursive = recursive
 		self.dirname   = dirname
 
-		name = os.path.basename(directory) if not isinstance(directory, int) else ""
+		name = os.path.basename(self.directory) if not isinstance(self.directory, int) else ""
 		super(DirectoryStream, self).__init__(name, chunk_size=chunk_size)
 
 	def _body_directory(self, short_path, visited_directories):
