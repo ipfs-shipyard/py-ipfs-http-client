@@ -58,16 +58,3 @@ class Section(base.SectionBase):
 			dict : Statistics, peers and wanted blocks
 		"""
 		return self._client.request('/bitswap/stat', decoder='json', **kwargs)
-	
-	
-	def unwant(self, key, **kwargs):
-		"""
-		Remove a given block from wantlist.
-		
-		Parameters
-		----------
-		key : str
-			Key to remove from wantlist.
-		"""
-		args = (key,)
-		return self._client.request('/bitswap/unwant', args, **kwargs)
