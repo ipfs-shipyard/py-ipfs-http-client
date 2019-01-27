@@ -76,7 +76,7 @@ def clean_file(file):
 
     Parameters
     ----------
-    file : str | bytes | os.PathLike | io.IOBase | int
+    file : Union[str, bytes, os.PathLike, io.IOBase, int]
         A filepath or ``file``-like object that may or may not need to be
         opened
     """
@@ -101,7 +101,7 @@ def clean_files(files):
 
     Parameters
     ----------
-    files : str | bytes | os.PathLike | io.IOBase | int | collections.abc.Iterable
+    files : Union[str, bytes, os.PathLike, io.IOBase, int, collections.abc.Iterable]
         Collection or single instance of a filepath and file-like object
     """
     if not isinstance(files, path_types) and not hasattr(files, "read"):

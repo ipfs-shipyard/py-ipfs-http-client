@@ -267,7 +267,7 @@ class Json(Encoding):
 
         Parameters
         ----------
-        obj : str | list | dict | int
+        obj : Union[str, list, dict, int]
             JSON serializable Python object
 
         Returns

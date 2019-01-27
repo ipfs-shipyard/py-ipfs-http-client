@@ -270,7 +270,7 @@ class FilesStream(StreamBase, StreamFileMixin):
 
 	Parameters
 	----------
-	files : str | bytes | os.PathLike | io.IOBase | int | collections.abc.Iterable
+	files : Union[str, bytes, os.PathLike, io.IOBase, int, collections.abc.Iterable]
 		The name, file object or file descriptor of the file to encode; may also
 		be a list of several items to allow for more efficient batch processing
 	chunk_size : int
@@ -359,14 +359,14 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 
 	Parameters
 	----------
-	directory : str | os.PathLike | int
+	directory : Union[str, os.PathLike, int]
 		The filepath or file descriptor of the directory to encode
 
 		File descriptors are only supported on Unix and Python 3.
-	dirname : str | None
+	dirname : Union[str, None]
 		The name of the base directroy to upload, use ``None`` for
-		the default of ``os.path.basename(directory) || '.'``
-	patterns : str | re.compile | collections.abc.Iterable
+		the default of ``os.path.basename(directory) or '.'``
+	patterns : Union[str, re.compile, collections.abc.Iterable]
 		A single glob pattern or a list of several glob patterns and
 		compiled regular expressions used to determine which filepaths to match
 	chunk_size : int
@@ -578,7 +578,7 @@ def stream_files(files, chunk_size=default_chunk_size):
 
 	Parameters
 	----------
-	files : str | bytes | os.PathLike | io.IOBase | int | collections.abc.Iterable
+	files : Union[str, bytes, os.PathLike, io.IOBase, int, collections.abc.Iterable]
 		The file(s) to stream
 	chunk_size : int
 		Maximum size of each stream chunk
@@ -595,11 +595,11 @@ def stream_directory(directory, recursive=False, patterns='**', chunk_size=defau
 
 	Parameters
 	----------
-	directory : str | bytes | os.PathLike | int
+	directory : Union[str, bytes, os.PathLike, int]
 		The filepath of the directory to stream
 	recursive : bool
 		Stream all content within the directory recursively?
-	patterns : str | re.compile | collections.abc.Iterable
+	patterns : Union[str, re.compile, collections.abc.Iterable]
 		Single *glob* pattern or list of *glob* patterns and compiled
 		regular expressions to match the names of the filepaths to keep
 	chunk_size : int
@@ -642,11 +642,11 @@ def stream_filesystem_node(filepaths,
 
 	Parameters
 	----------
-	filepaths : str | bytes | os.PathLike | int | io.IOBase | collections.abc.Iterable
+	filepaths : Union[str, bytes, os.PathLike, int, io.IOBase, collections.abc.Iterable]
 		The filepath of a single directory or one or more files to stream
 	recursive : bool
 		Stream all content within the directory recursively?
-	patterns : str | re.compile | collections.abc.Iterable
+	patterns : Union[str, re.compile, collections.abc.Iterable]
 		Single *glob* pattern or list of *glob* patterns and compiled
 		regular expressions to match the paths of files and directories
 		to be added to IPFS (directories only)

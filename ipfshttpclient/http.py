@@ -221,7 +221,7 @@ class HTTPClient(object):
             The REST command path to send
         args : list
             Positional parameters to be sent along with the HTTP request
-        files : :class:`io.RawIOBase` | :obj:`str` | :obj:`list`
+        files : Union[str, io.RawIOBase, collections.abc.Iterable]
             The file object(s) or path(s) to stream to the daemon
         opts : dict
             Query string paramters to be sent along with the HTTP request
