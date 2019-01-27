@@ -621,9 +621,10 @@ def stream_directory(directory, recursive=False, patterns='**', chunk_size=defau
 			finally:
 				os.close(fd)
 
-		dirname = os.path.basename(os.path.normpath(directory))
+		directory_str = utils.convert_path(directory)
+		dirname = os.path.basename(os.path.normpath(directory_str))
 
-		fd = os.open(directory, os.O_CLOEXEC | os.O_DIRECTORY)
+		fd = os.open(directory_str, os.O_CLOEXEC | os.O_DIRECTORY)
 		body, headers = stream_directory_impl(fd, dirname)
 		return auto_close_iter_fd(fd, body), headers
 	else:
@@ -654,7 +655,7 @@ def stream_filesystem_node(filepaths,
 	"""
 	is_dir = False
 	if isinstance(filepaths, utils.path_types):
-		is_dir = os.path.isdir(filepaths)
+		is_dir = os.path.isdir(utils.convert_path(filepaths))
 	elif isinstance(filepaths, int):
 		import stat
 		is_dir = stat.S_ISDIR(os.fstat(filepaths).st_mode)

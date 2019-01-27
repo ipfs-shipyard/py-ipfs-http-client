@@ -240,7 +240,7 @@ def test_mfs_file_write_stat_read_delete(client):
 		assert sorted(desc["Stat"].items()) == sorted(stat.items())
 
 		# Read back (and compare file contents)
-		with open(desc["Name"], "rb") as file:
+		with open(str(desc["Name"]), "rb") as file:
 			content = client.files.read(filepath)
 			assert content == file.read()
 
