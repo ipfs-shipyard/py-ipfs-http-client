@@ -22,10 +22,3 @@ def test_add_json(client, cleanup_pins):
 	# have to test the string added to IPFS, deserializing JSON will not
 	# test order of keys
 	assert '{"Action":"Open","Name":"IPFS","Pubkey":7,"Type":"PR"}' == client.cat(res).decode("utf-8")
-
-
-def test_add_get_pyobject(client, cleanup_pins):
-	data = [-1, 3.14, u"Hän€", b"23"]
-	res = client.add_pyobj(data)
-
-	assert data == client.get_pyobj(res)
