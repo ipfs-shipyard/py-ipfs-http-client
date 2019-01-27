@@ -6,7 +6,6 @@ TestEncoding - A class that tests constructs located in the encoding.py module.
 
 import unittest
 import json
-import pickle
 
 import pytest
 import six
@@ -32,7 +31,6 @@ class TestEncoding(unittest.TestCase):
     def setUp(self):
         """create a Json encoder"""
         self.encoder_json = ipfshttpclient.encoding.Json()
-        self.encoder_pickle = ipfshttpclient.encoding.Pickle()
 
     def test_json_parse(self):
         """Asserts parsed key/value json matches expected output."""
@@ -108,24 +106,6 @@ class TestEncoding(unittest.TestCase):
         """Tests serilization of json formatted string into an object."""
         data = {'key': 'value'}
         assert self.encoder_json.encode(data) == b'{"key":"value"}'
-
-    def test_encode_pickle(self):
-        """Tests serilization of pickle formatted string into an object."""
-        # In Python 2, data appears to be encoded differently based on the
-        # context from which pickle.dumps() is called. For this reason we are
-        # encoding and then decoding data to ensure that the decoded values are
-        # equivalent after the original data has been serialized.
-        data = {'key': 'value'}
-        encoder_res = pickle.loads(self.encoder_pickle.encode(data))
-        pickle_res = pickle.loads(pickle.dumps(data))
-        assert encoder_res == pickle_res
-
-    def test_parse_pickle(self):
-        """Tests if pickled Python object matches expected output."""
-        data = {'key': 'value'}
-        raw = pickle.dumps(data)
-        res = self.encoder_pickle.parse(raw)
-        assert res['key'] == 'value'
 
     def test_get_encoder_by_name(self):
         """Tests the process of obtaining an Encoder object given the named encoding."""

@@ -10,9 +10,7 @@ from __future__ import absolute_import
 
 import abc
 import codecs
-import io
 import json
-import pickle
 
 import six
 
@@ -287,98 +285,6 @@ class Json(Encoding):
             raise exceptions.EncodingError('json', error)
 
 
-class Pickle(Encoding):
-    """Python object parser/encoder using `pickle`.
-    """
-    name = 'pickle'
-
-    def __init__(self):
-        self._buffer = io.BytesIO()
-
-    def parse_partial(self, raw):
-        """Buffers the given data so that the it can be passed to `pickle` in
-        one go.
-
-        This does not actually process the data in smaller chunks, but merely
-        buffers it until `parse_finalize` is called! This is mostly because
-        the standard-library module expects the entire data to be available up
-        front, which is currently always the case for our code anyways.
-
-        Parameters
-        ----------
-        raw : bytes
-            Data to be buffered
-
-        Returns
-        -------
-            tuple : An empty tuple
-        """
-        self._buffer.write(raw)
-        return ()
-
-    def parse_finalize(self):
-        """Parses the buffered data and yields the result.
-
-        Raises
-        ------
-           ~ipfshttpclient.exceptions.DecodingError
-
-        Returns
-        -------
-            generator
-        """
-        try:
-            self._buffer.seek(0, 0)
-            yield pickle.load(self._buffer)
-        except pickle.UnpicklingError as error:
-            raise exceptions.DecodingError('pickle', error)
-
-    def parse(self, raw):
-        r"""Returns a Python object decoded from a pickle byte stream.
-
-        .. code-block:: python
-
-            >>> p = Pickle()
-            >>> p.parse(b'(lp0\nI1\naI2\naI3\naI01\naF4.5\naNaF6000.0\na.')
-            [1, 2, 3, True, 4.5, None, 6000.0]
-
-        Raises
-        ------
-        ~ipfshttpclient.exceptions.DecodingError
-
-        Parameters
-        ----------
-        raw : bytes
-            Pickle data bytes
-
-        Returns
-        -------
-            object
-        """
-        return Encoding.parse(self, raw)
-
-    def encode(self, obj):
-        """Returns ``obj`` serialized as a pickle binary string.
-
-        Raises
-        ------
-        ~ipfshttpclient.exceptions.EncodingError
-
-        Parameters
-        ----------
-        obj : object
-            Serializable Python object
-
-        Returns
-        -------
-            bytes
-        """
-        try:
-            return pickle.dumps(obj)
-        except pickle.PicklingError as error:
-            raise exceptions.EncodingError('pickle', error)
-
-
 class Protobuf(Encoding):
     """Protobuf parser/encoder that handles protobuf."""
     name = 'protobuf'
@@ -393,7 +299,6 @@ class Xml(Encoding):
 __encodings = {
     Dummy.name: Dummy,
     Json.name: Json,
-    Pickle.name: Pickle,
     Protobuf.name: Protobuf,
     Xml.name: Xml
 }
@@ -414,7 +319,6 @@ def get_encoding(name):
 
          * ``"none"``
          * ``"json"``
-         * ``"pickle"``
          * ``"protobuf"``
          * ``"xml"``
     """
