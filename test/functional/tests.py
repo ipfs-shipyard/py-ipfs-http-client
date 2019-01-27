@@ -833,15 +833,6 @@ class IpfsApiBitswapTest(unittest.TestCase):
         result = self.api.bitswap_stat()
         self.assertTrue(result and type(result) is dict and 'Wantlist' in result)
 
-    def test_bitswap_unwant(self):
-        """
-        Cannot ensure what is present in the wantlist prior to execution, so just ensure
-        something comes back.
-        """
-
-        result = self.api.bitswap_unwant(key='QmZTR5bcpQD7cFgTorqxZDYaew1Wqgfbd2ud9QqGPAkK2V')
-        self.assertTrue(result is not None)
-
 @skipIfOffline()
 class IpfsApiPubSubTest(unittest.TestCase):
 
