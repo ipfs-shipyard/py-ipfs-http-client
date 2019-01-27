@@ -39,7 +39,7 @@ class Section(base.SectionBase):
 		source : str
 			Filepath within the MFS to copy from
 		dest : str
-			Destination filepath with the MFS to which the file will be
+			Destination filepath within the MFS to which the file will be
 			copied to
 		"""
 		args = (source, dest)
@@ -132,7 +132,7 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			str : MFS file contents
+			bytes : MFS file contents
 		"""
 		opts = {"offset": offset}
 		if count is not None:
@@ -149,7 +149,6 @@ class Section(base.SectionBase):
 		.. code-block:: python
 
 			>>> client.files.rm("/bla/file")
-			b''
 
 		Parameters
 		----------
@@ -199,7 +198,7 @@ class Section(base.SectionBase):
 		----------
 		path : str
 			Filepath within the MFS
-		file : io.RawIOBase
+		file : Union[str, bytes, os.PathLike, io.RawIOBase, int]
 			IO stream object with data that should be written
 		offset : int
 			Byte offset at which to begin writing at
@@ -237,11 +236,11 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		files : str
+		files : Union[str, bytes, os.PathLike, int, io.IOBase, collections.abc.Iterable]
 			A filepath to either a file or directory
 		recursive : bool
-			Controls if files in subdirectories are added or not
-		pattern : str | list
+			Controls whether files in subdirectories are added or not
+		pattern : Union[str, list]
 			Single `*glob* <https://docs.python.org/3/library/glob.html>`_
 			pattern or list of *glob* patterns and compiled regular expressions
 			to match the names of the filepaths to keep
@@ -366,7 +365,7 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			str : File contents
+			bytes : File contents
 		"""
 		args = (multihash,)
 		opts = {}

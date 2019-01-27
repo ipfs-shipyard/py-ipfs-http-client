@@ -57,7 +57,7 @@ class PatchSection(base.SectionBase):
 		----------
 		multihash : str
 			The hash of an ipfs object to modify
-		new_data : io.RawIOBase
+		new_data : Union[str, bytes, os.PathLike, io.IOBase, int]
 			The data to append to the object's data section
 
 		Returns
@@ -116,7 +116,7 @@ class PatchSection(base.SectionBase):
 		----------
 		root : str
 			IPFS hash of the object to modify
-		data : io.RawIOBase
+		data : Union[str, bytes, os.PathLike, io.IOBase, int]
 			The new data to store in root
 
 		Returns
@@ -149,7 +149,7 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			str : Raw object data
+			bytes : Raw object data
 		"""
 		args = (multihash,)
 		return self._client.request('/object/data', args, **kwargs)
@@ -157,7 +157,7 @@ class Section(base.SectionBase):
 
 	def get(self, multihash, **kwargs):
 		"""Get and serialize the DAG node named by multihash.
-
+		
 		.. code-block:: python
 
 			>>> client.object.get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
@@ -269,7 +269,7 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		file : io.RawIOBase
+		file : Union[str, bytes, os.PathLike, io.IOBase, int]
 			(JSON) object from which the DAG object will be created
 
 		Returns

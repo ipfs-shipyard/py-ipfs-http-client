@@ -12,7 +12,7 @@ class LogSection(base.SectionBase):
 		
 		.. code-block:: python
 
-			>>> client.log_level("path", "info")
+			>>> client.unstable.log.level("path", "info")
 			{'Message': "Changed log level of 'path' to 'info'\n"}
 
 		Parameters
@@ -44,7 +44,7 @@ class LogSection(base.SectionBase):
 		
 		.. code-block:: python
 
-			>>> client.log_ls()
+			>>> client.unstable.log.ls()
 			{'Strings': [
 				'github.com/ipfs/go-libp2p/p2p/host', 'net/identify',
 				'merkledag', 'providers', 'routing/record', 'chunk', 'mfs',
@@ -80,7 +80,7 @@ class LogSection(base.SectionBase):
 		
 		.. code-block:: python
 
-			>>> with client.log_tail() as log_tail_iter:
+			>>> with client.unstable.log.tail() as log_tail_iter:
 			...     for item in log_tail_iter:
 			...         print(item)
 			...

@@ -26,7 +26,7 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			str : Value of the requested block
+			bytes : Value of the requested block
 		"""
 		args = (multihash,)
 		return self._client.request('/block/get', args, **kwargs)
@@ -43,7 +43,7 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		file : io.RawIOBase
+		file : Union[str, bytes, os.PathLike, io.IOBase, int]
 			The data to be stored as an IPFS block
 
 		Returns
