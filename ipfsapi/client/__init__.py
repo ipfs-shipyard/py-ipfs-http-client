@@ -10,6 +10,8 @@ from __future__ import absolute_import
 import os
 import warnings
 
+import ipfshttpclient
+
 DEFAULT_HOST = str(os.environ.get("PY_IPFSAPI_DEFAULT_HOST", 'localhost'))
 DEFAULT_PORT = int(os.environ.get("PY_IPFSAPI_DEFAULT_PORT", 5001))
 DEFAULT_BASE = str(os.environ.get("PY_IPFSAPI_DEFAULT_BASE", 'api/v0'))
@@ -17,14 +19,9 @@ DEFAULT_BASE = str(os.environ.get("PY_IPFSAPI_DEFAULT_BASE", 'api/v0'))
 VERSION_MINIMUM = "0.4.3"
 VERSION_MAXIMUM = "0.5.0"
 
-from . import files
-from . import graph
-from . import crypto
-from . import network
-from . import node
+from .. import exceptions, encoding
 
-import ipfsapi.multipart
-from .. import utils, exceptions, encoding
+from . import base
 
 
 def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
@@ -54,7 +51,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 
 
 def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
-            chunk_size=ipfsapi.multipart.default_chunk_size, **defaults):
+            chunk_size=4096, **defaults):
 	"""Create a new :class:`~ipfsapi.Client` instance and connect to the
 	daemon to validate that its version is supported.
 
@@ -84,139 +81,89 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 	return client
 
 
-class Client(
-	files.FilesBase,
-	graph.GraphBase,
-	crypto.CryptoBase,
-	network.NetworkBase,
-	node.NodeBase
-):
-	def dns(self, domain_name, recursive=False, **kwargs):
-		"""Resolves DNS links to the referenced object.
+class Client(ipfshttpclient.Client):
+	# Aliases for previous method names
+	key_gen    = base.DeprecatedMethodProperty("key", "gen")
+	key_list   = base.DeprecatedMethodProperty("key", "list")
+	key_rename = base.DeprecatedMethodProperty("key", "rename")
+	key_rm     = base.DeprecatedMethodProperty("key", "rm")
 
-		Multihashes are hard to remember, but domain names are usually easy to
-		remember. To create memorable aliases for multihashes, DNS TXT records
-		can point to other DNS links, IPFS objects, IPNS keys, etc.
-		This command resolves those links to the referenced object.
+	block_get  = base.DeprecatedMethodProperty("block", "get")
+	block_put  = base.DeprecatedMethodProperty("block", "put")
+	block_stat = base.DeprecatedMethodProperty("block", "stat")
 
-		For example, with this DNS TXT record::
+	files_cp    = base.DeprecatedMethodProperty("files", "cp")
+	files_ls    = base.DeprecatedMethodProperty("files", "ls")
+	files_mkdir = base.DeprecatedMethodProperty("files", "mkdir")
+	files_stat  = base.DeprecatedMethodProperty("files", "stat")
+	files_rm    = base.DeprecatedMethodProperty("files", "rm")
+	files_read  = base.DeprecatedMethodProperty("files", "read")
+	files_write = base.DeprecatedMethodProperty("files", "write")
+	files_mv    = base.DeprecatedMethodProperty("files", "mv")
 
-			>>> import dns.resolver
-			>>> a = dns.resolver.query("ipfs.io", "TXT")
-			>>> a.response.answer[0].items[0].to_text()
-			'"dnslink=/ipfs/QmTzQ1JRkWErjk39mryYw2WVaphAZNAREyMchXzYQ7c15n"'
+	object_data  = base.DeprecatedMethodProperty("object", "data")
+	object_get   = base.DeprecatedMethodProperty("object", "get")
+	object_links = base.DeprecatedMethodProperty("object", "links")
+	object_new   = base.DeprecatedMethodProperty("object", "new")
+	object_put   = base.DeprecatedMethodProperty("object", "put")
+	object_stat  = base.DeprecatedMethodProperty("object", "stat")
+	object_patch_add_link    = base.DeprecatedMethodProperty("object", "patch", "add_link")
+	object_patch_append_data = base.DeprecatedMethodProperty("object", "patch", "append_data")
+	object_patch_rm_link     = base.DeprecatedMethodProperty("object", "patch", "rm_link")
+	object_patch_set_data    = base.DeprecatedMethodProperty("object", "patch", "set_data")
 
-		The resolver will give::
+	pin_add    = base.DeprecatedMethodProperty("pin", "add")
+	pin_ls     = base.DeprecatedMethodProperty("pin", "ls")
+	pin_rm     = base.DeprecatedMethodProperty("pin", "rm")
+	pin_update = base.DeprecatedMethodProperty("pin", "update")
+	pin_verify = base.DeprecatedMethodProperty("pin", "verify")
 
-			>>> c.dns("ipfs.io")
-			{'Path': '/ipfs/QmTzQ1JRkWErjk39mryYw2WVaphAZNAREyMchXzYQ7c15n'}
+	refs       = base.DeprecatedMethodProperty("unstable", "refs")
+	refs_local = base.DeprecatedMethodProperty("unstable", "refs", "local")
 
-		Parameters
-		----------
-		domain_name : str
-			The domain-name name to resolve
-		recursive : bool
-			Resolve until the name is not a DNS link
+	bootstrap_add  = base.DeprecatedMethodProperty("bootstrap", "add")
+	bootstrap_list = base.DeprecatedMethodProperty("bootstrap", "list")
+	bootstrap_rm   = base.DeprecatedMethodProperty("bootstrap", "rm")
 
-		Returns
-		-------
-			dict : Resource were a DNS entry points to
-		"""
-		kwargs.setdefault("opts", {"recursive": recursive})
+	bitswap_stat     = base.DeprecatedMethodProperty("bitswap", "stat")
+	bitswap_wantlist = base.DeprecatedMethodProperty("bitswap", "wantlist")
 
-		args = (domain_name,)
-		return self._client.request('/dns', args, decoder='json', **kwargs)
+	dht_findpeer  = base.DeprecatedMethodProperty("dht", "findpeer")
+	dht_findprovs = base.DeprecatedMethodProperty("dht", "findproves")
+	dht_get       = base.DeprecatedMethodProperty("dht", "get")
+	dht_put       = base.DeprecatedMethodProperty("dht", "put")
+	dht_query     = base.DeprecatedMethodProperty("dht", "query")
 
-	###########
-	# HELPERS #
-	###########
+	pubsub_ls    = base.DeprecatedMethodProperty("pubsub", "ls")
+	pubsub_peers = base.DeprecatedMethodProperty("pubsub", "peers")
+	pubsub_pub   = base.DeprecatedMethodProperty("pubsub", "publish")
+	pubsub_sub   = base.DeprecatedMethodProperty("pubsub", "subscribe")
 
-	@utils.return_field('Hash')
-	def add_bytes(self, data, **kwargs):
-		"""Adds a set of bytes as a file to IPFS.
+	swarm_addrs      = base.DeprecatedMethodProperty("swarm", "addrs")
+	swarm_connect    = base.DeprecatedMethodProperty("swarm", "connect")
+	swarm_disconnect = base.DeprecatedMethodProperty("swarm", "disconnect")
+	swarm_peers      = base.DeprecatedMethodProperty("swarm", "peers")
+	swarm_filters_add = base.DeprecatedMethodProperty("swarm", "filters", "add")
+	swarm_filters_rm  = base.DeprecatedMethodProperty("swarm", "filters", "rm")
 
-		.. code-block:: python
+	name_publish = base.DeprecatedMethodProperty("name", "publish")
+	name_resolve = base.DeprecatedMethodProperty("name", "resolve")
 
-			>>> c.add_bytes(b"Mary had a little lamb")
-			'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
+	repo_gc   = base.DeprecatedMethodProperty("repo", "gc")
+	repo_stat = base.DeprecatedMethodProperty("repo", "stat")
 
-		Also accepts and will stream generator objects.
+	config         = base.DeprecatedMethodProperty("config", "set")
+	config_show    = base.DeprecatedMethodProperty("config", "get")
+	config_replace = base.DeprecatedMethodProperty("config", "replace")
 
-		Parameters
-		----------
-		data : bytes
-			Content to be added as a file
+	log_level = base.DeprecatedMethodProperty("unstable", "log", "level")
+	log_ls    = base.DeprecatedMethodProperty("unstable", "log", "ls")
+	log_tail  = base.DeprecatedMethodProperty("unstable", "log", "tail")
 
-		Returns
-		-------
-			str : Hash of the added IPFS object
-		"""
-		body, headers = ipfsapi.multipart.stream_bytes(data, self.chunk_size)
-		return self._client.request('/add', decoder='json',
-		                            data=body, headers=headers, **kwargs)
+	shutdown = base.DeprecatedMethodProperty("stop")
 
-	@utils.return_field('Hash')
-	def add_str(self, string, **kwargs):
-		"""Adds a Python string as a file to IPFS.
 
-		.. code-block:: python
-
-			>>> c.add_str(u"Mary had a little lamb")
-			'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
-
-		Also accepts and will stream generator objects.
-
-		Parameters
-		----------
-		string : str
-			Content to be added as a file
-
-		Returns
-		-------
-			str : Hash of the added IPFS object
-		"""
-		body, headers = ipfsapi.multipart.stream_text(string, self.chunk_size)
-		return self._client.request('/add', decoder='json',
-									data=body, headers=headers, **kwargs)
-
-	def add_json(self, json_obj, **kwargs):
-		"""Adds a json-serializable Python dict as a json file to IPFS.
-
-		.. code-block:: python
-
-			>>> c.add_json({'one': 1, 'two': 2, 'three': 3})
-			'QmVz9g7m5u3oHiNKHj2CJX1dbG1gtismRS3g9NaPBBLbob'
-
-		Parameters
-		----------
-		json_obj : dict
-			A json-serializable Python dictionary
-
-		Returns
-		-------
-			str : Hash of the added IPFS object
-		"""
-		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
-
-	def get_json(self, multihash, **kwargs):
-		"""Loads a json object from IPFS.
-
-		.. code-block:: python
-
-			>>> c.get_json('QmVz9g7m5u3oHiNKHj2CJX1dbG1gtismRS3g9NaPBBLbob')
-			{'one': 1, 'two': 2, 'three': 3}
-
-		Parameters
-		----------
-		multihash : str
-		   Multihash of the IPFS object to load
-
-		Returns
-		-------
-			object : Deserialized IPFS JSON object value
-		"""
-		return self.cat(multihash, decoder='json', **kwargs)
-
+	# Dropped utility methods
 	def add_pyobj(self, py_obj, **kwargs):
 		"""Adds a picklable Python object as a file to IPFS.
 
@@ -280,4 +227,4 @@ class Client(
 		"""
 		warnings.warn("Using `*_pyobj` on untrusted data is a security risk",
 		              DeprecationWarning)
-		return self.cat(multihash, decoder='pickle', **kwargs)
+		return encoding.Pickle().parse(self.cat(multihash, **kwargs))
