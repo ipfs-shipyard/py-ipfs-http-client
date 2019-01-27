@@ -154,19 +154,6 @@ class BitswapSection(base.SectionBase):
 		return self._client.request('/bitswap/stat', decoder='json', **kwargs)
 
 
-	def unwant(self, key, **kwargs):
-		"""
-		Remove a given block from wantlist.
-
-		Parameters
-		----------
-		key : str
-			Key to remove from wantlist.
-		"""
-		args = (key,)
-		return self._client.request('/bitswap/unwant', args, **kwargs)
-
-
 
 class DHTSection(base.SectionBase):
 	def findpeer(self, peer_id, *peer_ids, **kwargs):
@@ -770,7 +757,6 @@ class NetworkBase(base.ClientBase):
 
 	bitswap_stat     = base.DeprecatedMethodProperty("bitswap", "stat")
 	bitswap_wantlist = base.DeprecatedMethodProperty("bitswap", "wantlist")
-	bitswap_unwant   = base.DeprecatedMethodProperty("bitswap", "unwant")
 
 	dht_findpeer  = base.DeprecatedMethodProperty("dht", "findpeer")
 	dht_findprovs = base.DeprecatedMethodProperty("dht", "findproves")
