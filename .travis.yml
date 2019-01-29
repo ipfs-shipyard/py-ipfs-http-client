@@ -1,31 +1,75 @@
-language: python
 # Testing Python 3.7 requires using the `xenial` dist which uses
 # virtual machines rather than LXC and tends to take longer, so
-# use it only where necessary
+# use it only where necessary.
+# Testing on macOS/darwin always uses virtual machines so only
+# test the bare minimum.
 matrix:
   include:
-  - python: "2.7"
+  - os: linux
+    language: python
+    python: "2.7"
     env: TOXENV=py27
-  - python: "3.4"
+  - os: linux
+    language: python
+    python: "3.4"
     env: TOXENV=py34
-  - python: "3.5"
+  - os: linux
+    language: python
+    python: "3.5"
     env: TOXENV=py35
-  - python: "3.6"
+  - os: linux
+    language: python
+    python: "3.6"
     env: TOXENV=py36
-  - python: "3.7"
-    env: TOXENV=py37
+  - os: linux
+    language: python
     dist: xenial
-  - python: "3.6"
+    python: "3.7"
+    env: TOXENV=py37
+  - os: osx
+    language: generic
+    env: TOXENV=py27
+  - os: osx
+    language: generic
+    env: TOXENV=py34
+  - os: linux
+    language: python
+    python: "3.6"
     env: TOXENV=codestyle
     before_install: true
 
+env:
+  global:
+    - IPFS_VERSION=0.4.18
+    - IPFS_SHA512_LINUX=ef5b44a0aaed604890c83322ca02228061204085b87b20dd173edfe6b6631fc7a54724d2e00202488c86886992a0d409f43e09f022cdf8b1138f8419cf7614b0
+    - IPFS_SHA512_DARWIN=60cfa3920ffb9e88d06601e727376c536fc8d31f392a54a4c6c188a87449b3627e125870865f0f5eedad6a70699142fde8761166a7921aa8e588e341b7b653c9
+
+
+# Ensure go-IPFS is available for testing
 before_install:
-  - wget "https://dist.ipfs.io/go-ipfs/v0.4.18/go-ipfs_v0.4.18_linux-amd64.tar.gz" -O /tmp/ipfs.tar.gz
-  - mkdir -p $HOME/bin
-  - pushd . && cd $HOME/bin && tar -xzvf /tmp/ipfs.tar.gz && popd
-  - export PATH="$HOME/bin/go-ipfs:$PATH"
+  # Make the `sha512sum` available on macOS under that name!
+  - export PATH="$(echo /usr/local/Cellar/coreutils/*/libexec/gnubin):${PATH}"
+  
+  # Figure out parameters based on environment
+  - if [ "${TRAVIS_OS_NAME}" != "osx" ]; then export IPFS_PLATFORM="linux-amd64" IPFS_SHA512="${IPFS_SHA512_LINUX}"; else export IPFS_PLATFORM="darwin-amd64" IPFS_SHA512="${IPFS_SHA512_DARWIN}"; fi
+  # Download the daemon application
+  - wget "https://dist.ipfs.io/go-ipfs/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${IPFS_PLATFORM}.tar.gz" -O "/tmp/ipfs.tar.gz"
+  # Verify the checksum
+  - echo "${IPFS_SHA512}  /tmp/ipfs.tar.gz" | sha512sum -c
+  # Extract verify archive
+  - tar -xzvf "/tmp/ipfs.tar.gz"
+  # Set up path
+  - export PATH="${PWD}/go-ipfs:${PATH}"
 
 install:
+  # Install Python 3.4.4 (the last release binary version) for Python 3 testing on Darwin
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then wget "https://www.python.org/ftp/python/3.4.4/python-3.4.4-macosx10.6.pkg" -O /tmp/python.pkg; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then echo "349c61e374f6aeb44ca85481ee14d2f5  /tmp/python.pkg" | md5sum -c; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then sudo installer -pkg /tmp/python.pkg -target /; fi
+  # Just install PIP on the native Python 2.7 stack for Python 2 testing on Darwin
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py27" ]; then sudo easy_install pip; fi
+  
+  # Install the test runner
   - pip install tox
 
 script: tox
