@@ -24,8 +24,8 @@ All methods accept the following parameters in their ``kwargs``:
 
 .. autofunction:: ipfshttpclient.assert_version
 
-.. autoclass:: ipfshttpclient.Client
-    :members:
-    :show-inheritance:
-
+.. autoclientclass:: ipfshttpclient.Client
+	:members:
+	:inherited-members:
+	:undoc-members:
 ```

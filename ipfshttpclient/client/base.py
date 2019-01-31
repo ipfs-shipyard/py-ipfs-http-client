@@ -8,18 +8,18 @@ from .. import multipart, http
 
 class SectionProperty(object):
 	def __init__(self, cls):
-		self.cls = cls
+		self.__prop_cls__ = cls
 
 	def __get__(self, client_object, type=None):
 		try:
 			return client_object.__prop_objs__[self]
 		except AttributeError:
 			client_object.__prop_objs__ = {
-				self: self.cls(client_object)
+				self: self.__prop_cls__(client_object)
 			}
 			return client_object.__prop_objs__[self]
 		except KeyError:
-			client_object.__prop_objs__[self] = self.cls(client_object)
+			client_object.__prop_objs__[self] = self.__prop_cls__(client_object)
 			return client_object.__prop_objs__[self]
 
 
