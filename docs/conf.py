@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # Make current version number as `__version__` available
 with open(os.path.join(sys.path[0], 'ipfshttpclient', 'version.py')) as file:
-    exec(file.read())
+	exec(file.read())
 
 # -- General configuration ------------------------------------------------
 
@@ -35,18 +35,18 @@ with open(os.path.join(sys.path[0], 'ipfshttpclient', 'version.py')) as file:
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.coverage',
-    'sphinx.ext.viewcode',
+	'sphinx.ext.autodoc',
+	'sphinx.ext.doctest',
+	'sphinx.ext.todo',
+	'sphinx.ext.intersphinx',
+	'sphinx.ext.napoleon',
+	'sphinx.ext.coverage',
+	'sphinx.ext.viewcode',
 ]
 
 # Use reCommonMark for parsing text documents as MarkDown
 source_parsers = {
-    '.md': 'recommonmark.parser.CommonMarkParser',
+	'.md': 'recommonmark.parser.CommonMarkParser',
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -227,25 +227,25 @@ htmlhelp_basename = 'py-ipfs-http-client'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    # 'papersize': 'letterpaper',
+	# The paper size ('letterpaper' or 'a4paper').
+	# 'papersize': 'letterpaper',
 
-    # The font size ('10pt', '11pt' or '12pt').
-    # 'pointsize': '10pt',
+	# The font size ('10pt', '11pt' or '12pt').
+	# 'pointsize': '10pt',
 
-    # Additional stuff for the LaTeX preamble.
-    # 'preamble': '',
+	# Additional stuff for the LaTeX preamble.
+	# 'preamble': '',
 
-    # Latex figure (float) alignment
-    # 'figure_align': 'htbp',
+	# Latex figure (float) alignment
+	# 'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PythonIPFSHTTPClient.tex', 'Python IPFS HTTP Client Documentation',
-     'py-ipfs-http-client team', 'manual'),
+	(master_doc, 'PythonIPFSHTTPClient.tex', 'Python IPFS HTTP Client Documentation',
+	 'py-ipfs-http-client team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -274,8 +274,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'py-ipfs-http-client', 'Python IPFS HTTP Client Documentation',
-     [author], 1)
+	(master_doc, 'py-ipfs-http-client', 'Python IPFS HTTP Client Documentation',
+	 [author], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -288,9 +288,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'py-ipfs-http-client', 'Python IPFS HTTP Client Documentation',
-     author, 'py-ipfs-http-client', 'One line description of project.',
-     'Miscellaneous'),
+	(master_doc, 'py-ipfs-http-client', 'Python IPFS HTTP Client Documentation',
+	 author, 'py-ipfs-http-client', 'One line description of project.',
+	 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -307,13 +307,13 @@ texinfo_documents = [
 
 # -- AutoDoc settings -----------------------------------------------------
 
-autodoc_member_order = 'bysource'
+autodoc_member_order = 'groupwise'
 
 # -- InterSphinx settings -------------------------------------------------
 
 # External documentation link mapping
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None)
+	'python': ('https://docs.python.org/3', None)
 }
 
 # -- Napoleon settings ----------------------------------------------------
@@ -356,10 +356,78 @@ napoleon_use_param = True
 napoleon_use_rtype = False
 
 
-# app setup hook for reCommonMark's AutoStructify
+# -- AutoDoc extension for documenting our main `Client` object -----------
+
+import sphinx.ext.autodoc
+
+class ClientClassDocumenterBase(sphinx.ext.autodoc.ClassDocumenter):
+	directivetype = "class"
+
+	@property
+	def documenters(self):
+		"""Ensure that all subclasses within a ``clientclass`` documentation
+		object will definitely be handled by this documenter again."""
+		documenters = {
+			"clientsubclass": ClientSubClassDocumenter
+		}
+		documenters.update(super().documenters)
+		return documenters
+
+	def import_object(self):
+		"""Prevent client class objects from being marked as “properties”."""
+		if super().import_object():
+			# Document the shadowed `ipfshttpclient.client.base.Section` type
+			# rather then its (uninteresting) property wrapper
+			self.doc_as_attr = False
+			return True
+		return False
+	
+	def format_signature(self):
+		"""Hide inheritance signature since it's not applicable helpful for
+		these classes."""
+		return ""
+
+class ClientClassDocumenter(ClientClassDocumenterBase):
+	objtype = "clientclass"
+	priority = -100
+
+class ClientSubClassDocumenter(ClientClassDocumenterBase):
+	objtype = "clientsubclass"
+	priority = 100
+
+
+import sphinx.util.inspect
+
+def section_property_attrgetter(object, name, default=None):
+	try:
+		prop = sphinx.util.inspect.safe_getattr(object, name)
+		
+		# Try returning the underlying section property class
+		try:
+			return sphinx.util.inspect.safe_getattr(prop, "__prop_cls__")
+		except AttributeError:
+			pass
+		
+		# Return object itself
+		return prop
+	except AttributeError as e:
+		pass
+	
+	# Nothing found: Return default
+	return default
+
+
+# app setup hook for reCommonMark's AutoStructify and our own extension
 def setup(app):
-    from recommonmark.transform import AutoStructify
-    app.add_config_value('recommonmark_config', {
-        'auto_toc_tree_section': 'Contents',
-    }, True)
-    app.add_transform(AutoStructify)
+	from recommonmark.transform import AutoStructify
+	app.add_config_value("recommonmark_config", {
+		"auto_toc_tree_section": "Contents",
+	}, True)
+	app.add_transform(AutoStructify)
+	
+	# Add special documentation for `Client` class
+	app.add_autodocumenter(ClientClassDocumenter)
+	# Allow names to be resolved through the property objects of the client
+	# class without resorting to lots of name rewriting (as was the case with
+	# the previous implementation)
+	app.add_autodoc_attrgetter(object, section_property_attrgetter)
