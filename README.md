@@ -140,6 +140,18 @@ This module also contains some helper functions for adding strings and JSON to I
 [1, 77, 'lol']
 ```
 
+Use an IPFS server with basic auth (replace username and password with real creds):
+
+```py
+>>> import base64
+>>> import ipfsapi
+>>> creds = base64.b64encode(b"username:password").decode("utf-8")
+>>> headers = {"Authorization" : "Basic " + creds}
+>>> api = ipfsapi.connect('https://ipfs-api.example.com', 443, headers=headers)
+```
+
+
+
 ## Documentation
 
 Documentation (currently mostly API documentation unfortunately) is available on IPFS:
