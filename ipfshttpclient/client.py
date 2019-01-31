@@ -46,7 +46,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
         raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
-def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
+def connect(host=None, port=None, base=None,
             chunk_size=multipart.default_chunk_size, **defaults):
     """Create a new :class:`~ipfshttpclient.Client` instance and connect to the
     daemon to validate that its version is supported.
@@ -123,10 +123,14 @@ class Client(object):
 
     _clientfactory = http.HTTPClient
 
-    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
-                 base=DEFAULT_BASE, chunk_size=multipart.default_chunk_size,
+    def __init__(self, host=None, port=None,
+                 base=None, chunk_size=multipart.default_chunk_size,
                  **defaults):
         """Connects to the API port of an IPFS node."""
+
+        host = host or DEFAULT_HOST
+        port = port or DEFAULT_PORT
+        base = base or DEFAULT_BASE
 
         self.chunk_size = chunk_size
 
