@@ -268,9 +268,12 @@ class HTTPClient(object):
         path : str
             The REST command path to send
         filepath : str
-            The local path where IPFS will store downloaded files
+            The local directory where IPFS will store downloaded files
 
             Defaults to the current working directory.
+            If the directory does not exist, it will be created.
+        filename : str
+            The filename to store the file as.
         args : list
             Positional parameters to be sent along with the HTTP request
         opts : dict

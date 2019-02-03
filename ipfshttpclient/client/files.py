@@ -338,6 +338,13 @@ class Base(base.ClientBase):
 		----------
 		multihash : str
 			The path to the IPFS object(s) to be outputted
+                filepath : str
+                    The local directory where IPFS will store downloaded files
+
+                    Defaults to the current working directory.
+                    If the directory does not exist, it will be created.
+                filename : str
+                    The filename to store the file as.
 		"""
 		args = (multihash,)
 		return self._client.download('/get', args, filepath=filepath, filename=filename, **kwargs)
