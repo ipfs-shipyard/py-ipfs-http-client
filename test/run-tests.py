@@ -67,6 +67,7 @@ with contextlib.suppress(OSError):  #PY2: Replace with `FileExistsError`
 subprocess.call(["ipfs", "init"])
 subprocess.call(["ipfs", "config", "Addresses.Gateway", ""])
 subprocess.call(["ipfs", "config", "Addresses.API",     "/ip4/{}/tcp/{}".format(HOST, PORT)])
+subprocess.call(["ipfs", "config", "--bool", "Experimental.FilestoreEnabled", "true"])
 
 
 ################

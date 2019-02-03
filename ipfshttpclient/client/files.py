@@ -264,6 +264,12 @@ class Base(base.ClientBase):
 			The chunking algorithm to use
 		pin : bool
 			Pin this object when adding (Default: ``True``)
+		raw_leaves : bool
+			Use raw blocks for leaf nodes. (experimental). (Default: ``True``
+			when ``nocopy`` is True, or ``False`` otherwise)
+		nocopy : bool
+			Add the file using filestore. Implies raw-leaves. (experimental).
+			(Default: ``False``)
 
 		Returns
 		-------
@@ -274,11 +280,14 @@ class Base(base.ClientBase):
 		#PY2: No support for kw-only parameters after glob parameters
 		recursive = kwargs.pop("recursive", False)
 		pattern   = kwargs.pop("pattern", "**")
+		nocopy = kwargs.pop("nocopy", False)
 		opts = {
 			"trickle": kwargs.pop("trickle", False),
 			"only-hash": kwargs.pop("only_hash", False),
 			"wrap-with-directory": kwargs.pop("wrap_with_directory", False),
-			"pin": kwargs.pop("pin", True)
+			"pin": kwargs.pop("pin", True),
+			"raw-leaves": kwargs.pop("raw_leaves", nocopy),
+			'nocopy':  nocopy
 		}
 		if "chunker" in kwargs:
 			opts["chunker"] = kwargs.pop("chunker")
