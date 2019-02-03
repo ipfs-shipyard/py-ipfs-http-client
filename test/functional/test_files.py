@@ -16,6 +16,11 @@ FAKE_FILE2_PATH = conftest.TEST_DIR / "fake_dir" / "popoiopiu"
 
 FAKE_FILE1_HASH = {"Hash": "QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX",
                    "Name": "fsdfgh", "Size": "16"}
+FAKE_FILE1_RAW_LEAVES_HASH = {
+	"Hash": "zb2rhXxZH5PFgCwBAm7xQMoBa6QWqytN8NPvXK7Qc9McDz9zJ",
+	"Name": "fsdfgh", "Size": "8"
+}
+
 FAKE_FILE1_DIR_HASH = [
 	{"Hash": "QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX",
 	 "Name": "fsdfgh", "Size": "16"},
@@ -103,6 +108,13 @@ FAKE_DIR_HASH = [
 ]
 
 
+def calc_path_rel_to_cwd(p):
+	p = str(p)  # for Python < 3.5
+	prefix = os.path.commonprefix([p, os.getcwd()])
+	relpath = os.path.relpath(p, prefix)
+	assert not os.path.isabs(relpath)
+	return relpath
+
 
 def test_add_single_from_str_with_dir(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, wrap_with_directory=True)
@@ -130,6 +142,62 @@ def test_only_hash_file(client):
 def test_add_multiple_from_list(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, FAKE_FILE2_PATH)
 	assert FAKE_FILES_HASH == res
+
+
+def test_add_with_raw_leaves(client, cleanup_pins):
+	res = client.add(FAKE_FILE1_PATH, raw_leaves=True)
+	check_add_with_raw_leaves(client, res)
+
+
+def check_add_with_raw_leaves(client, res):
+	assert FAKE_FILE1_RAW_LEAVES_HASH == res
+	assert res["Hash"] in client.pin.ls(type="recursive")["Keys"]
+
+
+def test_add_nocopy_without_raw_leaves(client):
+	error_msg = None
+	try:
+		client.add(FAKE_FILE1_PATH, nocopy=True, raw_leaves=False)
+	except ipfshttpclient.exceptions.ErrorResponse as exc:
+		error_msg = exc.args[0]
+	assert error_msg is not None and "--raw-leaves" in error_msg
+
+
+def test_nocopy_with_raw_leaves_file(client, cleanup_pins):
+	res = client.add(FAKE_FILE1_PATH, nocopy=True, raw_leaves=True)
+	check_no_copy(client, res)
+
+
+def test_nocopy_with_default_raw_leaves_file(client, cleanup_pins):
+	res = client.add(FAKE_FILE1_PATH, nocopy=True)
+	check_no_copy(client, res)
+
+
+def check_no_copy(client, res):
+	check_add_with_raw_leaves(client, res)
+	# TODO: assert client.filestore.ls(res["Hash"])["Status"] == 0
+	# TODO: assert client.filestore.verify(res["Hash"])["Status"] == 0
+
+
+def test_add_relative_path(client, cleanup_pins):
+	res = client.add(calc_path_rel_to_cwd(FAKE_FILE1_PATH))
+	assert FAKE_FILE1_HASH == res
+	assert res["Hash"] in client.pin.ls(type="recursive")["Keys"]
+
+
+def test_add_nocopy_with_relative_path(client):
+	error_msg = None
+	try:
+		client.add(calc_path_rel_to_cwd(FAKE_FILE1_PATH), nocopy=True)
+	except ipfshttpclient.exceptions.ErrorResponse as exc:
+		error_msg = exc.args[0]
+
+	# For relative paths, multipart streaming layer won't append the
+	# Abspath header, and server will report the missing header. Note that
+	# currently, the server does report an error if Abspath is present but
+	# is a relative or nonexistent path -- instead, it silently ignores
+	# nocopy and adds the file to the blockstore (bug).
+	assert error_msg is not None and "missing file path" in error_msg
 
 
 def test_add_multiple_from_dirname(client, cleanup_pins):
