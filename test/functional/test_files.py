@@ -178,6 +178,19 @@ def test_get_file_filepath(client, cleanup_pins):
 		assert test_hash not in os.listdir(filepath)
 
 
+def test_get_file_filename(client, cleanup_pins):
+	client.add(FAKE_FILE1_PATH)
+
+	test_hash = FAKE_DIR_HASH[1]["Hash"]
+	filename = "foo"
+	try:
+		client.get(test_hash, filename=filename)
+		assert filename in os.listdir(os.getcwd())
+	finally:
+		os.remove(filename)
+		assert filename not in os.listdir(os.getcwd())
+
+
 def test_get_dir(client, cleanup_pins):
 	client.add(FAKE_DIR_PATH, recursive=True)
 
