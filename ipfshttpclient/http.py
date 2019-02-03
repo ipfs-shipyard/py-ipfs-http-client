@@ -247,7 +247,7 @@ class HTTPClient(object):
                              files, headers, data)
 
     @pass_defaults
-    def download(self, path, args=[], filepath=None, opts={},
+    def download(self, path, args=None, filepath=None, opts={},
                  compress=True, **kwargs):
         """Makes a request to the IPFS daemon to download a file.
 
@@ -280,6 +280,8 @@ class HTTPClient(object):
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
         """
+        if not args:
+            args = []
         url = self.base + path
         wd = filepath or '.'
 
