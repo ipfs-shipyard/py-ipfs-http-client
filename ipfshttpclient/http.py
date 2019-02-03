@@ -11,6 +11,7 @@ import contextlib
 import functools
 import re
 import tarfile
+import shutil
 from six.moves import http_client
 
 import requests
@@ -247,7 +248,7 @@ class HTTPClient(object):
                              files, headers, data)
 
     @pass_defaults
-    def download(self, path, args=None, filepath=None, opts={},
+    def download(self, path, args=None, filepath=None, filename=None, opts={},
                  compress=True, **kwargs):
         """Makes a request to the IPFS daemon to download a file.
 
@@ -308,6 +309,11 @@ class HTTPClient(object):
 
         with tarfile.open(fileobj=res.raw, mode=mode) as tf:
             tf.extractall(path=wd)
+
+        if type(filename) is str:
+            # Assume that arg 0 is multihash. Not great.
+            old_name = args[0]
+            shutil.move((wd + '/' + old_name), (wd + '/' + filename))
 
     @contextlib.contextmanager
     def session(self):

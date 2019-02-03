@@ -329,7 +329,7 @@ class Base(base.ClientBase):
 		return self._client.request('/file/ls', args, decoder='json', **kwargs)
 
 
-	def get(self, multihash, filepath=None, **kwargs):
+	def get(self, multihash, filepath=None, filename=None, **kwargs):
 		"""Downloads a file, or directory of files from IPFS.
 
 		Files are placed in the current working directory.
@@ -340,7 +340,7 @@ class Base(base.ClientBase):
 			The path to the IPFS object(s) to be outputted
 		"""
 		args = (multihash,)
-		return self._client.download('/get', args, filepath=filepath, **kwargs)
+		return self._client.download('/get', args, filepath=filepath, filename=filename, **kwargs)
 
 
 	def cat(self, multihash, offset=0, length=-1, **kwargs):
