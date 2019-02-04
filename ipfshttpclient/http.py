@@ -216,8 +216,8 @@ class HTTPClient(object):
     @pass_defaults
     def request(self, path,
                 args=[], files=[], opts={}, stream=False,
-                decoder=None, headers={}, data=None,
-                timeout=120, offline=False):
+                decoder=None, headers={}, data=None, timeout=120,
+                offline=False, method=None):
         """Makes an HTTP request to the IPFS daemon.
 
         This function returns the contents of the HTTP response from the IPFS
@@ -263,7 +263,8 @@ class HTTPClient(object):
         for arg in args:
             params.append(('arg', arg))
 
-        method = 'post' if (files or data) else 'get'
+        if not method:
+            method = 'post' if (files or data) else 'get'
 
         parser = encoding.get_encoding(decoder if decoder else "none")
 
