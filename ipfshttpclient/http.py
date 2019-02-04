@@ -251,6 +251,13 @@ class HTTPClient(object):
         offline : bool
                 Execute request in offline mode, i.e. locally without accessing
                 the network.
+        method : str
+            The HTTP request method to use. This argument is optional,
+            and GET or PUT will be used as appropriate by default.
+            The main use case for this is method='head' to reduce verbosity
+            and improve performance.
+        kwargs : dict
+            Additional arguments to pass to :mod:`requests`
         """
         url = self.base + path
 

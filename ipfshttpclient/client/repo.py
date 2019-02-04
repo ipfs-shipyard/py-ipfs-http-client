@@ -22,6 +22,13 @@ class Section(base.SectionBase):
 		to reclaim hard disk space. Returns the hashes of all collected
 		objects.
 
+		Parameters
+		----------
+		method : str
+		    Optional. Specifying method='head' will avoid requesting the
+		    full list of removed hashes, returning an empty dict instead.
+		    This is potentially much faster.
+
 		Returns
 		-------
 			dict
