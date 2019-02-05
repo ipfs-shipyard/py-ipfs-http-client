@@ -4,3 +4,5 @@ pytest
 pytest-cov
 pytest-mock
 pytest-ordering
+
+py-cid ; python_version >= "3.5"

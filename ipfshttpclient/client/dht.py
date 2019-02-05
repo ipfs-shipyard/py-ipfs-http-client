@@ -43,7 +43,7 @@ class Section(base.SectionBase):
 		return self._client.request('/dht/findpeer', args, decoder='json', **kwargs)
 
 
-	def findprovs(self, multihash, *multihashes, **kwargs):
+	def findprovs(self, cid, *cids, **kwargs):
 		"""Finds peers in the DHT that can provide a specific value.
 
 		.. code-block:: python
@@ -71,14 +71,14 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
+		cid : Union[str, cid.BaseCID]
 			The DHT key to find providers for
 
 		Returns
 		-------
 			dict : List of provider Peer IDs
 		"""
-		args = (multihash,) + multihashes
+		args = (str(cid),) + tuple(str(c) for c in cids)
 		return self._client.request('/dht/findprovs', args, decoder='json', **kwargs)
 
 

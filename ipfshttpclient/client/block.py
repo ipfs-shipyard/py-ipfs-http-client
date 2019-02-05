@@ -11,7 +11,7 @@ class Section(base.SectionBase):
 	Functions for interacting with raw IPFS blocks.
 	"""
 
-	def get(self, multihash, **kwargs):
+	def get(self, cid, **kwargs):
 		r"""Returns the raw contents of a block.
 
 		.. code-block:: python
@@ -21,14 +21,14 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
-			The base58 multihash of an existing block to get
+		cid : Union[str, cid.BaseCID]
+			The base58 CID of an existing block to get
 
 		Returns
 		-------
 			bytes : Value of the requested block
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/block/get', args, **kwargs)
 
 
@@ -57,7 +57,7 @@ class Section(base.SectionBase):
 		                            headers=headers, **kwargs)
 
 
-	def stat(self, multihash, **kwargs):
+	def stat(self, cid, **kwargs):
 		"""Returns a dict with the size of the block with the given hash.
 
 		.. code-block:: python
@@ -68,12 +68,12 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
-			The base58 multihash of an existing block to stat
+		cid : Union[str, cid.BaseCID]
+			The base58 CID of an existing block to stat
 
 		Returns
 		-------
 			dict : Information about the requested block
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/block/stat', args, decoder='json', **kwargs)
