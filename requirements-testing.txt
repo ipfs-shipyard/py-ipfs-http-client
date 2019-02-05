@@ -1,8 +1,8 @@
-httmock
+httmock ~= 1.3
 pathlib ; python_version < "3.4"
-pytest
-pytest-cov
-pytest-mock
-pytest-ordering
+pytest ~= 4.2
+pytest-cov ~= 2.6
+pytest-mock ~= 1.10
+pytest-ordering ~= 0.6
 
 py-cid ; python_version >= "3.5"
