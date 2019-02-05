@@ -182,7 +182,7 @@ class Client(files.Base, miscellaneous.Base):
 		"""
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 
-	def get_json(self, multihash, **kwargs):
+	def get_json(self, cid, **kwargs):
 		"""Loads a json object from IPFS.
 
 		.. code-block:: python
@@ -192,11 +192,11 @@ class Client(files.Base, miscellaneous.Base):
 
 		Parameters
 		----------
-		multihash : str
-		   Multihash of the IPFS object to load
+		cid : Union[str, cid.BaseCID]
+		   CID of the IPFS object to load
 
 		Returns
 		-------
 			object : Deserialized IPFS JSON object value
 		"""
-		return self.cat(multihash, decoder='json', **kwargs)
+		return self.cat(cid, decoder='json', **kwargs)

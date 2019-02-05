@@ -42,7 +42,7 @@ class PatchSection(base.SectionBase):
 		return self._client.request('/object/patch/add-link', args, decoder='json', **kwargs)
 
 
-	def append_data(self, multihash, new_data, **kwargs):
+	def append_data(self, cid, new_data, **kwargs):
 		"""Creates a new merkledag object based on an existing one.
 
 		The new object will have the provided data appended to it,
@@ -55,7 +55,7 @@ class PatchSection(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
+		cid : Union[str, cid.BaseCID]
 			The hash of an ipfs object to modify
 		new_data : Union[str, bytes, os.PathLike, io.IOBase, int]
 			The data to append to the object's data section
@@ -64,7 +64,7 @@ class PatchSection(base.SectionBase):
 		-------
 			dict : Hash of new object
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		body, headers = multipart.stream_files(new_data, self.chunk_size)
 		return self._client.request('/object/patch/append-data', args, decoder='json',
 		                            data=body, headers=headers, **kwargs)
@@ -134,7 +134,7 @@ class Section(base.SectionBase):
 	patch = base.SectionProperty(PatchSection)
 
 
-	def data(self, multihash, **kwargs):
+	def data(self, cid, **kwargs):
 		r"""Returns the raw bytes in an IPFS object.
 
 		.. code-block:: python
@@ -144,19 +144,19 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
-			Key of the object to retrieve, in base58-encoded multihash format
+		cid : Union[str, cid.BaseCID]
+			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
 			bytes : Raw object data
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/object/data', args, **kwargs)
 
 
-	def get(self, multihash, **kwargs):
-		"""Get and serialize the DAG node named by multihash.
+	def get(self, cid, **kwargs):
+		"""Get and serialize the DAG node named by CID.
 		
 		.. code-block:: python
 
@@ -176,18 +176,18 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
-			Key of the object to retrieve, in base58-encoded multihash format
+		cid : Union[str, cid.BaseCID]
+			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
 			dict : Object data and links
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/object/get', args, decoder='json', **kwargs)
 
 
-	def links(self, multihash, **kwargs):
+	def links(self, cid, **kwargs):
 		"""Returns the links pointed to by the specified object.
 
 		.. code-block:: python
@@ -208,14 +208,14 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
-			Key of the object to retrieve, in base58-encoded multihash format
+		cid : Union[str, cid.BaseCID]
+			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
 			dict : Object hash and merkedag links
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/object/links', args, decoder='json', **kwargs)
 
 
@@ -283,8 +283,8 @@ class Section(base.SectionBase):
 		                            headers=headers, **kwargs)
 
 
-	def stat(self, multihash, **kwargs):
-		"""Get stats for the DAG node named by multihash.
+	def stat(self, cid, **kwargs):
+		"""Get stats for the DAG node named by cid.
 
 		.. code-block:: python
 
@@ -295,12 +295,12 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		multihash : str
-			Key of the object to retrieve, in base58-encoded multihash format
+		cid : Union[str, cid.BaseCID]
+			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
 			dict
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/object/stat', args, decoder='json', **kwargs)

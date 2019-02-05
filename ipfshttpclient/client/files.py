@@ -328,21 +328,21 @@ class Base(base.ClientBase):
 		return self._client.request('/file/ls', args, decoder='json', **kwargs)
 
 
-	def get(self, multihash, **kwargs):
+	def get(self, cid, **kwargs):
 		"""Downloads a file, or directory of files from IPFS.
 
 		Files are placed in the current working directory.
 
 		Parameters
 		----------
-		multihash : str
+		cid : Union[str, cid.BaseCID]
 			The path to the IPFS object(s) to be outputted
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.download('/get', args, **kwargs)
 
 
-	def cat(self, multihash, offset=0, length=-1, **kwargs):
+	def cat(self, cid, offset=0, length=-1, **kwargs):
 		r"""Retrieves the contents of a file identified by hash.
 
 		.. code-block:: python
@@ -356,8 +356,8 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		multihash : str
-			The path to the IPFS object(s) to be retrieved
+		cid : Union[str, cid.BaseCID]
+			The name or path of the IPFS object(s) to be retrieved
 		offset : int
 			Byte offset to begin reading from
 		length : int
@@ -367,7 +367,7 @@ class Base(base.ClientBase):
 		-------
 			bytes : File contents
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		opts = {}
 		if offset != 0:
 			opts['offset'] = offset
@@ -377,7 +377,7 @@ class Base(base.ClientBase):
 		return self._client.request('/cat', args, **kwargs)
 
 
-	def ls(self, multihash, **kwargs):
+	def ls(self, cid, **kwargs):
 		"""Returns a list of objects linked to by the given hash.
 
 		.. code-block:: python
@@ -397,12 +397,12 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		multihash : str
+		cid : Union[str, cid.BaseCID]
 			The path to the IPFS object(s) to list links from
 
 		Returns
 		-------
 			dict : Directory information and contents
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/ls', args, decoder='json', **kwargs)

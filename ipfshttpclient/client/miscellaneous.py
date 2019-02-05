@@ -10,8 +10,8 @@ class Base(base.ClientBase):
 	def dns(self, domain_name, recursive=False, **kwargs):
 		"""Resolves DNS links to the referenced object.
 
-		Multihashes are hard to remember, but domain names are usually easy to
-		remember. To create memorable aliases for multihashes, DNS TXT records
+		CIDs are hard to remember, but domain names are usually easy to
+		remember. To create memorable aliases for CIDs, DNS TXT records
 		can point to other DNS links, IPFS objects, IPNS keys, etc.
 		This command resolves those links to the referenced object.
 

@@ -113,7 +113,7 @@ class LogSection(base.SectionBase):
 
 
 class RefsSection(base.SectionBase):
-	def __call__(self, multihash, **kwargs):
+	def __call__(self, cid, **kwargs):
 		"""Returns a list of hashes of objects referenced by the given hash.
 		
 		**This API is subject to future change or removal!** You likely want to
@@ -128,14 +128,14 @@ class RefsSection(base.SectionBase):
 		
 		Parameters
 		----------
-		multihash : str
+		cid : Union[str, cid.BaseCID]
 			Path to the object(s) to list refs from
 		
 		Returns
 		-------
 			list
 		"""
-		args = (multihash,)
+		args = (str(cid),)
 		return self._client.request('/refs', args, decoder='json', **kwargs)
 
 
