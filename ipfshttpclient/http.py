@@ -40,85 +40,103 @@ def pass_defaults(func):
 
 
 def _notify_stream_iter_closed():
-    pass  # Mocked by unit tests to determine check for proper closing
+	pass  # Mocked by unit tests to determine check for proper closing
 
 
 class StreamDecodeIterator(object):
-    """
-    Wrapper around `Iterable` that allows the iterable to be used in a
-    context manager (`with`-statement) allowing for easy cleanup.
-    """
-    def __init__(self, response, parser):
-        self._response = response
-        self._parser   = parser
-        self._response_iter = response.iter_content(chunk_size=None)
-        self._parser_iter   = None
+	"""
+	Wrapper around `Iterable` that allows the iterable to be used in a
+	context manager (`with`-statement) allowing for easy cleanup.
+	"""
+	def __init__(self, response, parser):
+		self._response = response
+		self._parser   = parser
+		self._response_iter = response.iter_content(chunk_size=None)
+		self._parser_iter   = None
 
-    def __iter__(self):
-        return self
+	def __iter__(self):
+		return self
 
-    def __next__(self):
-        while True:
-            # Try reading for current parser iterator
-            if self._parser_iter is not None:
-                try:
-                    return next(self._parser_iter)
-                except StopIteration:
-                    self._parser_iter = None
+	def __next__(self):
+		while True:
+			# Try reading for current parser iterator
+			if self._parser_iter is not None:
+				try:
+					result = next(self._parser_iter)
+					
+					# Detect late error messages that occured after some data
+					# has already been sent
+					if isinstance(result, dict) and result.get("Type") == "error":
+						msg = result["Message"]
+						raise exceptions.PartialErrorResponse(msg, None, [])
+					
+					return result
+				except StopIteration:
+					self._parser_iter = None
 
-                    # Forward exception to caller if we do not expect any
-                    # further data
-                    if self._response_iter is None:
-                        raise
+					# Forward exception to caller if we do not expect any
+					# further data
+					if self._response_iter is None:
+						raise
 
-            try:
-                data = next(self._response_iter)
+			try:
+				data = next(self._response_iter)
 
-                # Create new parser iterator using the newly recieved data
-                self._parser_iter = iter(self._parser.parse_partial(data))
-            except StopIteration:
-                # No more data to receive – destroy response iterator and
-                # iterate over the final fragments returned by the parser
-                self._response_iter = None
-                self._parser_iter   = iter(self._parser.parse_finalize())
+				# Create new parser iterator using the newly recieved data
+				self._parser_iter = iter(self._parser.parse_partial(data))
+			except StopIteration:
+				# No more data to receive – destroy response iterator and
+				# iterate over the final fragments returned by the parser
+				self._response_iter = None
+				self._parser_iter   = iter(self._parser.parse_finalize())
 
-    #PY2: Old iterator syntax
-    def next(self):
-        return self.__next__()
+	#PY2: Old iterator syntax
+	def next(self):
+		return self.__next__()
 
-    def __enter__(self):
-        return self
+	def __enter__(self):
+		return self
 
-    def __exit__(self, *a):
-        self.close()
+	def __exit__(self, *a):
+		self.close()
 
-    def close(self):
-        # Clean up any open iterators first
-        if self._response_iter is not None:
-            self._response_iter.close()
-        if self._parser_iter is not None:
-            self._parser_iter.close()
-        self._response_iter = None
-        self._parser_iter   = None
+	def close(self):
+		# Clean up any open iterators first
+		if self._response_iter is not None:
+			self._response_iter.close()
+		if self._parser_iter is not None:
+			self._parser_iter.close()
+		self._response_iter = None
+		self._parser_iter   = None
 
-        # Clean up response object and parser
-        if self._response is not None:
-            self._response.close()
-        self._response = None
-        self._parser   = None
+		# Clean up response object and parser
+		if self._response is not None:
+			self._response.close()
+		self._response = None
+		self._parser   = None
 
-        _notify_stream_iter_closed()
+		_notify_stream_iter_closed()
 
 
 def stream_decode_full(response, parser):
-    with StreamDecodeIterator(response, parser) as response_iter:
-        result = list(response_iter)
-        if len(result) == 0:
-            return b''
-        if len(result) == 1:
-            return result[0]
-        else:
-            return result
+	with StreamDecodeIterator(response, parser) as response_iter:
+		result = list(response_iter)
+
+		# Detect late error messages that occured after some data has already
+		# been sent
+		if len(result) > 0 \
+		and isinstance(result[-1], dict) \
+		and result[-1].get("Type") == "error":
+			msg = result[-1]["Message"]
+			partial = result[0:-2]
+			raise exceptions.PartialErrorResponse(msg, None, partial)
+
+		if len(result) == 0:
+			return b''
+		if len(result) == 1:
+			return result[0]
+		else:
+			return result
 
 
 class HTTPClient(object):
@@ -163,15 +181,26 @@ class HTTPClient(object):
         except requests.Timeout as error:
             six.raise_from(exceptions.TimeoutError(error), error)
 
-    def _do_raise_for_status(self, response, content=None):
+    def _do_raise_for_status(self, response):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as error:
+            content = []
+            try:
+                decoder = encoding.get_encoding("json")
+                for chunk in response.iter_content(chunk_size=None):
+                    content += list(decoder.parse_partial(chunk))
+                content += list(decoder.parse_finalize())
+            except exceptions.DecodingError:
+                pass
+            
             # If we have decoded an error response from the server,
             # use that as the exception message; otherwise, just pass
             # the exception on to the caller.
-            if isinstance(content, dict) and 'Message' in content:
-                msg = content['Message']
+            if len(content) == 1 \
+            and isinstance(content[0], dict) \
+            and "Message" in content[0]:
+                msg = content[0]["Message"]
                 six.raise_from(exceptions.ErrorResponse(msg, error), error)
             else:
                 six.raise_from(exceptions.StatusError(error), error)
@@ -182,21 +211,16 @@ class HTTPClient(object):
         res = self._do_request(method, url, params=params, stream=stream,
                                files=files, headers=headers, data=data)
 
-        if stream:
-            # Raise exceptions for response status
-            self._do_raise_for_status(res)
+        # Raise exception for response status
+        # (optionally incorpating the response message, if applicable)
+        self._do_raise_for_status(res)
 
+        if stream:
             # Decode each item as it is read
             return StreamDecodeIterator(res, parser)
         else:
-            # First decode received item
-            ret = stream_decode_full(res, parser)
-
-            # Raise exception for response status
-            # (optionally incorpating the response message, if applicable)
-            self._do_raise_for_status(res, ret)
-
-            return ret
+            # Decode received item immediately
+            return stream_decode_full(res, parser)
 
     @pass_defaults
     def request(self, path,

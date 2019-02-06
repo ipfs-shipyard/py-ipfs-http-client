@@ -107,6 +107,29 @@ def http_client_fail(url, request):
 	}
 
 
+
+@urlmatch(netloc=NETLOC, path=r'.*/http_client_fail_late')
+def http_client_fail_late(url, request):
+	"""Defines an endpoint for successful http client requests.
+
+	This endpoint will listen at http://localhost:5001/*/http_client_fail_late
+	for incoming requests and will always respond with a 200 status code, a
+	json encoded Message of "okay", followed by a late error message.
+
+	Keyword arguments:
+	url -- the url of the incoming request
+	request -- the request that is being responded to
+	"""
+	return {
+		"status_code": 200,
+		"content": json.dumps({
+			"Message": "okay"
+		}).encode("utf-8") + b"\n" + json.dumps({
+			"Type":    "error",
+			"Message": "request failed after all"
+		}).encode("utf-8")
+	}
+
 @urlmatch(netloc=NETLOC, path=r".*/cat")
 def http_client_cat(url, request):
 	"""Defines an endpoint for a request to cat a file.
@@ -142,8 +165,14 @@ def test_generic_failure(http_client):
 def test_http_client_failure(http_client):
 	"""Tests that an http client failure raises an ipfsHTTPClientError."""
 	with HTTMock(http_client_fail):
-		with pytest.raises(ipfshttpclient.exceptions.Error):
+		with pytest.raises(ipfshttpclient.exceptions.ErrorResponse):
 			http_client.request("/http_client_fail")
+
+def test_http_client_late_failure(http_client):
+	"""Tests that an http client failure raises an ipfsHTTPClientError."""
+	with HTTMock(http_client_fail_late):
+		with pytest.raises(ipfshttpclient.exceptions.PartialErrorResponse):
+			http_client.request("/http_client_fail_late", decoder="json")
 
 def test_stream(http_client):
 	"""Tests that the stream flag being set returns the raw response."""
