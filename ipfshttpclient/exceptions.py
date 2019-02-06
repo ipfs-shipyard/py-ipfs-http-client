@@ -12,6 +12,7 @@ The class hierachy for exceptions is::
           +-- ProtocolError
           +-- StatusError
           +-- ErrorResponse
+               +-- PartialErrorResponse
           +-- ConnectionError
           +-- TimeoutError
 
@@ -112,6 +113,18 @@ class ErrorResponse(StatusError):
 
     def __init__(self, message, original):
         StatusError.__init__(self, original, message)
+
+
+class PartialErrorResponse(ErrorResponse):
+	"""Raised when the daemon has responded with an error message after having
+	already returned some data.
+	
+	The incomplete data returned may be accessed using the ``partial``
+	attribute."""
+	
+	def __init__(self, message, original, partial):
+		self.partial = partial
+		ErrorResponse.__init__(self, message, original)
 
 
 class ConnectionError(CommunicationError):
