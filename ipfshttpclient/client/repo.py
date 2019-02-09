@@ -24,10 +24,11 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		method : str
-		    Optional. Specifying method='head' will avoid requesting the
-		    full list of removed hashes, returning an empty dict instead.
-		    This is potentially much faster.
+
+		return_result : bool
+		Defaults to True.
+		Passing False will return None and avoid downloading
+		the list of removed objects.
 
 		Returns
 		-------
