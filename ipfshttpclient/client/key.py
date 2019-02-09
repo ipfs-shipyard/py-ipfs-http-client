@@ -52,11 +52,11 @@ class Section(base.SectionBase):
 		.. code-block:: python
 
 			>>> client.key.list()
-			[{'Name': 'self',
-			  'Id': 'QmQf22bZar3WKmojipms22PkXH1MZGmvsqzQtuSvQE3uhm'},
-			 {'Name': 'example_key_name',
-			  'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
-			]
+			{'Keys': [{'Name': 'self',
+					  'Id': 'QmQf22bZar3WKmojipms22PkXH1MZGmvsqzQtuSvQE3uhm'},
+					 {'Name': 'example_key_name',
+					  'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
+					]}
 
 		Returns
 		-------
