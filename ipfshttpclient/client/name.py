@@ -36,8 +36,9 @@ class Section(base.SectionBase):
 			 * ``"s"``
 			 * ``"m"``
 			 * ``"h"``
-		ttl : int
-			Time duration this record should be cached for
+		ttl : string
+			Time duration this record should be cached for.
+			Same syntax like 'lifetime' option. (experimental feature)
 		key : string
 			 Name of the key to be used, as listed by 'ipfs key list'.
 
