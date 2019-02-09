@@ -216,8 +216,12 @@ class HTTPClient(object):
     @pass_defaults
     def request(self, path,
                 args=[], files=[], opts={}, stream=False,
+<<<<<<< HEAD
                 decoder=None, headers={}, data=None, timeout=120,
                 offline=False, method=None):
+=======
+                decoder=None, headers={}, data=None, return_result=True):
+>>>>>>> use bool return_result instead
         """Makes an HTTP request to the IPFS daemon.
 
         This function returns the contents of the HTTP response from the IPFS
@@ -256,6 +260,9 @@ class HTTPClient(object):
             and GET or PUT will be used as appropriate by default.
             The main use case for this is method='head' to reduce verbosity
             and improve performance.
+        return_result : bool
+            Defaults to True. If the return is not relevant, such as in gc(),
+            passing False will return None and avoid downloading results.
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
         """
@@ -270,13 +277,27 @@ class HTTPClient(object):
         for arg in args:
             params.append(('arg', arg))
 
-        if not method:
-            method = 'post' if (files or data) else 'get'
+        if (files or data):
+            method = 'post'
+        elif not return_result:
+            method = 'head'
+        else:
+            method = 'get'
 
         parser = encoding.get_encoding(decoder if decoder else "none")
 
+<<<<<<< HEAD
         return self._request(method, url, params, parser, stream,
                              files, headers, data, timeout=timeout)
+=======
+        ret = self._request(method, url, params, parser, stream,
+                             files, headers, data)
+>>>>>>> use bool return_result instead
+
+        if not return_result:
+            return None
+
+        return ret
 
     @pass_defaults
     def download(self, path, args=[], filepath=None, opts={},
