@@ -347,7 +347,7 @@ def glob_compile(pat):
 				res = '%s[%s]' % (res, stuff)
 		else:
 			res = res + re.escape(c)
-	return re.compile('^' + res + '\\Z(?ms)' + '$')
+	return re.compile(r'^' + res + r'\Z$', flags=re.M | re.S)
 
 
 class DirectoryStream(StreamBase, StreamFileMixin):
