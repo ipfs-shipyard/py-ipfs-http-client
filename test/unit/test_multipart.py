@@ -119,8 +119,8 @@ class TestStreamBase(unittest.TestCase):
 		"""Test the __init__ function for default parameter values."""
 		name = "test_name"
 		expected_disposition = 'form-data; filename="test_name"'
-		expected_type = 'multipart/form-data; boundary="\S*"'
-		expected_boundary_pattern = '\S*'
+		expected_type = r'multipart/form-data; boundary="\S*"'
+		expected_boundary_pattern = r'\S*'
 		generator = StreamBaseSub(name)
 		assert generator._headers['Content-Disposition'] == expected_disposition
 		assert re.search(expected_type,             generator.headers()['Content-Type'])
@@ -174,7 +174,7 @@ class TestStreamBase(unittest.TestCase):
 		"""Test the close function against example output."""
 		name = "fsdfgh"
 		instance = StreamBaseSub(name)
-		expected = b'--\S+--\r\n'
+		expected = b'--\\S+--\r\n'
 		actual = b''
 		for i in instance._gen_end():
 			actual += i
@@ -278,11 +278,13 @@ class TestFilesStream(unittest.TestCase):
 		relative_paths_list = [os.path.relpath(cur_path, os.getcwd())
 		                       for cur_path in filenames_list]
 
-		instance = ipfshttpclient.multipart.FilesStream(relative_paths_list)
+		instance = ipfshttpclient.multipart.FilesStream(relative_paths_list,
+							        abspath=abspath)
 
-		expected = "(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-			+ "\r\nContent-Type: application/\S+\r\n"\
-			+ "\r\n(.|\n)*\r\n)+--\S+--\r\n"
+		expected = r"(--\S+\r\n"
+			+ r"Content-Disposition: file; filename=\"\S+\"\r\n"
+			+ r"Content-Type: application/\S+\r\n"
+			+ r"\r\n(.|\n)*\r\n)+--\S+--\r\n"
 		actual = ""
 		for i in instance.body():
 			if type(i) is not str and type(i) is not memoryview:
@@ -308,9 +310,9 @@ class TestDirectoryStream(unittest.TestCase):
 		path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
 		                    "functional", "fake_dir")
 		instance = ipfshttpclient.multipart.DirectoryStream(path)
-		expected = b"^(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-			+ b"\r\nContent-Type: application/\S+\r\n\r\n(.|\n)*"\
-			+ b"\r\n)+--\S+--\r\n$"
+		expected = b"^(--\\S+\r\nContent-Disposition: file; filename=\"\\S+\""\
+			+ b"\r\nContent-Type: application/\\S+\r\n\r\n(.|\n)*"\
+			+ b"\r\n)+--\\S+--\r\n$"
 		actual = b"".join(instance.body())
 		assert re.search(expected, actual)
 
@@ -327,9 +329,9 @@ class TestBytesFileStream(unittest.TestCase):
 		# Get OS-agnostic path to test files
 		text = b"Here is some text for this test."
 		instance = ipfshttpclient.multipart.BytesFileStream(text)
-		expected = b"(--\S+\r\nContent-Disposition: file; filename=\"\S+\""\
-			+ b"\r\nContent-Type: application/\S+\r\n"\
-			+ b"\r\n(.|\n)*\r\n)+--\S+--\r\n"
+		expected = b"(--\\S+\r\nContent-Disposition: file; filename=\"\\S+\""\
+			+ b"\r\nContent-Type: application/\\S+\r\n"\
+			+ b"\r\n(.|\n)*\r\n)+--\\S+--\r\n"
 		actual = b"".join(instance.body())
 		assert re.search(expected, actual)
 
