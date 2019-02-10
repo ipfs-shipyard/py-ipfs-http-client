@@ -12,8 +12,8 @@ TEST_CID_STR      = "QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE"
 TEST_CONTENT_SIZE = 248
 
 if cid:
-	TEST2_CID_OBJ      = cid.make_cid("zb2rhmDGuPfTrMTyrvN6MWx1tbZ7RdVJgC16T8iY7Ff6Gm775")
-	TEST2_CONTENT_SIZE = 11
+	TEST2_CID_OBJ      = cid.make_cid("zb2rhjVFJv14KMc6qNirigEvFW8MWmpH1PMGYGi4BtqtLeS9z")
+	TEST2_CONTENT_SIZE = 13
 
 TEST_PUT_FILEPATH = conftest.TEST_DIR / "fake_dir" / "fsdfgh"
 TEST_PUT_CID      = "QmPevo2B1pwvDyuZyJbWVfhwkaGPee3f1kX36wFmqx1yna"
