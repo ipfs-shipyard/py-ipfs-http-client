@@ -203,13 +203,15 @@ class StreamBase(object):
 
 
 class StreamFileMixin(object):
-	def _gen_file(self, filename, file=None, content_type=None):
+	def _gen_file(self, filename, file_location=None, file=None, content_type=None):
 		"""Yields the entire contents of a file.
 
 		Parameters
 		----------
 		filename : str
 			Filename of the file being opened and added to the HTTP body
+		file_location : str
+			Full path to the file being added, including the filename
 		file : io.RawIOBase
 			The binary file-like object whose contents should be streamed
 
@@ -218,18 +220,21 @@ class StreamFileMixin(object):
 			The Content-Type of the file; if not set a value will be guessed
 		"""
 		#PY2: Use `yield from` instead
-		for chunk in self._gen_file_start(filename, content_type): yield chunk
+		for chunk in self._gen_file_start(filename, file_location, content_type):
+			yield chunk
 		if file:
 			for chunk in self._gen_file_chunks(file): yield chunk
 		for chunk in self._gen_file_end(): yield chunk
 
-	def _gen_file_start(self, filename, content_type=None):
+	def _gen_file_start(self, filename, file_location=None, content_type=None):
 		"""Yields the opening text of a file section in multipart HTTP.
 
 		Parameters
 		----------
 		filename : str
 			Filename of the file being opened and added to the HTTP body
+		file_location : str
+			Full path to the file being added, including the filename
 		content_type : str
 			The Content-Type of the file; if not set a value will be guessed
 		"""
@@ -238,6 +243,8 @@ class StreamFileMixin(object):
 
 		headers = content_disposition_headers(filename.replace(os.sep, "/"), disptype="file")
 		headers.update(content_type_headers(filename, content_type))
+		if file_location and os.path.isabs(file_location):
+			headers.update({"Abspath": file_location})
 		#PY2: Use `yield from` instead
 		for chunk in self._gen_headers(headers): yield chunk
 
@@ -286,12 +293,15 @@ class FilesStream(StreamBase, StreamFileMixin):
 		for file, need_close in self.files:
 			try:
 				try:
-					filename = os.path.basename(file.name)
+					file_location = file.name
+					filename = os.path.basename(file_location)
 				except AttributeError:
+					file_location = None
 					filename = ''
 
 				#PY2: Use `yield from` instead
-				for chunk in self._gen_file(filename, file): yield chunk
+				for chunk in self._gen_file(filename, file_location, file):
+					yield chunk
 			finally:
 				if need_close:
 					file.close()
@@ -418,11 +428,14 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 	def _body_file(self, short_path, file_location, dir_fd=-1):
 		try:
 			if dir_fd >= 0:
-				file_location = os.open(file_location, os.O_RDONLY | os.O_CLOEXEC, dir_fd=dir_fd)
+				f_path_or_desc = os.open(file_location, os.O_RDONLY | os.O_CLOEXEC, dir_fd=dir_fd)
+			else:
+				f_path_or_desc = file_location
 			# Stream file to client
-			with open(file_location, "rb") as file:
+			with open(f_path_or_desc, "rb") as file:
 				#PY2: Use `yield from`
-				for chunk in self._gen_file(short_path, file): yield chunk
+				for chunk in self._gen_file(short_path, file_location, file):
+					yield chunk
 		except OSError as e:
 			print(e)
 			# File might have disappeared between `os.walk()` and `open()`

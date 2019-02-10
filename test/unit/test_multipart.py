@@ -14,12 +14,16 @@ import io
 import os
 import re
 import unittest
+import urllib
 
 import pytest
 import six
 
+from six.moves import urllib_parse
+
 import ipfshttpclient.multipart
 
+ENC = "UTF-8"
 
 class TestContentHelpers(unittest.TestCase):
 	"""Tests the functionality of the three content-oriented helper functions.
@@ -192,34 +196,53 @@ class TestStreamFileMixin(unittest.TestCase):
 	test__gen_file_end -- test the _gen_file_end function against example output
 	"""
 
-	def test__gen_file(self):
+	def do_test__gen_file(self, name, file_location, abspath):
 		"""Test the _gen_file function against sample output."""
-		name = "functional/fake_dir/fsdfgh"
 		generator = StreamFileMixinSub(name)
-
 		file = io.BytesIO()
 		file.write(b"!234")
 		file.seek(0)
 
-		expected = b'--' + generator._boundary.encode() + b'\r\nContent-Disposition: file; '\
-		         + b'filename="functional%2Ffake_dir%2Ffsdfgh"\r\nContent-Type: '\
-		         + b'text/plain\r\n\r\n' \
+		expected = b'--' + generator._boundary.encode() + b'\r\n'
+		expected += b'Abspath: ' + name.encode(ENC) + b'\r\n' if abspath else b''
+		expected += b'Content-Disposition: file; '\
+		         + b'filename="' + urllib_parse.quote_plus(name).encode(ENC) + b'"\r\n'\
+			 + b'Content-Type: text/plain\r\n'\
+			 + b'\r\n' \
 		         + b'!234\r\n'
 
-		headers = b"".join(generator._gen_file(name, file, content_type="text/plain"))
+		headers = b"".join(generator._gen_file(name, file_location, file,
+						       content_type="text/plain"))
+		assert headers == expected
+
+	def test__gen_file(self):
+		self.do_test__gen_file("functional/fake_dir/fsdfgh",
+					file_location=None, abspath=False)
+	def test__gen_file_relative(self):
+		filepath = "functional/fake_dir/fsdfgh"
+		self.do_test__gen_file(filepath, filepath, abspath=False)
+	def test__gen_file_absolute(self):
+		filepath = "/functional/fake_dir/fsdfgh"
+		self.do_test__gen_file(filepath, filepath, abspath=True)
+
+	def do_test__gen_file_start(self, name, file_location, abspath):
+		"""Test the _gen_file_start function against sample output."""
+		generator = StreamFileMixinSub(name)
+
+		expected = b'--' + generator._boundary.encode() + b'\r\n'
+		expected += b'Abspath: ' + file_location.encode(ENC) + b'\r\n' if abspath else b''
+		expected += b'Content-Disposition: file; filename="' + name.encode(ENC) + b'"\r\n'\
+			  + b'Content-Type: application/octet-stream\r\n'\
+			  + b'\r\n'
+
+		headers = b"".join(generator._gen_file_start(name, file_location))
 		assert headers == expected
 
 	def test__gen_file_start(self):
-		"""Test the _gen_file_start function against sample output."""
+		self.do_test__gen_file_start("test_name", file_location=None, abspath=False)
+	def test__gen_file_start_with_filepath(self):
 		name = "test_name"
-		generator = StreamFileMixinSub(name)
-
-		expected = b'--' + generator._boundary.encode() + b'\r\nContent-Disposition: file; '\
-		         + b'filename="test_name"\r\nContent-Type: '\
-		         + b'application/octet-stream\r\n\r\n'
-
-		headers = b"".join(generator._gen_file_start(name))
-		assert headers == expected
+		self.do_test__gen_file_start(name, os.path.join(os.path.sep, name), abspath=True)
 
 	def test__gen_file_chunks(self):
 		"""Test the _gen_file_chunks function against example output.
@@ -259,7 +282,7 @@ class TestFilesStream(unittest.TestCase):
 	test_body -- check file stream body for proper structure
 	"""
 
-	def test_body(self):
+	def prep_test_body(self):
 		"""Test the body function against expected output.
 
 		Warning: This test depends on the contents of
@@ -274,17 +297,29 @@ class TestFilesStream(unittest.TestCase):
 		for (dirpath, _, filenames) in os.walk(path):
 			temp_list = [os.path.join(dirpath, name) for name in filenames]
 			filenames_list.extend(temp_list)
+		return filenames_list
+
+	def test_body_absolute(self):
+		filenames_list= self.prep_test_body()
+		instance = ipfshttpclient.multipart.FilesStream(filenames_list)
+		self.check_test_body(instance, abspath=True)
+
+	def test_body_relative(self):
+		filenames_list= self.prep_test_body()
+
 		# Convert absolute paths to relative
 		relative_paths_list = [os.path.relpath(cur_path, os.getcwd())
 		                       for cur_path in filenames_list]
 
-		instance = ipfshttpclient.multipart.FilesStream(relative_paths_list,
-							        abspath=abspath)
+		instance = ipfshttpclient.multipart.FilesStream(relative_paths_list)
+		self.check_test_body(instance, abspath=False)
 
+	def check_test_body(self, instance, abspath):
 		expected = r"(--\S+\r\n"
-			+ r"Content-Disposition: file; filename=\"\S+\"\r\n"
-			+ r"Content-Type: application/\S+\r\n"
-			+ r"\r\n(.|\n)*\r\n)+--\S+--\r\n"
+		expected += r"Abspath: \S+\r\n" if abspath else r""
+		expected += r"Content-Disposition: file; filename=\"\S+\"\r\n"
+		expected += r"Content-Type: application/\S+\r\n"
+		expected += r"\r\n(.|\n)*\r\n)+--\S+--\r\n"
 		actual = ""
 		for i in instance.body():
 			if type(i) is not str and type(i) is not memoryview:
