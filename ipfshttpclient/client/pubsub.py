@@ -29,6 +29,7 @@ class SubChannel:
 
 
 class Section(base.SectionBase):
+	@base.returns_single_item
 	def ls(self, **kwargs):
 		"""Lists subscribed topics by name
 
@@ -51,8 +52,9 @@ class Section(base.SectionBase):
 				   topics we are subscribed to
 		"""
 		return self._client.request('/pubsub/ls', decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def peers(self, topic=None, **kwargs):
 		"""List the peers we are pubsubbing with.
 
@@ -101,8 +103,9 @@ class Section(base.SectionBase):
 		"""
 		args = (topic,) if topic is not None else ()
 		return self._client.request('/pubsub/peers', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_no_item
 	def publish(self, topic, payload, **kwargs):
 		"""Publish a message to a given pubsub topic
 
@@ -130,8 +133,8 @@ class Section(base.SectionBase):
 		"""
 		args = (topic, payload)
 		return self._client.request('/pubsub/pub', args, decoder='json', **kwargs)
-
-
+	
+	
 	def subscribe(self, topic, discover=False, **kwargs):
 		"""Subscribe to mesages on a given topic
 

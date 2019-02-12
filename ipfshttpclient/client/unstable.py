@@ -5,6 +5,7 @@ from . import base
 
 
 class LogSection(base.SectionBase):
+	@base.returns_single_item
 	def level(self, subsystem, level, **kwargs):
 		r"""Changes the logging output of a running daemon.
 		
@@ -36,7 +37,9 @@ class LogSection(base.SectionBase):
 		args = (subsystem, level)
 		return self._client.request('/log/level', args,
 		                            decoder='json', **kwargs)
-
+	
+	
+	@base.returns_single_item
 	def ls(self, **kwargs):
 		"""Lists the logging subsystems of a running daemon.
 		
@@ -69,7 +72,8 @@ class LogSection(base.SectionBase):
 			dict : List of daemon logging subsystems
 		"""
 		return self._client.request('/log/ls', decoder='json', **kwargs)
-
+	
+	
 	def tail(self, **kwargs):
 		r"""Reads log outputs as they are written.
 		

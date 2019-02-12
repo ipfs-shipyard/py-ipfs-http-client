@@ -5,6 +5,7 @@ from . import base
 
 
 class Section(base.SectionBase):
+	@base.returns_single_item
 	def add(self, path, *paths, **kwargs):
 		"""Pins objects to local storage.
 
@@ -32,8 +33,9 @@ class Section(base.SectionBase):
 
 		args = (path,) + paths
 		return self._client.request('/pin/add', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def ls(self, type="all", **kwargs):
 		"""Lists objects pinned to local storage.
 
@@ -68,8 +70,9 @@ class Section(base.SectionBase):
 		kwargs.setdefault("opts", {})["type"] = type
 
 		return self._client.request('/pin/ls', decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def rm(self, path, *paths, **kwargs):
 		"""Removes a pinned object from local storage.
 
@@ -98,8 +101,9 @@ class Section(base.SectionBase):
 
 		args = (path,) + paths
 		return self._client.request('/pin/rm', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def update(self, from_path, to_path, **kwargs):
 		"""Replaces one pin with another.
 

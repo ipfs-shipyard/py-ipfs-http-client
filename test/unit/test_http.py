@@ -196,7 +196,7 @@ def test_explicit_decoder(http_client):
 	"""Tests that an explicit decoder is handled correctly."""
 	with HTTMock(http_client_okay):
 		res = http_client.request("/http_client_okay", decoder="json")
-		assert res["Message"] == "okay"
+		assert res[0]["Message"] == "okay"
 
 def test_unsupported_decoder(http_client):
 	"""Tests that unsupported encodings raise an exception."""

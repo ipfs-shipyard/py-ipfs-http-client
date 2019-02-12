@@ -120,23 +120,14 @@ class StreamDecodeIterator(object):
 
 def stream_decode_full(response, parser):
 	with StreamDecodeIterator(response, parser) as response_iter:
+		# Collect all responses
 		result = list(response_iter)
-
-		# Detect late error messages that occured after some data has already
-		# been sent
-		if len(result) > 0 \
-		and isinstance(result[-1], dict) \
-		and result[-1].get("Type") == "error":
-			msg = result[-1]["Message"]
-			partial = result[0:-2]
-			raise exceptions.PartialErrorResponse(msg, None, partial)
-
-		if len(result) == 0:
-			return b''
-		if len(result) == 1:
-			return result[0]
-		else:
-			return result
+		
+		# Return byte streams concatenated into one message, instead of split
+		# at arbitrary boundaries
+		if parser.is_stream:
+			return b"".join(result)
+		return result
 
 
 class HTTPClient(object):

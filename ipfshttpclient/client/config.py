@@ -5,6 +5,7 @@ from . import base
 
 
 class Section(base.SectionBase):
+	@base.returns_single_item
 	def get(self, **kwargs):
 		#TODO: Support the optional `key` parameter
 		"""Returns the current used server configuration.
@@ -29,8 +30,9 @@ class Section(base.SectionBase):
 			dict : The entire IPFS daemon configuration
 		"""
 		return self._client.request('/config/show', decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def replace(self, config, **kwargs):
 		"""Replaces the existing config with a user-defined config.
 
@@ -38,8 +40,9 @@ class Section(base.SectionBase):
 		operation can't be undone.
 		"""
 		return self._client.request('/config/replace', (config,), decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def set(self, key, value=None, **kwargs):
 		"""Add or replace a configuration value.
 

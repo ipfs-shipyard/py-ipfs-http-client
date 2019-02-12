@@ -7,6 +7,7 @@ from .. import exceptions
 
 
 class Section(base.SectionBase):
+	@base.returns_single_item
 	def findpeer(self, peer_id, *peer_ids, **kwargs):
 		"""Queries the DHT for all of the associated multiaddresses.
 
@@ -80,8 +81,9 @@ class Section(base.SectionBase):
 		"""
 		args = (str(cid),) + tuple(str(c) for c in cids)
 		return self._client.request('/dht/findprovs', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def get(self, key, *keys, **kwargs):
 		"""Queries the DHT for its best value related to given key.
 

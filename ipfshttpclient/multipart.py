@@ -660,9 +660,9 @@ def stream_filesystem_node(filepaths,
 		import stat
 		is_dir = stat.S_ISDIR(os.fstat(filepaths).st_mode)
 	if is_dir:
-		return stream_directory(filepaths, recursive, patterns, chunk_size)
+		return stream_directory(filepaths, recursive, patterns, chunk_size) + (True,)
 	else:
-		return stream_files(filepaths, chunk_size)
+		return stream_files(filepaths, chunk_size) + (False,)
 
 
 def stream_bytes(data, chunk_size=default_chunk_size):

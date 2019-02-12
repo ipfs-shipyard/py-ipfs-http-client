@@ -30,8 +30,9 @@ class Section(base.SectionBase):
 		"""
 		args = (str(cid),)
 		return self._client.request('/block/get', args, **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def put(self, file, **kwargs):
 		"""Stores the contents of the given file object as an IPFS block.
 
@@ -55,8 +56,9 @@ class Section(base.SectionBase):
 		body, headers = multipart.stream_files(file, self.chunk_size)
 		return self._client.request('/block/put', decoder='json', data=body,
 		                            headers=headers, **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def stat(self, cid, **kwargs):
 		"""Returns a dict with the size of the block with the given hash.
 
