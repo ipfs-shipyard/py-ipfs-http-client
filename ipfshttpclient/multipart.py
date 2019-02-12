@@ -659,7 +659,7 @@ def stream_filesystem_node(filepaths,
 	elif isinstance(filepaths, int):
 		import stat
 		is_dir = stat.S_ISDIR(os.fstat(filepaths).st_mode)
-	if recursive or is_dir:
+	if is_dir:
 		return stream_directory(filepaths, recursive, patterns, chunk_size)
 	else:
 		return stream_files(filepaths, chunk_size)
