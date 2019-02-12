@@ -5,6 +5,7 @@ from . import base
 
 
 class Section(base.SectionBase):
+	@base.returns_single_item
 	def wantlist(self, peer=None, **kwargs):
 		"""Returns blocks currently on the bitswap wantlist.
 		
@@ -30,6 +31,7 @@ class Section(base.SectionBase):
 		return self._client.request('/bitswap/wantlist', args, decoder='json', **kwargs)
 	
 	
+	@base.returns_single_item
 	def stat(self, **kwargs):
 		"""Returns some diagnostic information from the bitswap agent.
 		

@@ -6,8 +6,9 @@ from . import base
 
 class Section(base.SectionBase):
 	#TODO: Add `export(name, password)`
-
-
+	
+	
+	@base.returns_single_item
 	def gen(self, key_name, type, size=2048, **kwargs):
 		"""Adds a new public key that can be used for
 		:meth:`~ipfshttpclient.Client.name.publish`.
@@ -45,6 +46,7 @@ class Section(base.SectionBase):
 	#TODO: Add `import(name, pam, password)`
 
 
+	@base.returns_single_item
 	def list(self, **kwargs):
 		"""Returns a list of generated public keys that can be used with
 		:meth:`~ipfshttpclient.Client.name.publish`.
@@ -52,19 +54,21 @@ class Section(base.SectionBase):
 		.. code-block:: python
 
 			>>> client.key.list()
-			{'Keys': [{'Name': 'self',
-					  'Id': 'QmQf22bZar3WKmojipms22PkXH1MZGmvsqzQtuSvQE3uhm'},
-					 {'Name': 'example_key_name',
-					  'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
-					]}
+			{'Keys': [
+				{'Name': 'self',
+				 'Id': 'QmQf22bZar3WKmojipms22PkXH1MZGmvsqzQtuSvQE3uhm'},
+				{'Name': 'example_key_name',
+				 'Id': 'QmQLaT5ZrCfSkXTH6rUKtVidcxj8jrW3X2h75Lug1AV7g8'}
+			]}
 
 		Returns
 		-------
 			list : List of dictionaries with Names and Ids of public keys.
 		"""
 		return self._client.request('/key/list', decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def rename(self, key_name, new_key_name, **kwargs):
 		"""Rename a keypair
 
@@ -91,8 +95,9 @@ class Section(base.SectionBase):
 		return self._client.request(
 			'/key/rename', args, decoder='json', **kwargs
 		)
-
-
+	
+	
+	@base.returns_single_item
 	def rm(self, key_name, *key_names, **kwargs):
 		"""Remove a keypair
 

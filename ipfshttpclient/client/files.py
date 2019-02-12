@@ -11,7 +11,8 @@ class Section(base.SectionBase):
 	Functions used to manage files in IPFS's virtual “Mutable File System” (MFS)
 	file storage space.
 	"""
-
+	
+	@base.returns_single_item
 	def cp(self, source, dest, **kwargs):
 		"""Copies files within the MFS.
 
@@ -49,6 +50,7 @@ class Section(base.SectionBase):
 	#TODO: Add `flush(path="/")`
 
 
+	@base.returns_single_item
 	def ls(self, path, **kwargs):
 		"""Lists contents of a directory in the MFS.
 
@@ -70,15 +72,15 @@ class Section(base.SectionBase):
 		"""
 		args = (path,)
 		return self._client.request('/files/ls', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_no_item
 	def mkdir(self, path, parents=False, **kwargs):
 		"""Creates a directory within the MFS.
 
 		.. code-block:: python
 
 			>>> client.files.mkdir("/test")
-			b''
 
 		Parameters
 		----------
@@ -92,15 +94,15 @@ class Section(base.SectionBase):
 
 		args = (path,)
 		return self._client.request('/files/mkdir', args, **kwargs)
-
-
+	
+	
+	@base.returns_no_item
 	def mv(self, source, dest, **kwargs):
 		"""Moves files and directories within the MFS.
 
 		.. code-block:: python
 
 			>>> client.files.mv("/test/file", "/bla/file")
-			b''
 
 		Parameters
 		----------
@@ -111,8 +113,8 @@ class Section(base.SectionBase):
 		"""
 		args = (source, dest)
 		return self._client.request('/files/mv', args, **kwargs)
-
-
+	
+	
 	def read(self, path, offset=0, count=None, **kwargs):
 		"""Reads a file stored in the MFS.
 
@@ -141,8 +143,9 @@ class Section(base.SectionBase):
 
 		args = (path,)
 		return self._client.request('/files/read', args, **kwargs)
-
-
+	
+	
+	@base.returns_no_item
 	def rm(self, path, recursive=False, **kwargs):
 		"""Removes a file from the MFS.
 
@@ -161,8 +164,9 @@ class Section(base.SectionBase):
 
 		args = (path,)
 		return self._client.request('/files/rm', args, **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def stat(self, path, **kwargs):
 		"""Returns basic ``stat`` information for an MFS file
 		(including its hash).
@@ -184,8 +188,9 @@ class Section(base.SectionBase):
 		"""
 		args = (path,)
 		return self._client.request('/files/stat', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_no_item
 	def write(self, path, file, offset=0, create=False, truncate=False, count=None, **kwargs):
 		"""Writes to a mutable file in the MFS.
 
@@ -221,8 +226,8 @@ class Section(base.SectionBase):
 
 class Base(base.ClientBase):
 	files = base.SectionProperty(Section)
-
-
+	
+	
 	def add(self, file, *files, **kwargs):
 		"""Add a file, or directory of files to IPFS.
 
@@ -262,7 +267,9 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			dict: File name and hash of the added file node
+			Union[dict, list] : File name and hash of the added file node, will
+			                    return a list of one or more items unless only
+			                    a single file was given
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		recursive = kwargs.pop("recursive", False)
@@ -281,12 +288,18 @@ class Base(base.ClientBase):
 			"Use `client.add(name1, name2, …)` to add several items"
 		multiple = (len(files) > 0)
 		to_send  = ((file,) + files) if multiple else file
-		body, headers = multipart.stream_filesystem_node(
+		body, headers, is_dir = multipart.stream_filesystem_node(
 			to_send, recursive, pattern, self.chunk_size
 		)
-		return self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)
-
-
+		
+		resp = self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)
+		if not multiple and not is_dir and not kwargs["opts"]["wrap-with-directory"]:
+			assert len(resp) == 1
+			return resp[0]
+		return resp
+	
+	
+	@base.returns_single_item
 	def file_ls(self, multihash, **kwargs):
 		"""Lists directory contents for Unix filesystem objects.
 
@@ -334,8 +347,8 @@ class Base(base.ClientBase):
 		"""
 		args = (multihash,)
 		return self._client.request('/file/ls', args, decoder='json', **kwargs)
-
-
+	
+	
 	def get(self, cid, **kwargs):
 		"""Downloads a file, or directory of files from IPFS.
 
@@ -348,8 +361,8 @@ class Base(base.ClientBase):
 		"""
 		args = (str(cid),)
 		return self._client.download('/get', args, **kwargs)
-
-
+	
+	
 	def cat(self, cid, offset=0, length=-1, **kwargs):
 		r"""Retrieves the contents of a file identified by hash.
 
@@ -383,8 +396,9 @@ class Base(base.ClientBase):
 			opts['length'] = length
 		kwargs.setdefault('opts', opts)
 		return self._client.request('/cat', args, **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def ls(self, cid, **kwargs):
 		"""Returns a list of objects linked to by the given hash.
 

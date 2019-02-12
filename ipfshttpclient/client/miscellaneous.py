@@ -7,6 +7,7 @@ from .. import exceptions
 
 
 class Base(base.ClientBase):
+	@base.returns_single_item
 	def dns(self, domain_name, recursive=False, **kwargs):
 		"""Resolves DNS links to the referenced object.
 
@@ -44,6 +45,7 @@ class Base(base.ClientBase):
 		return self._client.request('/dns', args, decoder='json', **kwargs)
 	
 	
+	@base.returns_single_item
 	def id(self, peer=None, **kwargs):
 		"""Shows IPFS Node ID info.
 
@@ -83,8 +85,8 @@ class Base(base.ClientBase):
 
 
 	#TODO: isOnline()
-
-
+	
+	
 	def ping(self, peer, *peers, **kwargs):
 		"""Provides round-trip latency information for the routing system.
 		
@@ -118,6 +120,8 @@ class Base(base.ClientBase):
 		args = (peer,) + peers
 		return self._client.request('/ping', args, decoder='json', **kwargs)
 	
+	
+	@base.returns_single_item
 	def resolve(self, name, recursive=False, **kwargs):
 		"""Accepts an identifier and resolves it to the referenced item.
 		
@@ -151,6 +155,7 @@ class Base(base.ClientBase):
 		return self._client.request('/resolve', args, decoder='json', **kwargs)
 	
 	
+	@base.returns_no_item
 	def stop(self):
 		"""Stop the connected IPFS daemon instance.
 		
@@ -166,6 +171,7 @@ class Base(base.ClientBase):
 			pass
 	
 	
+	@base.returns_single_item
 	def version(self, **kwargs):
 		"""Returns the software version of the currently connected node.
 		

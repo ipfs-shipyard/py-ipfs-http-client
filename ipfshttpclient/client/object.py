@@ -7,6 +7,7 @@ from .. import multipart
 
 
 class PatchSection(base.SectionBase):
+	@base.returns_single_item
 	def add_link(self, root, name, ref, create=False, **kwargs):
 		"""Creates a new merkledag object based on an existing one.
 
@@ -40,8 +41,9 @@ class PatchSection(base.SectionBase):
 
 		args = ((root, name, ref),)
 		return self._client.request('/object/patch/add-link', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def append_data(self, cid, new_data, **kwargs):
 		"""Creates a new merkledag object based on an existing one.
 
@@ -68,8 +70,9 @@ class PatchSection(base.SectionBase):
 		body, headers = multipart.stream_files(new_data, self.chunk_size)
 		return self._client.request('/object/patch/append-data', args, decoder='json',
 		                            data=body, headers=headers, **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def rm_link(self, root, link, **kwargs):
 		"""Creates a new merkledag object based on an existing one.
 
@@ -96,8 +99,9 @@ class PatchSection(base.SectionBase):
 		"""
 		args = ((root, link),)
 		return self._client.request('/object/patch/rm-link', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def set_data(self, root, data, **kwargs):
 		"""Creates a new merkledag object based on an existing one.
 
@@ -132,8 +136,8 @@ class PatchSection(base.SectionBase):
 
 class Section(base.SectionBase):
 	patch = base.SectionProperty(PatchSection)
-
-
+	
+	
 	def data(self, cid, **kwargs):
 		r"""Returns the raw bytes in an IPFS object.
 
@@ -153,8 +157,9 @@ class Section(base.SectionBase):
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/data', args, **kwargs)
-
-
+	
+		
+	@base.returns_single_item
 	def get(self, cid, **kwargs):
 		"""Get and serialize the DAG node named by CID.
 		
@@ -185,8 +190,9 @@ class Section(base.SectionBase):
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/get', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def links(self, cid, **kwargs):
 		"""Returns the links pointed to by the specified object.
 
@@ -217,8 +223,9 @@ class Section(base.SectionBase):
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/links', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def new(self, template=None, **kwargs):
 		"""Creates a new object from an IPFS template.
 
@@ -244,8 +251,9 @@ class Section(base.SectionBase):
 		"""
 		args = (template,) if template is not None else ()
 		return self._client.request('/object/new', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def put(self, file, **kwargs):
 		"""Stores input as a DAG object and returns its key.
 
@@ -281,8 +289,9 @@ class Section(base.SectionBase):
 		body, headers = multipart.stream_files(file, self.chunk_size)
 		return self._client.request('/object/put', decoder='json', data=body,
 		                            headers=headers, **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def stat(self, cid, **kwargs):
 		"""Get stats for the DAG node named by cid.
 

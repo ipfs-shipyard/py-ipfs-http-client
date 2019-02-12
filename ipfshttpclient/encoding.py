@@ -22,6 +22,8 @@ class Encoding(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    is_stream = False
+
     @abc.abstractmethod
     def parse_partial(self, raw):
         """Parses the given data and yields all complete data sets that can
@@ -94,6 +96,7 @@ class Dummy(Encoding):
     """Dummy parser/encoder that does nothing.
     """
     name = "none"
+    is_stream = True
 
     def parse_partial(self, raw):
         """Yields the data passed into this method.

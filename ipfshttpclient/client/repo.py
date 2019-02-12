@@ -27,8 +27,9 @@ class Section(base.SectionBase):
 			dict : List of IPFS objects that have been removed
 		"""
 		return self._client.request('/repo/gc', decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def stat(self, **kwargs):
 		"""Displays the repo's status.
 

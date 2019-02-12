@@ -1,9 +1,45 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+import functools
+
+import six
 
 from . import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_BASE
 
 from .. import multipart, http
+
+
+def returns_single_item(func):
+	@functools.wraps(func)
+	def wrapper(*args, **kwargs):
+		result = func(*args, **kwargs)
+		if isinstance(result, list):
+			if len(result) != 1:
+				print(result)
+			assert len(result) == 1, ("Called IPFS HTTP-Client function should "
+			                          "only ever return one item")
+			return result[0]
+		assert kwargs.get("stream", False), ("Called IPFS HTTP-Client function "
+		                                     "should only ever return a list, "
+		                                     "when not streaming a response")
+		return result
+	return wrapper
+
+
+def returns_no_item(func):
+	@functools.wraps(func)
+	def wrapper(*args, **kwargs):
+		result = func(*args, **kwargs)
+		if isinstance(result, (list, six.binary_type)):
+			assert len(result) == 0, ("Called IPFS HTTP-Client function should "
+			                          "never return an item")
+			return
+		assert kwargs.get("stream", False), ("Called IPFS HTTP-Client function "
+		                                     "should only ever return a list "
+		                                     "or bytes, when not streaming a "
+		                                     "response")
+		return result
+	return wrapper
 
 
 class SectionProperty(object):

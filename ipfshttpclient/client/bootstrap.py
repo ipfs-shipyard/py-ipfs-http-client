@@ -5,6 +5,7 @@ from . import base
 
 
 class Section(base.SectionBase):
+	@base.returns_single_item
 	def add(self, peer, *peers, **kwargs):
 		"""Adds peers to the bootstrap list.
 
@@ -19,8 +20,9 @@ class Section(base.SectionBase):
 		"""
 		args = (peer,) + peers
 		return self._client.request('/bootstrap/add', args, decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def list(self, **kwargs):
 		"""Returns the addresses of peers used during initial discovery of the
 		IPFS network.
@@ -42,8 +44,9 @@ class Section(base.SectionBase):
 			dict : List of known bootstrap peers
 		"""
 		return self._client.request('/bootstrap', decoder='json', **kwargs)
-
-
+	
+	
+	@base.returns_single_item
 	def rm(self, peer, *peers, **kwargs):
 		"""Removes peers from the bootstrap list.
 
