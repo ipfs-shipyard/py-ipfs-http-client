@@ -223,7 +223,7 @@ class Base(base.ClientBase):
 	files = base.SectionProperty(Section)
 
 
-	def add(self, files, recursive=False, pattern='**', *args, **kwargs):
+	def add(self, file, *files, **kwargs):
 		"""Add a file, or directory of files to IPFS.
 
 		.. code-block:: python
@@ -236,10 +236,12 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		files : Union[str, bytes, os.PathLike, int, io.IOBase, collections.abc.Iterable]
-			A filepath to either a file or directory
+		file : Union[str, bytes, os.PathLike, int, io.IOBase]
+			A filepath, path-object, file descriptor or open file object the
+			file or directory to add
 		recursive : bool
-			Controls whether files in subdirectories are added or not
+			If ``file`` is some kind of directory, controls whether files in
+			subdirectories should also be added or not (Default: ``False``)
 		pattern : Union[str, list]
 			Single `*glob* <https://docs.python.org/3/library/glob.html>`_
 			pattern or list of *glob* patterns and compiled regular expressions
@@ -263,6 +265,8 @@ class Base(base.ClientBase):
 			dict: File name and hash of the added file node
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
+		recursive = kwargs.pop("recursive", False)
+		pattern   = kwargs.pop("pattern", "**")
 		opts = {
 			"trickle": kwargs.pop("trickle", False),
 			"only-hash": kwargs.pop("only_hash", False),
@@ -273,8 +277,12 @@ class Base(base.ClientBase):
 			opts["chunker"] = kwargs.pop("chunker")
 		kwargs.setdefault("opts", {}).update(opts)
 
+		assert not isinstance(file, (tuple, list)), \
+			"Use `client.add(name1, name2, …)` to add several items"
+		multiple = (len(files) > 0)
+		to_send  = ((file,) + files) if multiple else file
 		body, headers = multipart.stream_filesystem_node(
-			files, recursive, pattern, self.chunk_size
+			to_send, recursive, pattern, self.chunk_size
 		)
 		return self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)
 

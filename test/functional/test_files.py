@@ -128,7 +128,7 @@ def test_only_hash_file(client):
 
 
 def test_add_multiple_from_list(client, cleanup_pins):
-	res = client.add([FAKE_FILE1_PATH, FAKE_FILE2_PATH])
+	res = client.add(FAKE_FILE1_PATH, FAKE_FILE2_PATH)
 	assert FAKE_FILES_HASH == res
 
 
