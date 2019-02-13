@@ -1,2 +1,2 @@
 flake8~=3.7
-flake8-tabs~=1.0.1
+flake8-tabs~=2.0.0

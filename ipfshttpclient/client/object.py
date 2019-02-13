@@ -158,7 +158,7 @@ class Section(base.SectionBase):
 		args = (str(cid),)
 		return self._client.request('/object/data', args, **kwargs)
 	
-		
+	
 	@base.returns_single_item
 	def get(self, cid, **kwargs):
 		"""Get and serialize the DAG node named by CID.
