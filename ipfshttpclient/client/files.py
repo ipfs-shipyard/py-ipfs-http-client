@@ -285,7 +285,7 @@ class Base(base.ClientBase):
 		kwargs.setdefault("opts", {}).update(opts)
 
 		assert not isinstance(file, (tuple, list)), \
-			"Use `client.add(name1, name2, …)` to add several items"
+		       "Use `client.add(name1, name2, …)` to add several items"
 		multiple = (len(files) > 0)
 		to_send  = ((file,) + files) if multiple else file
 		body, headers, is_dir = multipart.stream_filesystem_node(
