@@ -78,7 +78,7 @@ Pass in API options:
 Add a directory and match against a filename pattern:
 
 ```py
->>> http_client.add('photos', match='*.jpg')
+>>> http_client.add('photos', pattern='*.jpg')
 [{'Hash': 'QmcqBstfu5AWpXUqbucwimmWdJbu89qqYmE3WXVktvaXhX',
   'Name': 'photos/photo1.jpg'},
  {'Hash': 'QmSbmgg7kYwkSNzGLvWELnw1KthvTAMszN5TNg3XQ799Fu',
