@@ -48,8 +48,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Dictionary with the key "Strings" who's value is an array of
-				   topics we are subscribed to
+			dict
+		
+		+---------+-------------------------------------------------+
+		| Strings | List of topic the IPFS daemon is subscribbed to |
+		+---------+-------------------------------------------------+
 		"""
 		return self._client.request('/pubsub/ls', decoder='json', **kwargs)
 	
@@ -98,8 +101,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Dictionary with the ke "Strings" who's value is id of IPFS
-				   peers we're pubsubbing with
+			dict
+		
+		+---------+-------------------------------------------------+
+		| Strings | List of PeerIDs of peers we are pubsubbing with |
+		+---------+-------------------------------------------------+
 		"""
 		args = (topic,) if topic is not None else ()
 		return self._client.request('/pubsub/peers', args, decoder='json', **kwargs)
@@ -129,7 +135,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			list : empty list
+			list
+				An empty list
 		"""
 		args = (topic, payload)
 		return self._client.request('/pubsub/pub', args, decoder='json', **kwargs)
@@ -151,13 +158,13 @@ class Section(base.SectionBase):
 
 			>>> sub = client.pubsub.subscribe('testing')
 			>>> with client.pubsub.subscribe('testing') as sub:
-			# publish a message 'hello' to the topic 'testing'
-			...	client.pubsub.publish('testing', 'hello')
-			... for message in sub:
-			...     print(message)
-			...     # Stop reading the subscription after
-			...     # we receive one publication
-			...     break
+			... 	# publish a message 'hello' to the topic 'testing'
+			... 	client.pubsub.publish('testing', 'hello')
+			... 	for message in sub:
+			... 		print(message)
+			... 		# Stop reading the subscription after
+			... 		# we receive one publication
+			... 		break
 			{'from': '<base64encoded IPFS id>',
 			 'data': 'aGVsbG8=',
 			 'topicIDs': ['testing']}
@@ -177,9 +184,9 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			Generator wrapped in a context
-			manager that maintains a connection
-			stream to the given topic.
+			:class:`SubChannel`
+				Generator wrapped in a context manager that maintains a
+				connection stream to the given topic.
 		"""
 		args = (topic, discover)
 		return SubChannel(self._client.request('/pubsub/sub', args, stream=True, decoder='json'))

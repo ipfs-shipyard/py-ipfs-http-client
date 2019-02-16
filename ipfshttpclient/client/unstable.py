@@ -14,7 +14,7 @@ class LogSection(base.SectionBase):
 		.. code-block:: python
 
 			>>> client.unstable.log.level("path", "info")
-			{'Message': "Changed log level of 'path' to 'info'\n"}
+			{"Message": "Changed log level of 'path' to 'info'\n"}
 
 		Parameters
 		----------
@@ -32,7 +32,11 @@ class LogSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : Status message
+			dict
+		
+		+--------+-----------------------+
+		| Status | Textual status report |
+		+--------+-----------------------+
 		"""
 		args = (subsystem, level)
 		return self._client.request('/log/level', args,
@@ -69,7 +73,11 @@ class LogSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of daemon logging subsystems
+			dict
+		
+		+---------+-----------------------------------+
+		| Strings | List of daemon logging subsystems |
+		+---------+-----------------------------------+
 		"""
 		return self._client.request('/log/ls', decoder='json', **kwargs)
 	
@@ -109,7 +117,7 @@ class LogSection(base.SectionBase):
 
 		Returns
 		-------
-			iterable
+			Iterable[dict]
 		"""
 		return self._client.request('/log/tail', decoder='json',
 		                            stream=True, **kwargs)
@@ -132,7 +140,7 @@ class RefsSection(base.SectionBase):
 		
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			Path to the object(s) to list refs from
 		
 		Returns

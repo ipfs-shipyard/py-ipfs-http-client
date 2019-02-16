@@ -21,12 +21,13 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
-			The base58 CID of an existing block to get
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
+			The CID of an existing block to get
 
 		Returns
 		-------
-			bytes : Value of the requested block
+			bytes
+				Contents of the requested block
 		"""
 		args = (str(cid),)
 		return self._client.request('/block/get', args, **kwargs)
@@ -49,9 +50,10 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Information about the new block
-
-				   See :meth:`~ipfshttpclient.Client.block.stat`
+			dict
+				Information about the new block
+				
+				See :meth:`~ipfshttpclient.Client.block.stat`
 		"""
 		body, headers = multipart.stream_files(file, self.chunk_size)
 		return self._client.request('/block/put', decoder='json', data=body,
@@ -70,12 +72,13 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
-			The base58 CID of an existing block to stat
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
+			The CID of an existing block to stat
 
 		Returns
 		-------
-			dict : Information about the requested block
+			dict
+				Information about the requested block
 		"""
 		args = (str(cid),)
 		return self._client.request('/block/stat', args, decoder='json', **kwargs)

@@ -37,7 +37,11 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			dict : Resource were a DNS entry points to
+			dict
+		
+		+------+-------------------------------------+
+		| Path | Resource were a DNS entry points to |
+		+------+-------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["recursive"] = recursive
 
@@ -78,7 +82,8 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			dict : Information about the IPFS node
+			dict
+				Information about the IPFS node
 		"""
 		args = (peer,) if peer is not None else ()
 		return self._client.request('/id', args, decoder='json', **kwargs)
@@ -101,6 +106,11 @@ class Base(base.ClientBase):
 			 {'Success': False, 'Time': 0,
 			  'Text': 'Peer lookup error: routing: not found'}]
 		
+		.. hint::
+			
+			Pass ``stream=True`` to receive ping progress reports as they
+			arrive.
+		
 		Parameters
 		----------
 		peer : str
@@ -110,7 +120,8 @@ class Base(base.ClientBase):
 		
 		Returns
 		-------
-			list : Progress reports from the ping
+			list
+				Progress reports from the ping
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "count" in kwargs:
@@ -147,7 +158,11 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			dict : IPFS path of resource
+			dict
+		
+		+------+-------------------------------------+
+		| Path | IPFS path of the requested resource |
+		+------+-------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["recursive"] = recursive
 		
@@ -160,8 +175,8 @@ class Base(base.ClientBase):
 		"""Stop the connected IPFS daemon instance.
 		
 		Sending any further requests after this will fail with
-		``ipfsapi.exceptions.ConnectionError``, until you start another IPFS
-		daemon instance.
+		:class:`~ipfshttpclient.exceptions.ConnectionError`, until you start
+		another IPFS daemon instance.
 		"""
 		try:
 			return self._client.request('/shutdown')
@@ -183,6 +198,7 @@ class Base(base.ClientBase):
 		
 		Returns
 		-------
-			dict : Daemon and system version information
+			dict
+				Daemon and system version information
 		"""
 		return self._client.request('/version', decoder='json', **kwargs)

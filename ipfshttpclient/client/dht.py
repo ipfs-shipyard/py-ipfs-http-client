@@ -13,7 +13,7 @@ class Section(base.SectionBase):
 
 		.. code-block:: python
 
-			>>> client.dht_findpeer("QmaxqKpiYNr62uSFBhxJAMmEMkT6dvc3oHkrZN … MTLZ")
+			>>> client.dht.findpeer("QmaxqKpiYNr62uSFBhxJAMmEMkT6dvc3oHkrZN … MTLZ")
 			[{'ID': 'QmfVGMFrwW6AV6fTWmD6eocaTybffqAvkVLXQEFrYdk6yc',
 			  'Extra': '', 'Type': 6, 'Responses': None},
 			 {'ID': 'QmTKiUdjbRjeN9yPhNhG1X38YNuBdjeiV9JXYWzCAJ4mj5',
@@ -38,7 +38,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of multiaddrs
+			dict
+				List of multiaddrs
 		"""
 		args = (peer_id,) + peer_ids
 		return self._client.request('/dht/findpeer', args, decoder='json', **kwargs)
@@ -49,7 +50,7 @@ class Section(base.SectionBase):
 
 		.. code-block:: python
 
-			>>> client.dht_findprovs("QmNPXDC6wTXVmZ9Uoc8X1oqxRRJr4f1sDuyQu … mpW2")
+			>>> client.dht.findprovs("QmNPXDC6wTXVmZ9Uoc8X1oqxRRJr4f1sDuyQu … mpW2")
 			[{'ID': 'QmaxqKpiYNr62uSFBhxJAMmEMkT6dvc3oHkrZNpH2VMTLZ',
 			  'Extra': '', 'Type': 6, 'Responses': None},
 			 {'ID': 'QmaK6Aj5WXkfnWGoWq7V8pGUYzcHPZp4jKQ5JtmRvSzQGk',
@@ -72,12 +73,13 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The DHT key to find providers for
 
 		Returns
 		-------
-			dict : List of provider Peer IDs
+			dict
+				List of provider Peer IDs
 		"""
 		args = (str(cid),) + tuple(str(c) for c in cids)
 		return self._client.request('/dht/findprovs', args, decoder='json', **kwargs)
@@ -138,7 +140,7 @@ class Section(base.SectionBase):
 
 		.. code-block:: python
 
-			>>> client.dht_put("QmVgNoP89mzpgEAAqK8owYoDEyB97Mkc … E9Uc", "test123")
+			>>> client.dht.put("QmVgNoP89mzpgEAAqK8owYoDEyB97Mkc … E9Uc", "test123")
 			[{'ID': 'QmfLy2aqbhU1RqZnGQyqHSovV8tDufLUaPfN1LNtg5CvDZ',
 			  'Extra': '', 'Type': 5, 'Responses': None},
 			 {'ID': 'QmZ5qTkNvvZ5eFq9T4dcCEK7kX8L7iysYEpvQmij9vokGE',
@@ -169,7 +171,7 @@ class Section(base.SectionBase):
 
 		.. code-block:: python
 
-			>>> client.dht_query("/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDM … uvuJ")
+			>>> client.dht.query("/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDM … uvuJ")
 			[{'ID': 'QmPkFbxAQ7DeKD5VGSh9HQrdS574pyNzDmxJeGrRJxoucF',
 			  'Extra': '', 'Type': 2, 'Responses': None},
 			 {'ID': 'QmR1MhHVLJSLt9ZthsNNhudb1ny1WdhY4FPW21ZYFWec4f',
@@ -187,7 +189,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of peers IDs
+			dict
+				List of peers IDs
 		"""
 		args = (peer_id,) + peer_ids
 		return self._client.request('/dht/query', args, decoder='json', **kwargs)

@@ -25,7 +25,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of IPFS objects that have been pinned
+			dict
+		
+		+------+-----------------------------------------------------------+
+		| Pins | List of IPFS objects that have been pinned by this action |
+		+------+-----------------------------------------------------------+
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "recursive" in kwargs:
@@ -51,7 +55,8 @@ class Section(base.SectionBase):
 				'QmNPZUCeSN5458Uwny8mXSWubjjr6J … kP5e': {'Type': 'recursive'},
 				'QmNg5zWpRMxzRAVg7FTQ3tUxVbKj8E … gHPz': {'Type': 'indirect'},
 				…
-				'QmNiuVapnYCrLjxyweHeuk6Xdqfvts … wCCe': {'Type': 'indirect'}}}
+				'QmNiuVapnYCrLjxyweHeuk6Xdqfvts … wCCe': {'Type': 'indirect'}
+			}}
 
 		Parameters
 		----------
@@ -65,7 +70,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Hashes of pinned IPFS objects and why they are pinned
+			dict
+		
+		+------+--------------------------------------------------------------+
+		| Keys | Mapping of IPFS object names currently pinned to their types |
+		+------+--------------------------------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["type"] = type
 
@@ -93,7 +102,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of IPFS objects that have been unpinned
+			dict
+		
+		+------+-------------------------------------------------------------+
+		| Pins | List of IPFS objects that have been unpinned by this action |
+		+------+-------------------------------------------------------------+
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "recursive" in kwargs:
@@ -131,7 +144,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of IPFS objects affected by the pinning operation
+			dict
+		
+		+------+-------------------------------------------------------------+
+		| Pins | List of IPFS objects that have been affected by this action |
+		+------+-------------------------------------------------------------+
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "unpin" in kwargs:
@@ -173,7 +190,13 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			iterable
+			Iterable[dict]
+		
+		+-----+----------------------------------------------------+
+		| Cid | IPFS object ID checked                             |
+		+-----+----------------------------------------------------+
+		| Ok  | Whether the given object was successfully verified |
+		+-----+----------------------------------------------------+
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		if "verbose" in kwargs:

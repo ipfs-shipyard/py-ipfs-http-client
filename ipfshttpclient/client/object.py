@@ -35,7 +35,11 @@ class PatchSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : Hash of new object
+			dict
+		
+		+------+----------------------------------+
+		| Hash | Hash of the newly derived object |
+		+------+----------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["create"] = create
 
@@ -57,14 +61,18 @@ class PatchSection(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The hash of an ipfs object to modify
 		new_data : Union[str, bytes, os.PathLike, io.IOBase, int]
 			The data to append to the object's data section
 
 		Returns
 		-------
-			dict : Hash of new object
+			dict
+		
+		+------+----------------------------------+
+		| Hash | Hash of the newly derived object |
+		+------+----------------------------------+
 		"""
 		args = (str(cid),)
 		body, headers = multipart.stream_files(new_data, self.chunk_size)
@@ -95,7 +103,11 @@ class PatchSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : Hash of new object
+			dict
+		
+		+------+----------------------------------+
+		| Hash | Hash of the newly derived object |
+		+------+----------------------------------+
 		"""
 		args = ((root, link),)
 		return self._client.request('/object/patch/rm-link', args, decoder='json', **kwargs)
@@ -125,7 +137,11 @@ class PatchSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : Hash of new object
+			dict
+		
+		+------+----------------------------------+
+		| Hash | Hash of the newly derived object |
+		+------+----------------------------------+
 		"""
 		args = (root,)
 		body, headers = multipart.stream_files(data, self.chunk_size)
@@ -148,12 +164,13 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
-			bytes : Raw object data
+			bytes
+				Raw object data
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/data', args, **kwargs)
@@ -177,16 +194,23 @@ class Section(base.SectionBase):
 				{'Hash': 'QmZNPyKVriMsZwJSNXeQtVQSNU4v4KEKGUQaMT61LPahso',
 				 'Name': 'lib',               'Size': 268261},
 				{'Hash': 'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
-				 'Name': 'published-version', 'Size': 55}]}
+				 'Name': 'published-version', 'Size': 55}
+			]}
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
-			dict : Object data and links
+			dict
+		
+		+-------+------------------------------------------------+
+		| Data  | Raw object data (ISO-8859-1 decoded)           |
+		+-------+------------------------------------------------+
+		| Links | List of links associated with the given object |
+		+-------+------------------------------------------------+
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/get', args, decoder='json', **kwargs)
@@ -214,12 +238,18 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			Key of the object to retrieve, in CID format
 
 		Returns
 		-------
-			dict : Object hash and merkedag links
+			dict
+		
+		+-------+------------------------------------------------+
+		| Hash  | The requested object CID                       |
+		+-------+------------------------------------------------+
+		| Links | List of links associated with the given object |
+		+-------+------------------------------------------------+
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/links', args, decoder='json', **kwargs)
@@ -247,7 +277,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Object hash
+			dict
+		
+		+-------+----------------------------------------+
+		| Hash  | The hash of the requested empty object |
+		+-------+----------------------------------------+
 		"""
 		args = (template,) if template is not None else ()
 		return self._client.request('/object/new', args, decoder='json', **kwargs)
@@ -282,9 +316,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Hash and links of the created DAG object
-
-				   See :meth:`~ipfshttpclient.Client.object.links`
+			dict
+				Hash and links of the created DAG object
+				
+				See the :meth:`~ipfshttpclient.Client.object.links` method for
+				details.
 		"""
 		body, headers = multipart.stream_files(file, self.chunk_size)
 		return self._client.request('/object/put', decoder='json', data=body,
@@ -304,7 +340,7 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			Key of the object to retrieve, in CID format
 
 		Returns

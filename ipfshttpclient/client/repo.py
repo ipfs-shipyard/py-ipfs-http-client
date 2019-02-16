@@ -24,7 +24,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of IPFS objects that have been removed
+			dict
+				List of IPFS objects that have been removed
 		"""
 		return self._client.request('/repo/gc', decoder='json', **kwargs)
 	
@@ -46,7 +47,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : General information about the IPFS file repository
+			dict
+				General information about the IPFS file repository
 
 		+------------+-------------------------------------------------+
 		| NumObjects | Number of objects in the local repo.            |

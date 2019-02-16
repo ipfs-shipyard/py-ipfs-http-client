@@ -64,7 +64,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Python IPFS HTTP Client'
-copyright = '2016, py-ipfs-http-client team'
+copyright = '2019, py-ipfs-http-client team'
 author = 'py-ipfs-http-client team'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -313,7 +313,8 @@ autodoc_member_order = 'groupwise'
 
 # External documentation link mapping
 intersphinx_mapping = {
-	'python': ('https://docs.python.org/3', None)
+	'python': ('https://docs.python.org/3', None),
+	'cid': ('https://py-cid.readthedocs.io/en/master/', None)
 }
 
 # -- Napoleon settings ----------------------------------------------------

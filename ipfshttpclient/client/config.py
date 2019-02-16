@@ -10,11 +10,6 @@ class Section(base.SectionBase):
 		#TODO: Support the optional `key` parameter
 		"""Returns the current used server configuration.
 
-		.. warning::
-
-			The configuration file contains private key data that must be
-			handled with care.
-
 		.. code-block:: python
 
 			>>> config = client.config.get()
@@ -27,30 +22,31 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : The entire IPFS daemon configuration
+			dict
+				The entire IPFS daemon configuration
 		"""
 		return self._client.request('/config/show', decoder='json', **kwargs)
 	
 	
 	@base.returns_single_item
 	def replace(self, config, **kwargs):
-		"""Replaces the existing config with a user-defined config.
+		"""Replaces the existing configuration with a new configuration tree.
 
 		Make sure to back up the config file first if neccessary, as this
-		operation can't be undone.
+		operation can not be undone.
 		"""
 		return self._client.request('/config/replace', (config,), decoder='json', **kwargs)
 	
 	
 	@base.returns_single_item
 	def set(self, key, value=None, **kwargs):
-		"""Add or replace a configuration value.
+		"""Add or replace a single configuration value.
 
 		.. code-block:: python
 
-			>>> client.config("Addresses.Gateway")
+			>>> client.config.set("Addresses.Gateway")
 			{'Key': 'Addresses.Gateway', 'Value': '/ip4/127.0.0.1/tcp/8080'}
-			>>> client.config("Addresses.Gateway", "/ip4/127.0.0.1/tcp/8081")
+			>>> client.config.set("Addresses.Gateway", "/ip4/127.0.0.1/tcp/8081")
 			{'Key': 'Addresses.Gateway', 'Value': '/ip4/127.0.0.1/tcp/8081'}
 
 		Parameters
@@ -62,7 +58,13 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Requested/updated key and its (new) value
+			dict
+		
+		+-------+---------------------------------------------+
+		| Key   | The requested configuration key             |
+		+-------+---------------------------------------------+
+		| Value | The new value of the this configuration key |
+		+-------+---------------------------------------------+
 		"""
 		args = (key, value)
 		return self._client.request('/config', args, decoder='json', **kwargs)

@@ -49,11 +49,11 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 	Parameters
 	----------
 	version : str
-		The version of an IPFS daemon.
+		The actual version of an IPFS daemon
 	minimum : str
-		The minimal IPFS version to allow.
+		The minimal IPFS daemon version to allowed
 	maximum : str
-		The maximum IPFS version to allow.
+		The maximum IPFS daemon version to allowed
 	"""
 	# Convert version strings to integer tuples
 	version = list(map(int, version.split('-', 1)[0].split('.')))
@@ -84,7 +84,7 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 
 	Returns
 	-------
-		~ipfshttpclient.Client
+		:class:`~ipfshttpclient.Client`
 	"""
 	# Create client instance
 	client = Client(host, port, base, chunk_size, **defaults)
@@ -96,6 +96,16 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 
 
 class Client(files.Base, miscellaneous.Base):
+	"""The main IPFS HTTP client class
+	
+	Allows access to an IPFS daemon instance using its HTTP API by exposing an
+	`IPFS Interface Core <https://github.com/ipfs/interface-ipfs-core/tree/master/SPEC>`__
+	compatible set of methods.
+	
+	It is possible to instantiate this class directly, using the same parameters
+	as :func:`connect`, to prevent the client from checking for an active and
+	compatible version of the daemon.
+	"""
 	bitswap   = base.SectionProperty(bitswap.Section)
 	block     = base.SectionProperty(block.Section)
 	bootstrap = base.SectionProperty(bootstrap.Section)
@@ -134,7 +144,8 @@ class Client(files.Base, miscellaneous.Base):
 
 		Returns
 		-------
-			str : Hash of the added IPFS object
+			str
+				Hash of the added IPFS object
 		"""
 		body, headers = multipart.stream_bytes(data, self.chunk_size)
 		return self._client.request('/add', decoder='json',
@@ -159,7 +170,8 @@ class Client(files.Base, miscellaneous.Base):
 
 		Returns
 		-------
-			str : Hash of the added IPFS object
+			str
+				Hash of the added IPFS object
 		"""
 		body, headers = multipart.stream_text(string, self.chunk_size)
 		return self._client.request('/add', decoder='json',
@@ -180,7 +192,8 @@ class Client(files.Base, miscellaneous.Base):
 
 		Returns
 		-------
-			str : Hash of the added IPFS object
+			str
+				Hash of the added IPFS object
 		"""
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 	
@@ -196,11 +209,12 @@ class Client(files.Base, miscellaneous.Base):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 		   CID of the IPFS object to load
 
 		Returns
 		-------
-			object : Deserialized IPFS JSON object value
+			object
+				Deserialized IPFS JSON object value
 		"""
 		return self.cat(cid, decoder='json', **kwargs)

@@ -37,11 +37,16 @@ class Section(base.SectionBase):
 				'/ip4/104.236.176.52/tcp/4001/ipfs/QmSoLnSGccFuZQJzRa … ca9z',
 				'/ip4/104.236.179.241/tcp/4001/ipfs/QmSoLPppuBtQSGwKD … KrGM',
 				…
-				'/ip4/178.62.61.185/tcp/4001/ipfs/QmSoLMeWqB7YGVLJN3p … QBU3']}
+				'/ip4/178.62.61.185/tcp/4001/ipfs/QmSoLMeWqB7YGVLJN3p … QBU3'
+			]}
 
 		Returns
 		-------
-			dict : List of known bootstrap peers
+			dict
+		
+		+-------+-------------------------------+
+		| Peers | List of known bootstrap peers |
+		+-------+-------------------------------+
 		"""
 		return self._client.request('/bootstrap', decoder='json', **kwargs)
 	
