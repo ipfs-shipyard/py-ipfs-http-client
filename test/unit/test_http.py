@@ -240,17 +240,17 @@ def test_failed_download(http_client):
 		with pytest.raises(ipfshttpclient.exceptions.StatusError):
 			http_client.download("/fail")
 
-def test_download_timeout(self):
+def test_download_timeout(http_client):
         """Tests that a timed-out download raises a TimeoutError."""
         with HTTMock(return_timeout_2_sec):
                 with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
-                        self.client.download('/timeout', timeout=1)
+                        http_client.download('/timeout', timeout=1)
 
-def test_request_timeout(self):
+def test_request_timeout(http_client):
         """Tests that a timed-out request raises a TimeoutError."""
         with HTTMock(return_timeout_2_sec):
                 with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
-                        self.client.request('/timeout', timeout=1)
+                        http_client.request('/timeout', timeout=1)
 
 def test_session(http_client):
 	"""Tests that a session is established and then closed."""
