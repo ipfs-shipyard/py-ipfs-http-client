@@ -8,6 +8,7 @@ TestHttp -- A TCP client for interacting with an IPFS daemon
 """
 
 import json
+import time
 
 import pytest
 import pytest_localserver.http
@@ -35,6 +36,28 @@ def http_client(http_server):
 	return ipfshttpclient.http.HTTPClient(
 		*(http_server.server_address + (ipfshttpclient.DEFAULT_BASE,))
 	)
+
+
+def slow_http_server_app(environ, start_response):
+	"""
+	HTTP server application that will be slow to responsed (2 seconds)
+	"""
+	start_response("400 Bad Request", [
+		("Content-Type", "text/json")
+	])
+	
+	time.sleep(0.5)
+	yield json.dumps({
+		"Type": "error",
+		"Message": "Timeout was not triggered"
+	}).encode("utf-8")
+
+@pytest.fixture(scope="module")
+def slow_http_server(request):
+	server = pytest_localserver.http.WSGIServer(application=slow_http_server_app)
+	server.start()
+	request.addfinalizer(server.stop)
+	return server
 
 
 
@@ -135,6 +158,24 @@ def test_failed_download(http_client, http_server):
 	
 	with pytest.raises(ipfshttpclient.exceptions.StatusError):
 		http_client.download("/fail")
+
+def test_download_timeout(slow_http_server):
+	"""Tests that a timed-out download raises a TimeoutError."""
+	http_client = ipfshttpclient.http.HTTPClient(
+		*(slow_http_server.server_address + (ipfshttpclient.DEFAULT_BASE,))
+	)
+	
+	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
+		http_client.download('/timeout', timeout=0.1)
+
+def test_request_timeout(slow_http_server):
+	"""Tests that a timed-out request raises a TimeoutError."""
+	http_client = ipfshttpclient.http.HTTPClient(
+		*(slow_http_server.server_address + (ipfshttpclient.DEFAULT_BASE,))
+	)
+	
+	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
+		http_client.request('/timeout', timeout=0.1)
 
 def test_session(http_client, http_server):
 	"""Tests that a session is established and then closed."""
