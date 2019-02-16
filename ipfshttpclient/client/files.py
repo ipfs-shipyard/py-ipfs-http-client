@@ -27,7 +27,6 @@ class Section(base.SectionBase):
 				{'Size': 0, 'Hash': '', 'Name': 'test', 'Type': 0}
 			]}
 			>>> client.files.cp("/test", "/bla")
-			''
 			>>> client.files.ls("/")
 			{'Entries': [
 				{'Size': 0, 'Hash': '', 'Name': 'Software', 'Type': 0},
@@ -68,7 +67,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Directory entries
+			dict
+		
+		+---------+------------------------------------------+
+		| Entries | List of files in the given MFS directory |
+		+---------+------------------------------------------+
 		"""
 		args = (path,)
 		return self._client.request('/files/ls', args, decoder='json', **kwargs)
@@ -197,7 +200,6 @@ class Section(base.SectionBase):
 		.. code-block:: python
 
 			>>> client.files.write("/test/file", io.BytesIO(b"hi"), create=True)
-			b''
 
 		Parameters
 		----------
@@ -273,9 +275,9 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			Union[dict, list] : File name and hash of the added file node, will
-			                    return a list of one or more items unless only
-			                    a single file was given
+			Union[dict, list]
+				File name and hash of the added file node, will return a list
+				of one or more items unless only a single file was given
 		"""
 		#PY2: No support for kw-only parameters after glob parameters
 		recursive = kwargs.pop("recursive", False)
@@ -365,7 +367,7 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The path to the IPFS object(s) to be outputted
 		"""
 		args = (str(cid),)
@@ -386,7 +388,7 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The name or path of the IPFS object(s) to be retrieved
 		offset : int
 			Byte offset to begin reading from
@@ -395,7 +397,8 @@ class Base(base.ClientBase):
 
 		Returns
 		-------
-			bytes : File contents
+			bytes
+				The file's contents
 		"""
 		args = (str(cid),)
 		opts = {}
@@ -428,12 +431,13 @@ class Base(base.ClientBase):
 
 		Parameters
 		----------
-		cid : Union[str, cid.BaseCID]
+		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The path to the IPFS object(s) to list links from
 
 		Returns
 		-------
-			dict : Directory information and contents
+			dict
+				Directory information and contents
 		"""
 		args = (str(cid),)
 		return self._client.request('/ls', args, decoder='json', **kwargs)

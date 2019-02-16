@@ -25,7 +25,11 @@ class FiltersSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of swarm filters added
+			dict
+		
+		+---------+-----------------------------+
+		| Strings | List of swarm filters added |
+		+---------+-----------------------------+
 		"""
 		args = (address,) + addresses
 		return self._client.request('/swarm/filters/add', args, decoder='json', **kwargs)
@@ -51,7 +55,11 @@ class FiltersSection(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of swarm filters removed
+			dict
+		
+		+---------+-------------------------------+
+		| Strings | List of swarm filters removed |
+		+---------+-------------------------------+
 		"""
 		args = (address,) + addresses
 		return self._client.request('/swarm/filters/rm', args, decoder='json', **kwargs)
@@ -91,7 +99,12 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Multiaddrs of peers by peer id
+			dict
+				Multiaddrs of peers by peer id
+		
+		+-------+-------------------------------------------------------+
+		| Addrs | Mapping of PeerIDs to a list its advatised MultiAddrs |
+		+-------+-------------------------------------------------------+
 		"""
 		return self._client.request('/swarm/addrs', decoder='json', **kwargs)
 	
@@ -117,7 +130,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Textual connection status report
+			dict
+				Textual connection status report
 		"""
 		args = (address,) + addresses
 		return self._client.request('/swarm/connect', args, decoder='json', **kwargs)
@@ -147,7 +161,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Textual connection status report
+			dict
+				Textual connection status report
 		"""
 		args = (address,) + addresses
 		return self._client.request('/swarm/disconnect', args, decoder='json', **kwargs)
@@ -165,10 +180,15 @@ class Section(base.SectionBase):
 				'/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDMGvV2BGHeYER … uvuJ',
 				'/ip4/104.223.59.174/tcp/4001/ipfs/QmeWdgoZezpdHz1PX8 … 1jB6',
 				…
-				'/ip6/fce3: … :f140/tcp/43901/ipfs/QmSoLnSGccFuZQJzRa … ca9z']}
+				'/ip6/fce3: … :f140/tcp/43901/ipfs/QmSoLnSGccFuZQJzRa … ca9z'
+			]}
 
 		Returns
 		-------
-			dict : List of multiaddrs of currently connected peers
+			dict
+		
+		+---------+----------------------------------------------------+
+		| Strings | List of MultiAddrs that the daemon is connected to |
+		+---------+----------------------------------------------------+
 		"""
 		return self._client.request('/swarm/peers', decoder='json', **kwargs)

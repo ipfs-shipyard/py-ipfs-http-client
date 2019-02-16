@@ -50,7 +50,13 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : IPNS hash and the IPFS path it points at
+			dict
+		
+		+-------+----------------------------------------------------------+
+		| Name  | Key ID of the key to which the given value was published |
+		+-------+----------------------------------------------------------+
+		| Value | Value that was published                                 |
+		+-------+----------------------------------------------------------+
 		"""
 		opts = {"lifetime": lifetime,
 		        "resolve": resolve,
@@ -95,7 +101,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : The IPFS path the IPNS hash points at
+			dict
+		
+		+------+--------------------------------------+
+		| Path | The resolved value of the given name |
+		+------+--------------------------------------+
 		"""
 		opts = {"recursive": recursive, "nocache": nocache}
 		if dht_record_count is not None:

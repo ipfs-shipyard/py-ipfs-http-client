@@ -33,7 +33,13 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : Key name and Key Id
+			dict
+		
+		+------+---------------------------------------------------+
+		| Name | The name of the newly generated key               |
+		+------+---------------------------------------------------+
+		| Id   | The key ID/fingerprint of the newly generated key |
+		+------+---------------------------------------------------+
 		"""
 
 		opts = {"type": type, "size": size}
@@ -63,7 +69,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			list : List of dictionaries with Names and Ids of public keys.
+			dict
+		
+		+------+--------------------------------------------------------+
+		| Keys | List of dictionaries with Names and Ids of public keys |
+		+------+--------------------------------------------------------+
 		"""
 		return self._client.request('/key/list', decoder='json', **kwargs)
 	
@@ -89,7 +99,8 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of key names and IDs that have been removed
+			dict
+				Information about the key renameal
 		"""
 		args = (key_name, new_key_name)
 		return self._client.request(
@@ -103,7 +114,7 @@ class Section(base.SectionBase):
 
 		.. code-block:: python
 
-			>>> client.key_rm("bla")
+			>>> client.key.rm("bla")
 			{"Keys": [
 				{"Name": "bla",
 				 "Id": "QmfJpR6paB6h891y7SYXGe6gapyNgepBeAYMbyejWA4FWA"}
@@ -116,7 +127,11 @@ class Section(base.SectionBase):
 
 		Returns
 		-------
-			dict : List of key names and IDs that have been removed
+			dict
+		
+		+------+--------------------------------------------------+
+		| Keys | List of key names and IDs that have been removed |
+		+------+--------------------------------------------------+
 		"""
 		args = (key_name,) + key_names
 		return self._client.request('/key/rm', args, decoder='json', **kwargs)

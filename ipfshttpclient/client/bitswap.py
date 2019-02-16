@@ -25,7 +25,11 @@ class Section(base.SectionBase):
 		
 		Returns
 		-------
-			dict : List of wanted blocks
+			dict
+		
+		+------+----------------------------------------------------+
+		| Keys | List of blocks the connected daemon is looking for |
+		+------+----------------------------------------------------+
 		"""
 		args = (peer,)
 		return self._client.request('/bitswap/wantlist', args, decoder='json', **kwargs)
@@ -57,6 +61,7 @@ class Section(base.SectionBase):
 		
 		Returns
 		-------
-			dict : Statistics, peers and wanted blocks
+			dict
+				Statistics, peers and wanted blocks
 		"""
 		return self._client.request('/bitswap/stat', decoder='json', **kwargs)
