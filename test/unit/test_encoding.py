@@ -9,7 +9,6 @@ import json
 
 import pytest
 import six
-from httmock import urlmatch, HTTMock
 
 import ipfshttpclient.encoding
 import ipfshttpclient.exceptions
