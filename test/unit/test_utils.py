@@ -5,9 +5,7 @@ TestUtils -- defines a set of unit tests for untils.py
 """
 
 import io
-import json
-import os
-import pickle
+import os.path
 import unittest
 
 import ipfshttpclient.utils as utils

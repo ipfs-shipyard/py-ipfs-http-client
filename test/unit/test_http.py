@@ -8,12 +8,9 @@ TestHttp -- A TCP client for interacting with an IPFS daemon
 """
 
 import json
-import tarfile
-import os
 
 from httmock import urlmatch, HTTMock
 import pytest
-import requests
 
 import ipfshttpclient.http
 import ipfshttpclient.exceptions
