@@ -1,7 +1,7 @@
-httmock ~= 1.3
 pathlib ; python_version < "3.4"
 pytest ~= 4.2
 pytest-cov ~= 2.6
+pytest-localserver ~= 0.5
 pytest-mock ~= 1.10
 pytest-ordering ~= 0.6
 
