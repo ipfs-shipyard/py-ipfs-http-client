@@ -18,6 +18,8 @@ All methods accept the following parameters in their ``kwargs``:
 
  * **opts** (*dict*) – A dictionary of custom parameters to be sent with the
                        HTTP request
+ * **timeout** (**float**) – The number of seconds to wait of a daemon reply
+                             before giving up
 
 ```eval_rst
 .. autofunction:: ipfshttpclient.connect
