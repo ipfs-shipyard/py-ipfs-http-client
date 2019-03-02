@@ -36,7 +36,7 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item
-	def ls(self, type="all", **kwargs):
+	def ls(self, *cids, **kwargs):
 		"""Lists objects pinned to local storage.
 
 		By default, all pinned objects are returned, but the ``type`` flag or
@@ -53,8 +53,21 @@ class Section(base.SectionBase):
 				…
 				'QmNiuVapnYCrLjxyweHeuk6Xdqfvts … wCCe': {'Type': 'indirect'}}}
 
+			>>> client.pin.ls('/ipfs/QmNNPMA1eGUbKxeph6yqV8ZmRkdVat … YMuz')
+			{'Keys': {
+				'QmNNPMA1eGUbKxeph6yqV8ZmRkdVat … YMuz': {'Type': 'recursive'}}}
+
+			>>> client.pin.ls('/ipfs/QmdBCSn4UJP82MjhRVwpABww48tXL3 … mA6z')
+			ipfshttpclient.exceptions.ErrorResponse:
+				path '/ipfs/QmdBCSn4UJP82MjhRVwpABww48tXL3 … mA6z' is not pinned
+
 		Parameters
 		----------
+		cids : str
+			The path(s) of pinned IPFS object(s) to search for.
+			If none are passed, return information about all pinned objects.
+			If any of the passed CIDs is not pinned, then remote will
+			return an error and an ErrorResponse exception will be raised.
 		type : "str"
 			The type of pinned keys to list. Can be:
 
@@ -63,15 +76,26 @@ class Section(base.SectionBase):
 			 * ``"recursive"``
 			 * ``"all"``
 
+		Raises
+		------
+		~ipfsapi.exceptions.ErrorResponse
+			Remote returned an error. Remote will return an error
+			if any of the passed CIDs is not pinned. In this case,
+			the exception will contain 'not pinned' in its args[0].
+
 		Returns
 		-------
 			dict : Hashes of pinned IPFS objects and why they are pinned
 		"""
-		kwargs.setdefault("opts", {})["type"] = type
+		#PY2: No support for kw-only parameters after glob parameters
+		opts = {
+			"type": kwargs.pop("type", "all")
+		}
+		kwargs.setdefault("opts", {}).update(opts)
 
-		return self._client.request('/pin/ls', decoder='json', **kwargs)
-	
-	
+		return self._client.request('/pin/ls', cids, decoder='json', **kwargs)
+
+
 	@base.returns_single_item
 	def rm(self, path, *paths, **kwargs):
 		"""Removes a pinned object from local storage.

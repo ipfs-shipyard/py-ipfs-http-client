@@ -1,10 +1,13 @@
 # _*_ coding: utf-8 -*-
 import pytest
 
+import ipfshttpclient.exceptions
+
 
 class Resources(object):
 	def __init__(self, client):
 		self.msg = client.add_str("Mary had a little lamb")
+		self.msg2 = client.add_str("Mary had a little alpaca")
 		resp_add = client.add("test/functional/fake_dir", recursive=True)
 		self.fake_dir_hashes = [el["Hash"] for el in resp_add if "Hash" in el]
 		for resp in resp_add:
@@ -18,6 +21,38 @@ def resources(client):
 	return Resources(client)
 
 
+def is_pinned(client, path):
+	error_msg = None
+	try:
+	    resp = client.pin.ls(path)
+	    assert path.split("/")[-1] in resp["Keys"]
+	except ipfshttpclient.exceptions.ErrorResponse as exc:
+		error_msg = exc.args[0]
+		if "not pinned" in error_msg:
+		    return False
+		raise
+	return True
+
+
+def test_ls_void(client, resources):
+	pins = client.pin.ls()["Keys"]
+	assert len(pins) >= 2
+	assert resources.msg in pins
+	assert resources.msg2 in pins
+
+
+def test_ls_single(client, resources):
+	pins = client.pin.ls(resources.msg)["Keys"]
+	assert len(pins) == 1
+	assert resources.msg in pins
+
+
+def test_ls_multiple(client, resources):
+	pins = client.pin.ls(resources.msg, resources.msg2)["Keys"]
+	assert len(pins) == 2
+	assert resources.msg in pins
+	assert resources.msg2 in pins
+
 
 def test_ls_add_rm_single(client, resources):
 	# Get pinned objects at start.
@@ -29,6 +64,7 @@ def test_ls_add_rm_single(client, resources):
 
 	# No matter what, the resource should not be pinned at this point
 	assert resources.msg not in client.pin.ls()["Keys"]
+	assert not is_pinned(client, resources.msg)
 
 	for option in (True, False):
 		# Pin the resource.
@@ -52,6 +88,7 @@ def test_ls_add_rm_single(client, resources):
 
 	# Compare pinned items from start to finish of test
 	assert resources.msg not in pins_end.keys()
+	assert not is_pinned(client, resources.msg)
 
 
 def test_ls_add_rm_directory(client, resources):
