@@ -6,7 +6,8 @@ from . import base
 
 class Section(base.SectionBase):
 	@base.returns_single_item
-	def publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None, key=None, **kwargs):
+	def publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None, key=None,
+	            allow_offline=False, **kwargs):
 		"""Publishes an object to IPNS.
 
 		IPNS is a PKI namespace, where names are the hashes of public keys, and
@@ -25,6 +26,10 @@ class Section(base.SectionBase):
 			IPFS path of the object to be published
 		resolve : bool
 			Resolve given path before publishing
+		allow_offline : bool
+			 When offline, save the IPNS record to the the local
+			 datastore without broadcasting to the network instead
+			 of simply failing.
 		lifetime : str
 			Time duration that the record will be valid for
 
@@ -47,7 +52,9 @@ class Section(base.SectionBase):
 		-------
 			dict : IPNS hash and the IPFS path it points at
 		"""
-		opts = {"lifetime": lifetime, "resolve": resolve}
+		opts = {"lifetime": lifetime,
+		        "resolve": resolve,
+		        "allow-offline": allow_offline}
 		if ttl:
 			opts["ttl"] = ttl
 		if key:
@@ -59,7 +66,8 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item
-	def resolve(self, name=None, recursive=False, nocache=False, **kwargs):
+	def resolve(self, name=None, recursive=False, nocache=False,
+	            dht_record_count=None, dht_timeout=None, **kwargs):
 		"""Gets the value currently published at an IPNS name.
 
 		IPNS is a PKI namespace, where names are the hashes of public keys, and
@@ -79,12 +87,22 @@ class Section(base.SectionBase):
 			Resolve until the result is not an IPFS name (default: false)
 		nocache : bool
 			Do not use cached entries (default: false)
+		dht_record_count: int
+			Number of records to request for DHT resolution.
+		dht_timeout: string
+			Max time to collect values during DHT resolution eg "30s".
+			Pass 0 for no timeout
 
 		Returns
 		-------
 			dict : The IPFS path the IPNS hash points at
 		"""
 		opts = {"recursive": recursive, "nocache": nocache}
+		if dht_record_count is not None:
+			opts["dht-record-count"] = dht_record_count
+		if dht_timeout is not None:
+			opts["dht-timeout"] = dht_timeout
+
 		kwargs.setdefault("opts", {}).update(opts)
 		args = (name,) if name is not None else ()
 		return self._client.request('/name/resolve', args, decoder='json', **kwargs)
