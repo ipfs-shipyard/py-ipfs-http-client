@@ -36,13 +36,31 @@ def sort_by_key(items, key="Name"):
 	return sorted(items, key=lambda x: x[key])
 
 
-
-@pytest.fixture
-def client():
+def get_client():
 	if is_available():
 		return ipfshttpclient.Client()
 	else:
 		pytest.skip("Running IPFS node required")
+
+
+@pytest.fixture(scope="function")
+def client():
+	"""Create a client with function lifetimme to connect to the IPFS daemon.
+
+	Each test function should instantiate a fresh client, so use this
+	fixture in test functions."""
+	return get_client()
+
+
+@pytest.fixture(scope="module")
+def module_client():
+	"""Create a client with a module lifetime to connect to the IPFS daemon.
+
+	For module-scope fixtures that need a client, if the client is to be created
+	automatically using a fixture (to keep client creation code centralized
+	here), that client-creating fixture must also be module-scope, so use
+	this fixture in module-scoped fixtures."""
+	return get_client()
 
 
 @pytest.fixture
