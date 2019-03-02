@@ -185,6 +185,7 @@ def test_add_relative_path(client, cleanup_pins):
 	assert res["Hash"] in client.pin.ls(type="recursive")["Keys"]
 
 
+@pytest.mark.skip(reason="Requires go-ipfs 77cd41acfef6cc442309eda565c29e36fdd488d9 PR#5937")
 def test_add_nocopy_with_relative_path(client):
 	error_msg = None
 	try:
