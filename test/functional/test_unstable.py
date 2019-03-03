@@ -1,5 +1,7 @@
 # _*_ coding: utf-8 -*-
 import conftest
+from threading import Timer
+import time
 
 
 ##################
@@ -24,9 +26,22 @@ def test_log_ls_level(client):
 
 
 def test_log_tail(client):
+
+	# Generate some events in the log, but only after we start listening
+	TIME_TO_LOG_TAIL = 2  # time it takes to send request and start listening
+	TIME_TO_GC = 2  # time it takes for GC to complete
+	t = Timer(TIME_TO_LOG_TAIL, client.repo.gc)
+	t.start()
+
 	# Gets the response object.
-	tail = client.unstable.log.tail()
-	
+	tail = client.unstable.log.tail(timeout=5)
+
+	# In case the log was not empty, we may return earlier
+	# than the timer. If we return while the GC is still
+	# running, we risk racing with test exit, so wait.
+	t.cancel()
+	time.sleep(TIME_TO_GC)
+
 	# The log should have been parsed into a dictionary object with
 	# various keys depending on the event that occured.
 	assert type(next(tail)) is dict
