@@ -216,7 +216,8 @@ class HTTPClient(object):
     @pass_defaults
     def request(self, path,
                 args=[], files=[], opts={}, stream=False,
-                decoder=None, headers={}, data=None, timeout=120):
+                decoder=None, headers={}, data=None,
+                timeout=120, offline=False):
         """Makes an HTTP request to the IPFS daemon.
 
         This function returns the contents of the HTTP response from the IPFS
@@ -247,6 +248,9 @@ class HTTPClient(object):
             before giving up
             
             Defaults to 120
+        offline : bool
+                Execute request in offline mode, i.e. locally without accessing
+                the network.
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
         """
@@ -254,6 +258,8 @@ class HTTPClient(object):
 
         params = []
         params.append(('stream-channels', 'true'))
+        if offline:
+            params.append(('offline', 'true'))
         for opt in opts.items():
             params.append(opt)
         for arg in args:
@@ -268,7 +274,7 @@ class HTTPClient(object):
 
     @pass_defaults
     def download(self, path, args=[], filepath=None, opts={},
-                 compress=True, timeout=120, **kwargs):
+                 compress=True, timeout=120, offline=False, **kwargs):
         """Makes a request to the IPFS daemon to download a file.
 
         Downloads a file or files from IPFS into the current working
@@ -302,6 +308,9 @@ class HTTPClient(object):
             before giving up
             
             Defaults to 120
+        offline : bool
+                Execute request in offline mode, i.e. locally without accessing
+                the network.
         kwargs : dict
             Additional arguments to pass to :mod:`requests`
         """
@@ -310,6 +319,8 @@ class HTTPClient(object):
 
         params = []
         params.append(('stream-channels', 'true'))
+        if offline:
+            params.append(('offline', 'true'))
         params.append(('archive', 'true'))
         if compress:
             params.append(('compress', 'true'))
