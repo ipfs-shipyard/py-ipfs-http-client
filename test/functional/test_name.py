@@ -65,9 +65,8 @@ def published_mapping(module_client, resources):
 	# we're not testing publish here, pass whatever args we want
 	resp = module_client.name.publish(resources.msg3,
 	                                  key=resources.key_test2["Name"],
-	                                  resolve=False, allow_offline=True,
-	                                  lifetime="5m", ttl="5m",
-	                                  timeout=TIMEOUT)
+	                                  resolve=False, lifetime="5m", ttl="5m",
+	                                  allow_offline=True, timeout=TIMEOUT)
 	return PublishedMapping(resp["Name"], resp["Value"])
 
 
@@ -89,28 +88,31 @@ def check_publish(client, response_path, resolved_path, key, resp):
 
 
 def test_publish_self(client, resources):
-	resp = client.name.publish(resources.msg1, timeout=TIMEOUT)
+	resp = client.name.publish(resources.msg1,
+	                           allow_offline=True, timeout=TIMEOUT)
 	check_publish(client, resources.msg1, resources.msg1,
 	              resources.key_self, resp)
 
 
 def test_publish_params(client, resources):
-	resp = client.name.publish(resources.msg1, allow_offline=True,
-	                           lifetime="25h", ttl="1m", timeout=TIMEOUT)
+	resp = client.name.publish(resources.msg1, lifetime="25h", ttl="1m",
+	                           allow_offline=True, timeout=TIMEOUT)
 	check_publish(client, resources.msg1, resources.msg1,
 	              resources.key_self, resp)
 
 
 def test_publish_key(client, resources):
 	resp = client.name.publish(resources.msg2,
-	                           key=resources.key_test1["Name"], timeout=TIMEOUT)
+	                           key=resources.key_test1["Name"],
+	                           allow_offline=True, timeout=TIMEOUT)
 	check_publish(client, resources.msg2, resources.msg2,
 	              resources.key_test1, resp)
 
 
 def test_publish_indirect(client, resources, published_mapping):
 	path = hash_to_ipns_path(published_mapping.name)
-	resp = client.name.publish(path, resolve=True, timeout=TIMEOUT)
+	resp = client.name.publish(path, resolve=True,
+	                           allow_offline=True, timeout=TIMEOUT)
 	check_publish(client, path, published_mapping.path,
 	              resources.key_self, resp)
 
@@ -122,7 +124,8 @@ def test_resolve(client, published_mapping):
 
 def test_resolve_recursive(client, published_mapping):
 	inner_path = hash_to_ipns_path(published_mapping.name)
-	res = client.name.publish(inner_path, resolve=False, timeout=TIMEOUT)
+	res = client.name.publish(inner_path, resolve=False,
+	                          allow_offline=True, timeout=TIMEOUT)
 	outer_path = res["Name"]
 
 	resp = client.name.resolve(outer_path, recursive=True, timeout=TIMEOUT)
