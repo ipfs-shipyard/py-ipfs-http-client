@@ -3,7 +3,7 @@
 import pytest
 
 
-TIMEOUT = 240
+TIMEOUT = 300
 
 
 def get_key(client, key_name):
@@ -131,6 +131,6 @@ def test_resolve_recursive(client, published_mapping):
 
 def test_resolve_params(client, published_mapping):
 	resp = client.name.resolve(published_mapping.name,  nocache=True,
-	                           dht_record_count=1, dht_timeout="10s",
+	                           dht_record_count=1, dht_timeout="180s",
 	                           timeout=TIMEOUT)
 	check_resolve(resp, published_mapping.path)
