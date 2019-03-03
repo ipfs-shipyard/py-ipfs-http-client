@@ -36,9 +36,9 @@ def sort_by_key(items, key="Name"):
 	return sorted(items, key=lambda x: x[key])
 
 
-def get_client():
+def get_client(offline=False):
 	if is_available():
-		return ipfshttpclient.Client()
+		return ipfshttpclient.Client(offline=offline)
 	else:
 		pytest.skip("Running IPFS node required")
 
@@ -52,6 +52,12 @@ def client():
 	return get_client()
 
 
+@pytest.fixture(scope="function")
+def offline_client():
+	"""Create a client in offline mode with function lifetimme"""
+	return get_client(offline=True)
+
+
 @pytest.fixture(scope="module")
 def module_client():
 	"""Create a client with a module lifetime to connect to the IPFS daemon.
@@ -61,6 +67,12 @@ def module_client():
 	here), that client-creating fixture must also be module-scope, so use
 	this fixture in module-scoped fixtures."""
 	return get_client()
+
+
+@pytest.fixture(scope="module")
+def module_offline_client():
+	"""Create a client in offline mode with module lifetime."""
+	return get_client(offline=True)
 
 
 @pytest.fixture
