@@ -12,7 +12,7 @@ class Section(base.SectionBase):
 	file storage space.
 	"""
 	
-	@base.returns_single_item
+	@base.returns_no_item
 	def cp(self, source, dest, **kwargs):
 		"""Copies files within the MFS.
 

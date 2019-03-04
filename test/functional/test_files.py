@@ -296,6 +296,18 @@ TEST_MFS_FILES = {
 TEST_MFS_DIRECTORY = "/test_dir"
 
 
+def test_mfs_file_cp_rm(client, cleanup_pins):
+	res = client.add(FAKE_FILE1_PATH)
+	h = res["Hash"]
+
+	mfs_path = "/" + TEST_MFS_DIRECTORY + "file1"
+	res = client.files.cp("/ipfs/" + h, mfs_path)
+	assert res is None
+
+	res = client.files.rm(mfs_path)
+	assert res is None
+
+
 def test_mfs_file_write_stat_read_delete(client):
 	for filename, desc in TEST_MFS_FILES.items():
 		filepath = "/" + filename
