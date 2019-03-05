@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 """Defines encoding related classes.
 
 Classes:
@@ -102,9 +103,10 @@ class TestEncoding(unittest.TestCase):
         assert res[1]['key2'] == 'value2'
 
     def test_json_encode(self):
-        """Tests serilization of json formatted string into an object."""
-        data = {'key': 'value'}
-        assert self.encoder_json.encode(data) == b'{"key":"value"}'
+        """Tests serilization of an object into a json formatted UTF-8 string."""
+        data = {'key': 'value with Ünicøde characters ☺'}
+        assert self.encoder_json.encode(data) == \
+               b'{"key":"value with \xc3\x9cnic\xc3\xb8de characters \xe2\x98\xba"}'
 
     def test_get_encoder_by_name(self):
         """Tests the process of obtaining an Encoder object given the named encoding."""
