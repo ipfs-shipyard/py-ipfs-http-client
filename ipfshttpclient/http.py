@@ -251,8 +251,6 @@ class HTTPClient(object):
         offline : bool
                 Execute request in offline mode, i.e. locally without accessing
                 the network.
-        kwargs : dict
-            Additional arguments to pass to :mod:`requests`
         """
         url = self.base + path
 
