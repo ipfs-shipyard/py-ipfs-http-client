@@ -298,7 +298,7 @@ class HTTPClient(object):
 
     @pass_defaults
     def download(self, path, args=[], filepath=None, opts={},
-                 compress=True, timeout=120, offline=False, **kwargs):
+                 compress=True, timeout=120, offline=False):
         """Makes a request to the IPFS daemon to download a file.
 
         Downloads a file or files from IPFS into the current working
@@ -335,8 +335,6 @@ class HTTPClient(object):
         offline : bool
                 Execute request in offline mode, i.e. locally without accessing
                 the network.
-        kwargs : dict
-            Additional arguments to pass to :mod:`requests`
         """
         url = self.base + path
         wd = filepath or '.'
@@ -357,7 +355,7 @@ class HTTPClient(object):
         method = 'get'
 
         res = self._do_request(method, url, params=params, stream=True,
-                               timeout=timeout, **kwargs)
+                               timeout=timeout)
 
         self._do_raise_for_status(res)
 
