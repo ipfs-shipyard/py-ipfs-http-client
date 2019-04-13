@@ -24,11 +24,10 @@ class Section(base.SectionBase):
 
 		Parameters
 		----------
-
 		return_result : bool
-		Defaults to True.
-		Passing False will return None and avoid downloading
-		the list of removed objects.
+			Defaults to True.
+			Passing False will return None and avoid downloading
+			the list of removed objects.
 
 		Returns
 		-------
