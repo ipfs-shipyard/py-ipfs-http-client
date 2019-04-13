@@ -284,15 +284,17 @@ class HTTPClient(object):
         else:
             method = 'get'
 
+        # Don't attempt to decode response or stream
+        # (which would keep an iterator open that will then never be waited for)
+        if not return_result:
+            decoder = None
+            stream = False
+
         parser = encoding.get_encoding(decoder if decoder else "none")
 
-<<<<<<< HEAD
-        return self._request(method, url, params, parser, stream,
-                             files, headers, data, timeout=timeout)
-=======
         ret = self._request(method, url, params, parser, stream,
-                             files, headers, data)
->>>>>>> use bool return_result instead
+                             files, headers, data, timeout=timeout)
+                            files, headers, data)
 
         if not return_result:
             return None
