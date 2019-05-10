@@ -141,6 +141,13 @@ class HTTPClient(object):
         The port the IPFS daemon is running at
     base : str
         The path prefix for API calls
+    timeout : Union[numbers.Real, Tuple[numbers.Real, numbers.Real], NoneType]
+    	The default number of seconds to wait when establishing a connection to
+    	the daemon and waiting for returned data before throwing
+    	:exc:`~ipfshttpclient.exceptions.TimeoutError`; if the value is a tuple
+    	its contents will be interpreted as the values for the connection and
+    	receiving phases respectively, otherwise the value will apply to both
+    	phases; if the value is ``None`` then all timeouts will be disabled
     defaults : dict
         The default parameters to be passed to
         :meth:`~ipfshttpclient.http.HTTPClient.request`

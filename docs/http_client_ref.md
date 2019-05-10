@@ -56,7 +56,7 @@ All methods accept the following parameters in their `kwargs`:
       `bytes` then arbitrary bags of bytes will be yielded that together form
       a stream; finally, if it is of type `dict` then the single dictonary item
       will be yielded once.
- * **timeout** (**float**) – The number of seconds to wait of a daemon reply
+ * **timeout** ([float](float)) – The number of seconds to wait of a daemon reply
                              before giving up
 
 ```eval_rst
