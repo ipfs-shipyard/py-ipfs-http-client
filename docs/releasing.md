@@ -21,8 +21,12 @@ DNF line: `sudo dnf install python3-flit`
 Sphinx is the standard documentation framework for Python. Recommonmark is an extension that allows
 Sphinx to process Markdown documentation as if it where reStructuredText.
 
-APT line: `sudo apt install python3-sphinx python3-recommonmark`  
-DNF line: `sudo dnf install python3-sphinx python3-recommonmark`
+<!-- APT line: `sudo apt install python3-sphinx python3-recommonmark`  -->
+<!--DNF line: `sudo dnf install python3-sphinx python3-recommonmark`-->
+
+At least reCommonMark 0.5 is required, so install it using PIP:
+
+`pip3 install recommonmark~=0.5.0`
 
 ## Hosting Documentation
 
