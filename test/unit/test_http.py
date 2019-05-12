@@ -34,7 +34,8 @@ def http_server(request):
 @pytest.fixture
 def http_client(http_server):
 	return ipfshttpclient.http.HTTPClient(
-		*(http_server.server_address + (ipfshttpclient.DEFAULT_BASE,))
+		"/ip4/{0}/tcp/{1}/http".format(*http_server.server_address),
+		ipfshttpclient.DEFAULT_BASE
 	)
 
 
@@ -162,7 +163,8 @@ def test_failed_download(http_client, http_server):
 def test_download_timeout(slow_http_server):
 	"""Tests that a timed-out download raises a TimeoutError."""
 	http_client = ipfshttpclient.http.HTTPClient(
-		*(slow_http_server.server_address + (ipfshttpclient.DEFAULT_BASE,))
+		"/ip4/{0}/tcp/{1}/http".format(*slow_http_server.server_address),
+		ipfshttpclient.DEFAULT_BASE
 	)
 	
 	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
@@ -171,7 +173,8 @@ def test_download_timeout(slow_http_server):
 def test_request_timeout(slow_http_server):
 	"""Tests that a timed-out request raises a TimeoutError."""
 	http_client = ipfshttpclient.http.HTTPClient(
-		*(slow_http_server.server_address + (ipfshttpclient.DEFAULT_BASE,))
+		"/ip4/{0}/tcp/{1}/http".format(*slow_http_server.server_address),
+		ipfshttpclient.DEFAULT_BASE
 	)
 	
 	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):

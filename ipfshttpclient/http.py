@@ -9,10 +9,17 @@ from __future__ import absolute_import
 import abc
 import contextlib
 import functools
-import re
 import tarfile
 from six.moves import http_client
+import socket
+try:
+	import urllib.parse
+except ImportError:  #PY2
+	class urllib:
+		import urlparse as parse
 
+import multiaddr
+from multiaddr.protocols import (P_DNS, P_DNS4, P_DNS6, P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP)
 import six
 
 from . import encoding
@@ -21,22 +28,22 @@ from . import requests_wrapper as requests
 
 
 def pass_defaults(func):
-    """Decorator that returns a function named wrapper.
+	"""Decorator that returns a function named wrapper.
 
-    When invoked, wrapper invokes func with default kwargs appended.
+	When invoked, wrapper invokes func with default kwargs appended.
 
-    Parameters
-    ----------
-    func : callable
-        The function to append the default kwargs to
-    """
-    @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        merged = {}
-        merged.update(self.defaults)
-        merged.update(kwargs)
-        return func(self, *args, **merged)
-    return wrapper
+	Parameters
+	----------
+	func : callable
+		  The function to append the default kwargs to
+	"""
+	@functools.wraps(func)
+	def wrapper(self, *args, **kwargs):
+		merged = {}
+		merged.update(self.defaults)
+		merged.update(kwargs)
+		return func(self, *args, **merged)
+	return wrapper
 
 
 def _notify_stream_iter_closed():
@@ -131,255 +138,293 @@ def stream_decode_full(response, parser):
 
 
 class HTTPClient(object):
-    """An HTTP client for interacting with the IPFS daemon.
+	"""An HTTP client for interacting with the IPFS daemon.
 
-    Parameters
-    ----------
-    host : str
-        The host the IPFS daemon is running on
-    port : int
-        The port the IPFS daemon is running at
-    base : str
-        The path prefix for API calls
-    timeout : Union[numbers.Real, Tuple[numbers.Real, numbers.Real], NoneType]
-    	The default number of seconds to wait when establishing a connection to
-    	the daemon and waiting for returned data before throwing
-    	:exc:`~ipfshttpclient.exceptions.TimeoutError`; if the value is a tuple
-    	its contents will be interpreted as the values for the connection and
-    	receiving phases respectively, otherwise the value will apply to both
-    	phases; if the value is ``None`` then all timeouts will be disabled
-    defaults : dict
-        The default parameters to be passed to
-        :meth:`~ipfshttpclient.http.HTTPClient.request`
-    """
+	Parameters
+	----------
+	addr : Union[str, multiaddr.Multiaddr]
+		The address where the IPFS daemon may be reached
+	base : str
+		The path prefix for API calls
+	timeout : Union[numbers.Real, Tuple[numbers.Real, numbers.Real], NoneType]
+		The default number of seconds to wait when establishing a connection to
+		the daemon and waiting for returned data before throwing
+		:exc:`~ipfshttpclient.exceptions.TimeoutError`; if the value is a tuple
+		its contents will be interpreted as the values for the connection and
+		receiving phases respectively, otherwise the value will apply to both
+		phases; if the value is ``None`` then all timeouts will be disabled
+	defaults : dict
+		The default parameters to be passed to
+		:meth:`~ipfshttpclient.http.HTTPClient.request`
+	"""
+	
+	__metaclass__ = abc.ABCMeta
+	
+	def __init__(self, addr, base, **defaults):
+		addr = multiaddr.Multiaddr(addr)
+		addr_iter = iter(addr.items())
+		
+		# Parse the `host`, `family`, `port` & `secure` values from the given
+		# multiaddr, raising on unsupported `addr` values
+		try:
+			# Read host value
+			proto, host = next(addr_iter)
+			family = socket.AF_UNSPEC
+			if proto.code in (P_IP4, P_DNS4):
+				family = socket.AF_INET
+			elif proto.code in (P_IP6, P_DNS6):
+				family = socket.AF_INET6
+			elif proto.code != P_DNS:
+				raise exceptions.AddressError(addr)
+			
+			# Read port value
+			proto, port = next(addr_iter)
+			if proto.code != P_TCP:
+				raise exceptions.AddressError(addr)
+			
+			# Read application-level protocol name
+			secure = False
+			try:
+				proto, value = next(addr_iter)
+			except StopIteration:
+				pass
+			else:
+				if proto.code == P_HTTPS:
+					secure = True
+				elif proto.code != P_HTTP:
+					raise exceptions.AddressError(addr)
+			
+			# No further values may follow; this also exhausts the iterator
+			was_final = all(True for _ in addr_iter)
+			if not was_final:
+				raise exceptions.AddressError(addr)
+		except StopIteration:
+			six.raise_from(exceptions.AddressError(addr), None)
 
-    __metaclass__ = abc.ABCMeta
+		# Convert the parsed `addr` values to a URL base and parameters
+		# for `requests`
+		if ":" in host and not host.startswith("["):
+			host = "[{0}]".format(host)
+		self.base = urllib.parse.SplitResult(
+			scheme   = "http" if not secure else "https",
+			netloc   = "{0}:{1}".format(host, port),
+			path     = base,
+			query    = "",
+			fragment = ""
+		).geturl()
+		self._kwargs = {
+			"family": family
+		}
+		
+		self.defaults = defaults
+		self._session = None
 
-    def __init__(self, host, port, base, **defaults):
-        self.host = host
-        self.port = port
-        if not re.match('^https?://', host.lower()):
-            host = 'http://' + host
+	def _do_request(self, *args, **kwargs):
+		for name, value in self._kwargs.items():
+			kwargs.setdefault(name, value)
+		try:
+			if self._session:
+				return self._session.request(*args, **kwargs)
+			else:
+				return requests.request(*args, **kwargs)
+		except (requests.ConnectTimeout, requests.Timeout) as error:
+			six.raise_from(exceptions.TimeoutError(error), error)
+		except requests.ConnectionError as error:
+			six.raise_from(exceptions.ConnectionError(error), error)
+		except http_client.HTTPException as error:
+			six.raise_from(exceptions.ProtocolError(error), error)
 
-        self.base = '%s:%s/%s' % (host, port, base)
+	def _do_raise_for_status(self, response):
+		try:
+			response.raise_for_status()
+		except requests.exceptions.HTTPError as error:
+			content = []
+			try:
+				decoder = encoding.get_encoding("json")
+				for chunk in response.iter_content(chunk_size=None):
+					content += list(decoder.parse_partial(chunk))
+				content += list(decoder.parse_finalize())
+			except exceptions.DecodingError:
+				pass
 
-        self.defaults = defaults
-        self._session = None
+			# If we have decoded an error response from the server,
+			# use that as the exception message; otherwise, just pass
+			# the exception on to the caller.
+			if len(content) == 1 \
+			and isinstance(content[0], dict) \
+			and "Message" in content[0]:
+				msg = content[0]["Message"]
+				six.raise_from(exceptions.ErrorResponse(msg, error), error)
+			else:
+				six.raise_from(exceptions.StatusError(error), error)
 
-    def _do_request(self, *args, **kwargs):
-        try:
-            if self._session:
-                return self._session.request(*args, **kwargs)
-            else:
-                return requests.request(*args, **kwargs)
-        except (requests.ConnectTimeout, requests.Timeout) as error:
-            six.raise_from(exceptions.TimeoutError(error), error)
-        except requests.ConnectionError as error:
-            six.raise_from(exceptions.ConnectionError(error), error)
-        except http_client.HTTPException as error:
-            six.raise_from(exceptions.ProtocolError(error), error)
+	def _request(self, method, url, params, parser, stream=False, files=None,
+	             headers={}, data=None, timeout=120):
+		# Do HTTP request (synchronously)
+		res = self._do_request(method, url, params=params, stream=stream,
+		                      files=files, headers=headers, data=data, timeout=timeout)
 
-    def _do_raise_for_status(self, response):
-        try:
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as error:
-            content = []
-            try:
-                decoder = encoding.get_encoding("json")
-                for chunk in response.iter_content(chunk_size=None):
-                    content += list(decoder.parse_partial(chunk))
-                content += list(decoder.parse_finalize())
-            except exceptions.DecodingError:
-                pass
-            
-            # If we have decoded an error response from the server,
-            # use that as the exception message; otherwise, just pass
-            # the exception on to the caller.
-            if len(content) == 1 \
-            and isinstance(content[0], dict) \
-            and "Message" in content[0]:
-                msg = content[0]["Message"]
-                six.raise_from(exceptions.ErrorResponse(msg, error), error)
-            else:
-                six.raise_from(exceptions.StatusError(error), error)
+		# Raise exception for response status
+		# (optionally incorpating the response message, if applicable)
+		self._do_raise_for_status(res)
 
-    def _request(self, method, url, params, parser, stream=False, files=None,
-                 headers={}, data=None, timeout=120):
-        # Do HTTP request (synchronously)
-        res = self._do_request(method, url, params=params, stream=stream,
-                               files=files, headers=headers, data=data, timeout=timeout)
+		if stream:
+			# Decode each item as it is read
+			return StreamDecodeIterator(res, parser)
+		else:
+			# Decode received item immediately
+			return stream_decode_full(res, parser)
 
-        # Raise exception for response status
-        # (optionally incorpating the response message, if applicable)
-        self._do_raise_for_status(res)
+	@pass_defaults
+	def request(self, path,
+	            args=[], files=[], opts={}, stream=False,
+	            decoder=None, headers={}, data=None,
+	            timeout=120, offline=False, return_result=True):
+		"""Makes an HTTP request to the IPFS daemon.
 
-        if stream:
-            # Decode each item as it is read
-            return StreamDecodeIterator(res, parser)
-        else:
-            # Decode received item immediately
-            return stream_decode_full(res, parser)
+		This function returns the contents of the HTTP response from the IPFS
+		daemon.
 
-    @pass_defaults
-    def request(self, path,
-                args=[], files=[], opts={}, stream=False,
-                decoder=None, headers={}, data=None, timeout=120,
-                offline=False, method=None, return_result=True):
-        """Makes an HTTP request to the IPFS daemon.
+		Raises
+		------
+		~ipfshttpclient.exceptions.ErrorResponse
+		~ipfshttpclient.exceptions.ConnectionError
+		~ipfshttpclient.exceptions.ProtocolError
+		~ipfshttpclient.exceptions.StatusError
+		~ipfshttpclient.exceptions.TimeoutError
 
-        This function returns the contents of the HTTP response from the IPFS
-        daemon.
+		Parameters
+		----------
+		path : str
+			The REST command path to send
+		args : list
+			Positional parameters to be sent along with the HTTP request
+		files : Union[str, io.RawIOBase, collections.abc.Iterable]
+			The file object(s) or path(s) to stream to the daemon
+		opts : dict
+			Query string paramters to be sent along with the HTTP request
+		decoder : str
+			The encoder to use to parse the HTTP response
+		timeout : float
+			How many seconds to wait for the server to send data
+			before giving up
+			
+			Defaults to 120
+		offline : bool
+			Execute request in offline mode, i.e. locally without accessing
+			the network.
+		return_result : bool
+			Defaults to True. If the return is not relevant, such as in gc(),
+			passing False will return None and avoid downloading results.
+		"""
+		url = self.base + path
 
-        Raises
-        ------
-        ~ipfshttpclient.exceptions.ErrorResponse
-        ~ipfshttpclient.exceptions.ConnectionError
-        ~ipfshttpclient.exceptions.ProtocolError
-        ~ipfshttpclient.exceptions.StatusError
-        ~ipfshttpclient.exceptions.TimeoutError
+		params = []
+		params.append(('stream-channels', 'true'))
+		if offline:
+			params.append(('offline', 'true'))
+		for opt in opts.items():
+			params.append(opt)
+		for arg in args:
+			params.append(('arg', arg))
 
-        Parameters
-        ----------
-        path : str
-            The REST command path to send
-        args : list
-            Positional parameters to be sent along with the HTTP request
-        files : Union[str, io.RawIOBase, collections.abc.Iterable]
-            The file object(s) or path(s) to stream to the daemon
-        opts : dict
-            Query string paramters to be sent along with the HTTP request
-        decoder : str
-            The encoder to use to parse the HTTP response
-        timeout : float
-            How many seconds to wait for the server to send data
-            before giving up
-            
-            Defaults to 120
-        offline : bool
-                Execute request in offline mode, i.e. locally without accessing
-                the network.
-        method : str
-            The HTTP request method to use. This argument is optional,
-            and GET or PUT will be used as appropriate by default.
-            The main use case for this is method='head' to reduce verbosity
-            and improve performance.
-        return_result : bool
-            Defaults to True. If the return is not relevant, such as in gc(),
-            passing False will return None and avoid downloading results.
-        kwargs : dict
-            Additional arguments to pass to :mod:`requests`
-        """
-        url = self.base + path
+		if (files or data):
+			method = 'post'
+		elif not return_result:
+			method = 'head'
+		else:
+			method = 'get'
 
-        params = []
-        params.append(('stream-channels', 'true'))
-        if offline:
-            params.append(('offline', 'true'))
-        for opt in opts.items():
-            params.append(opt)
-        for arg in args:
-            params.append(('arg', arg))
+		# Don't attempt to decode response or stream
+		# (which would keep an iterator open that will then never be waited for)
+		if not return_result:
+			decoder = None
+			stream = False
 
-        if (files or data):
-            method = 'post'
-        elif not return_result:
-            method = 'head'
-        else:
-            method = 'get'
+		parser = encoding.get_encoding(decoder if decoder else "none")
 
-        # Don't attempt to decode response or stream
-        # (which would keep an iterator open that will then never be waited for)
-        if not return_result:
-            decoder = None
-            stream = False
+		ret = self._request(method, url, params, parser, stream,
+		                    files, headers, data, timeout=timeout)
 
-        parser = encoding.get_encoding(decoder if decoder else "none")
+		return ret if return_result else None
 
-        ret = self._request(method, url, params, parser, stream,
-                            files, headers, data, timeout=timeout)
+	@pass_defaults
+	def download(self, path, args=[], filepath=None, opts={},
+	             compress=True, timeout=120, offline=False):
+		"""Makes a request to the IPFS daemon to download a file.
 
-        if not return_result:
-            return None
+		Downloads a file or files from IPFS into the current working
+		directory, or the directory given by ``filepath``.
 
-        return ret
+		Raises
+		------
+		~ipfshttpclient.exceptions.ErrorResponse
+		~ipfshttpclient.exceptions.ConnectionError
+		~ipfshttpclient.exceptions.ProtocolError
+		~ipfshttpclient.exceptions.StatusError
+		~ipfshttpclient.exceptions.TimeoutError
 
-    @pass_defaults
-    def download(self, path, args=[], filepath=None, opts={},
-                 compress=True, timeout=120, offline=False):
-        """Makes a request to the IPFS daemon to download a file.
+		Parameters
+		----------
+		path : str
+			The REST command path to send
+		filepath : str
+			The local path where IPFS will store downloaded files
 
-        Downloads a file or files from IPFS into the current working
-        directory, or the directory given by ``filepath``.
+			Defaults to the current working directory.
+		args : list
+			Positional parameters to be sent along with the HTTP request
+		opts : dict
+			Query string paramters to be sent along with the HTTP request
+		compress : bool
+			Whether the downloaded file should be GZip compressed by the
+			daemon before being sent to the client
+		timeout : float
+			How many seconds to wait for the server to send data
+			before giving up
+			
+			Defaults to 120
+		offline : bool
+			Execute request in offline mode, i.e. locally without accessing
+			the network.
+		"""
+		url = self.base + path
+		wd = filepath or '.'
 
-        Raises
-        ------
-        ~ipfshttpclient.exceptions.ErrorResponse
-        ~ipfshttpclient.exceptions.ConnectionError
-        ~ipfshttpclient.exceptions.ProtocolError
-        ~ipfshttpclient.exceptions.StatusError
-        ~ipfshttpclient.exceptions.TimeoutError
+		params = []
+		params.append(('stream-channels', 'true'))
+		if offline:
+			params.append(('offline', 'true'))
+		params.append(('archive', 'true'))
+		if compress:
+			params.append(('compress', 'true'))
 
-        Parameters
-        ----------
-        path : str
-            The REST command path to send
-        filepath : str
-            The local path where IPFS will store downloaded files
+		for opt in opts.items():
+			params.append(opt)
+		for arg in args:
+			params.append(('arg', arg))
 
-            Defaults to the current working directory.
-        args : list
-            Positional parameters to be sent along with the HTTP request
-        opts : dict
-            Query string paramters to be sent along with the HTTP request
-        compress : bool
-            Whether the downloaded file should be GZip compressed by the
-            daemon before being sent to the client
-        timeout : float
-            How many seconds to wait for the server to send data
-            before giving up
-            
-            Defaults to 120
-        offline : bool
-                Execute request in offline mode, i.e. locally without accessing
-                the network.
-        """
-        url = self.base + path
-        wd = filepath or '.'
+		method = 'get'
 
-        params = []
-        params.append(('stream-channels', 'true'))
-        if offline:
-            params.append(('offline', 'true'))
-        params.append(('archive', 'true'))
-        if compress:
-            params.append(('compress', 'true'))
+		res = self._do_request(method, url, params=params, stream=True,
+		                       timeout=timeout)
 
-        for opt in opts.items():
-            params.append(opt)
-        for arg in args:
-            params.append(('arg', arg))
+		self._do_raise_for_status(res)
 
-        method = 'get'
+		# try to stream download as a tar file stream
+		mode = 'r|gz' if compress else 'r|'
 
-        res = self._do_request(method, url, params=params, stream=True,
-                               timeout=timeout)
+		with tarfile.open(fileobj=res.raw, mode=mode) as tf:
+			tf.extractall(path=wd)
 
-        self._do_raise_for_status(res)
+	@contextlib.contextmanager
+	def session(self):
+		"""A context manager for this client's session.
 
-        # try to stream download as a tar file stream
-        mode = 'r|gz' if compress else 'r|'
-
-        with tarfile.open(fileobj=res.raw, mode=mode) as tf:
-            tf.extractall(path=wd)
-
-    @contextlib.contextmanager
-    def session(self):
-        """A context manager for this client's session.
-
-        This function closes the current session when this client goes out of
-        scope.
-        """
-        self._session = requests.session()
-        yield
-        self._session.close()
-        self._session = None
+		This function closes the current session when this client goes out of
+		scope.
+		"""
+		self._session = requests.Session()
+		yield
+		self._session.close()
+		self._session = None
