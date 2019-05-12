@@ -87,14 +87,15 @@ class ClientBase(object):
 	----------
 	addr : Union[bytes, str, multiaddr.Multiaddr]
 		The `MultiAddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
-		API daemon location, as used in the *API* key of
-		`go-ipfs Addresses section <https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
+		API daemon location, as used in the *API* key of `go-ipfs Addresses
+		section
+		<https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
 		
 		Supported addressing patterns are currently:
-		
-		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
-		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
-		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
+		 
+		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
+		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
+		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
 		
 		Additional forms (proxying) may be supported in the future.
 	base : str

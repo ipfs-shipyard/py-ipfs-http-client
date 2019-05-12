@@ -9,7 +9,9 @@ def test_ipfs_node_available():
 	Dummy test to ensure that running the tests without a daemon produces a failure, since we
 	think it's unlikely that people running tests want this
 	"""
-	assert conftest.is_available(), "Functional tests require an IPFS node to be available at: {0}".format(ipfshttpclient.DEFAULT_ADDR)
+	assert conftest.is_available(), \
+	       "Functional tests require an IPFS node to be available at: {0}" \
+	       .format(ipfshttpclient.DEFAULT_ADDR)
 
 
 def test_add_json(client, cleanup_pins):
