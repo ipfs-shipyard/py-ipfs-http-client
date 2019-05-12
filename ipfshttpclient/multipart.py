@@ -313,8 +313,9 @@ class FilesStream(StreamBase, StreamFileMixin):
 def glob_compile(pat):
 	"""Translate a shell glob PATTERN to a regular expression.
 
-	This is almost entirely based on `fnmatch.translate` source-code from the
-	python 3.5 standard-library.
+	Source code taken from the `fnmatch.translate` function of the python 3.7
+	standard-library with the glob-style modification of making `*`
+	non-recursive and the adding `**` as recursive matching operator.
 	"""
 
 	i, n = 0, len(pat)
@@ -348,11 +349,30 @@ def glob_compile(pat):
 			if j >= n:
 				res = res + '\\['
 			else:
-				stuff = pat[i:j].replace('\\', '\\\\')
+				stuff = pat[i:j]
+				if '--' not in stuff:
+					stuff = stuff.replace('\\', r'\\')
+				else:
+					chunks = []
+					k = i+2 if pat[i] == '!' else i + 1
+					while True:
+						k = pat.find('-', k, j)
+						if k < 0:
+							break
+						chunks.append(pat[i:k])
+						i = k + 1
+						k = k + 3
+					chunks.append(pat[i:j])
+					# Escape backslashes and hyphens for set difference (--).
+					# Hyphens that create ranges shouldn't be escaped.
+					stuff = '-'.join(s.replace('\\', r'\\').replace('-', r'\-')
+					                 for s in chunks)
+				# Escape set operations (&&, ~~ and ||).
+				stuff = re.sub(r'([&~|])', r'\\\1', stuff)
 				i = j + 1
 				if stuff[0] == '!':
 					stuff = '^' + stuff[1:]
-				elif stuff[0] == '^':
+				elif stuff[0] in ('^', '['):
 					stuff = '\\' + stuff
 				res = '%s[%s]' % (res, stuff)
 		else:
