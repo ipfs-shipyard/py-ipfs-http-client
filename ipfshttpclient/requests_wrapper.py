@@ -99,7 +99,7 @@ class ConnectionOverrideMixin:
 		try:
 			conn = create_connection(
 				(self._dns_host, self.port), self.timeout, **extra_kw)
-		except socket.timeout as e:
+		except socket.timeout:
 			raise urllib3.exceptions.ConnectTimeoutError(
 				self, "Connection to %s timed out. (connect timeout=%s)" %
 				(self.host, self.timeout))
@@ -120,12 +120,13 @@ class HTTPSConnection(ConnectionOverrideMixin, urllib3.connection.HTTPSConnectio
 	def __init__(self, *args, **kw):
 		self.family = _kw_scheme_to_family(kw, "https")
 		super(HTTPSConnection, self).__init__(*args, **kw)
-	
+
 
 # Override the higher-level `urllib3` ConnectionPool objects that instantiate
 # one or more Connection objects and dispatch work between them
 class HTTPConnectionPool(urllib3.HTTPConnectionPool):
 	ConnectionCls = HTTPConnection
+
 
 class HTTPSConnectionPool(urllib3.HTTPConnectionPool):
 	ConnectionCls = HTTPSConnection
@@ -237,6 +238,7 @@ from requests import (
 def request(method, url, **kwargs):
 	with Session() as session:
 		return session.request(method=method, url=url, **kwargs)
+
 
 def get(url, params=None, **kwargs):
 	kwargs.setdefault('allow_redirects', True)
