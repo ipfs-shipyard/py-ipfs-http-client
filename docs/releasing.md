@@ -1,5 +1,5 @@
 Since releasing new versions is currently a somewhat complicated task, the current procedure
-(27.04.2018) will be outlined in this document.
+(12.05.2018) will be outlined in this document.
 
 All of this has only been tested on Debian 10 & Fedora 28 (Linux).
 
@@ -12,7 +12,7 @@ All of this has only been tested on Debian 10 & Fedora 28 (Linux).
 APT line: `sudo apt install python3-pip && sudo pip3 install flit`  
 DNF line: `sudo dnf install python3-flit`
 
-*Note*: Version `1.0+` of `flit` is required!
+*Note*: Version `1.1+` of `flit` is required!
 
 ## Building the documentation
 
@@ -38,14 +38,17 @@ that will build it**:
 Yes, we use IPFS to host our documentation. In case you haven't already you can download it here:
 https://ipfs.io/docs/install/
 
-### `ipfs-file-publish`
+### A dedicated IPNS key for publishing
 
-This small utility copies files or directories into the IPFS [MFS](https://ipfs.io/docs/commands/#ipfs-files)
-and then publishes the resulting hash as the node's primary hash. This is currently used to upload
-new versions of the documentation.
+For publishing the documentation an IPNS key used only for this task should be
+generated if there is no such key already:
 
-You can download it at:
-[https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfs-file-publish](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfs-file-publish)
+`ipfs key gen --type ed25519 ipfs-http-client`
+
+This key will need to be copied to all other system if the documentation is to
+be published on these as well.
+
+At the time of writing the officially used key is: *12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF*
 
 
 # Steps when releasing a new version
@@ -62,10 +65,9 @@ You can download it at:
 
 Run: `flit build && flit upload`
 
-## Re-generate the documentation
+## Re-generate and publish the documentation
 
-Run: `make -C docs/ html`
+Run: `docs/publish.py ipfs-http-client` (were `ipfs-http-client` is the IPNS key ID)
 
-## Publish the documentation
-
-Make sure an IPFS daemon is running and run: `ipfs-file-publish /Software/Python/ipfshttpclient/ docs/build/html/`
+The command will also print a commandline that may be used to mirror the generated
+documentation on systems other then the current one.
