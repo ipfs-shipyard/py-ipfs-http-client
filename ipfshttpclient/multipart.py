@@ -482,8 +482,8 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 			dirname = os.path.basename(directory)
 			dirname = dirname if isinstance(dirname, str) else os.fsdecode(dirname)
 		else:
-			dirname = "_" if isinstance(directory, (str, int)) else os.fsencode("_")
-		assert(type(directory) == type(dirname) or isinstance(directory, int))
+			dirname = "_"
+		assert type(directory) == type(dirname) or isinstance(directory, int)
 
 		# Identify the unnecessary portion of the relative path
 		truncate = (directory if not isinstance(directory, int) else ".") + sep
@@ -508,7 +508,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 				# remove leading / or \ if it is present
 				if short_path.startswith(os.path.sep):
 					short_path = short_path[len(os.path.sep):]
-			short_path = os.path.join(dirname, short_path)
+			short_path = os.path.join(dirname, short_path) if short_path else dirname
 
 			wildcard_directory = False
 			if os.path.split(short_path)[0] in wildcard_directories:
