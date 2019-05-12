@@ -262,7 +262,8 @@ class HTTPClient(object):
 	             headers={}, data=None, timeout=120):
 		# Do HTTP request (synchronously)
 		res = self._do_request(method, url, params=params, stream=stream,
-		                      files=files, headers=headers, data=data, timeout=timeout)
+		                       files=files, headers=headers, data=data,
+		                       timeout=timeout)
 
 		# Raise exception for response status
 		# (optionally incorpating the response message, if applicable)

@@ -31,13 +31,13 @@ def check_pid_exists(pid):
 	if os.name == "posix":
 		import errno
 		if pid < 0:
-		    return False
+			return False
 		try:
-		    os.kill(pid, 0)
+			os.kill(pid, 0)
 		except OSError as e:
-		    return e.errno == errno.EPERM
+			return e.errno == errno.EPERM
 		else:
-		    return True
+			return True
 	else:
 		import ctypes
 		kernel32 = ctypes.windll.kernel32

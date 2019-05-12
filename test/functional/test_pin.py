@@ -24,12 +24,12 @@ def resources(client):
 def is_pinned(client, path):
 	error_msg = None
 	try:
-	    resp = client.pin.ls(path)
-	    assert path.split("/")[-1] in resp["Keys"]
+		resp = client.pin.ls(path)
+		assert path.split("/")[-1] in resp["Keys"]
 	except ipfshttpclient.exceptions.ErrorResponse as exc:
 		error_msg = exc.args[0]
 		if "not pinned" in error_msg:
-		    return False
+			return False
 		raise
 	return True
 

@@ -123,8 +123,8 @@ def test_add_single_from_str_with_dir(client, cleanup_pins):
 	
 	dir_hash = None
 	for item in res:
-	    if item["Name"] == "":
-	        dir_hash = item["Hash"]
+		if item["Name"] == "":
+			dir_hash = item["Hash"]
 	assert dir_hash in client.pin.ls(type="recursive")["Keys"]
 
 

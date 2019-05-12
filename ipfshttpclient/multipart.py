@@ -354,7 +354,7 @@ def glob_compile(pat):
 					stuff = stuff.replace('\\', r'\\')
 				else:
 					chunks = []
-					k = i+2 if pat[i] == '!' else i + 1
+					k = i + 2 if pat[i] == '!' else i + 1
 					while True:
 						k = pat.find('-', k, j)
 						if k < 0:

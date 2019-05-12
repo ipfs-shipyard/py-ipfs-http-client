@@ -138,9 +138,9 @@ class PoolManager(urllib3.PoolManager):
 	def __init__(self, *args, **kwargs):
 		super(PoolManager, self).__init__(*args, **kwargs)
 		
-    	# Additionally to adding our variant of the usual HTTP and HTTPS
-    	# pool classes, also add these for some variants of the default schemes
-    	# that are limited to some specific address family only
+		# Additionally to adding our variant of the usual HTTP and HTTPS
+		# pool classes, also add these for some variants of the default schemes
+		# that are limited to some specific address family only
 		self.pool_classes_by_scheme = {}
 		for scheme, ConnectionPool in (("http", HTTPConnectionPool), ("https", HTTPSConnectionPool)):
 			self.pool_classes_by_scheme[scheme] = ConnectionPool
@@ -152,7 +152,7 @@ class PoolManager(urllib3.PoolManager):
 	# will be passed down to the `*ConnectionPool`s and finally to the actual
 	# `*Connection`s as parameter
 	def _new_pool(self, scheme, host, port, request_context=None):
-        # Copied from `urllib3` to *not* surpress the `scheme` parameter
+		# Copied from `urllib3` to *not* surpress the `scheme` parameter
 		pool_cls = self.pool_classes_by_scheme[scheme]
 		if request_context is None:
 			request_context = self.connection_pool_kw.copy()
@@ -235,35 +235,35 @@ from requests import (
 
 # Re-implement the top-level “session-less” API
 def request(method, url, **kwargs):
-    with Session() as session:
-        return session.request(method=method, url=url, **kwargs)
+	with Session() as session:
+		return session.request(method=method, url=url, **kwargs)
 
 def get(url, params=None, **kwargs):
-    kwargs.setdefault('allow_redirects', True)
-    return request('get', url, params=params, **kwargs)
+	kwargs.setdefault('allow_redirects', True)
+	return request('get', url, params=params, **kwargs)
 
 
 def options(url, **kwargs):
-    kwargs.setdefault('allow_redirects', True)
-    return request('options', url, **kwargs)
+	kwargs.setdefault('allow_redirects', True)
+	return request('options', url, **kwargs)
 
 
 def head(url, **kwargs):
-    kwargs.setdefault('allow_redirects', False)
-    return request('head', url, **kwargs)
+	kwargs.setdefault('allow_redirects', False)
+	return request('head', url, **kwargs)
 
 
 def post(url, data=None, json=None, **kwargs):
-    return request('post', url, data=data, json=json, **kwargs)
+	return request('post', url, data=data, json=json, **kwargs)
 
 
 def put(url, data=None, **kwargs):
-    return request('put', url, data=data, **kwargs)
+	return request('put', url, data=data, **kwargs)
 
 
 def patch(url, data=None, **kwargs):
-    return request('patch', url, data=data, **kwargs)
+	return request('patch', url, data=data, **kwargs)
 
 
 def delete(url, **kwargs):
-    return request('delete', url, **kwargs)
+	return request('delete', url, **kwargs)
