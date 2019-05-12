@@ -47,16 +47,19 @@ class SectionProperty(object):
 		self.__prop_cls__ = cls
 
 	def __get__(self, client_object, type=None):
-		try:
-			return client_object.__prop_objs__[self]
-		except AttributeError:
-			client_object.__prop_objs__ = {
-				self: self.__prop_cls__(client_object)
-			}
-			return client_object.__prop_objs__[self]
-		except KeyError:
-			client_object.__prop_objs__[self] = self.__prop_cls__(client_object)
-			return client_object.__prop_objs__[self]
+		if client_object is not None:  # We are invoked on object
+			try:
+				return client_object.__prop_objs__[self]
+			except AttributeError:
+				client_object.__prop_objs__ = {
+					self: self.__prop_cls__(client_object)
+				}
+				return client_object.__prop_objs__[self]
+			except KeyError:
+				client_object.__prop_objs__[self] = self.__prop_cls__(client_object)
+				return client_object.__prop_objs__[self]
+		else:  # We are invoked on class
+			return self.__prop_cls__
 
 
 class SectionBase(object):
