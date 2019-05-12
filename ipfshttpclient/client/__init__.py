@@ -10,8 +10,9 @@ from __future__ import absolute_import
 import os
 import warnings
 
-DEFAULT_HOST = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_HOST", 'localhost'))
-DEFAULT_PORT = int(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_PORT", 5001))
+import multiaddr
+
+DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
 VERSION_MINIMUM = "0.4.3"
@@ -64,7 +65,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 		raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
-def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
+def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
             chunk_size=multipart.default_chunk_size, **defaults):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
 	daemon to validate that its version is supported.
@@ -87,7 +88,7 @@ def connect(host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
 		:class:`~ipfshttpclient.Client`
 	"""
 	# Create client instance
-	client = Client(host, port, base, chunk_size, **defaults)
+	client = Client(addr, base, chunk_size, **defaults)
 
 	# Query version number from daemon and validate it
 	assert_version(client.version()['Version'])

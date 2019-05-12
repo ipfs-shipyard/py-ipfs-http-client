@@ -4,7 +4,7 @@ import functools
 
 import six
 
-from . import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_BASE
+from . import DEFAULT_ADDR, DEFAULT_BASE
 
 from .. import multipart, http
 
@@ -86,11 +86,19 @@ class ClientBase(object):
 
 	Parameters
 	----------
-	host : str
-		Hostname or IP address of the computer running the ``ipfs daemon``
-		node (defaults to the local system)
-	port : int
-		The API port of the IPFS deamon (usually 5001)
+	addr : Union[str, multiaddr.Multiaddr]
+		The `MultiAddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
+		daemon location, as used in the *API* key of
+		`go-ipfs *Addresses* section <https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
+		(defaults to ``/dns/localhost/tcp/5001``)
+		
+		Supported formats are currently:
+		
+		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
+		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
+		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
+		
+		Additional forms (proxying) may be supported in the future.
 	base : str
 		Path of the deamon's API (currently always ``api/v0``)
 	chunk_size : int
@@ -99,11 +107,11 @@ class ClientBase(object):
 
 	_clientfactory = http.HTTPClient
 
-	def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT,
-	             base=DEFAULT_BASE, chunk_size=multipart.default_chunk_size,
+	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE,
+	             chunk_size=multipart.default_chunk_size,
 	             **defaults):
 		"""Connects to the API port of an IPFS node."""
 
 		self.chunk_size = chunk_size
 
-		self._client = self._clientfactory(host, port, base, **defaults)
+		self._client = self._clientfactory(addr, base, **defaults)

@@ -4,6 +4,7 @@ The class hierachy for exceptions is::
 
     Error
      +-- VersionMismatch
+     +-- AddressError
      +-- EncoderError
      |    +-- EncoderMissingError
      |    +-- EncodingError
@@ -17,11 +18,21 @@ The class hierachy for exceptions is::
           +-- TimeoutError
 
 """
+import multiaddr.exceptions
 
 
 class Error(Exception):
     """Base class for all exceptions in this module."""
     pass
+
+
+class AddressError(Error, multiaddr.exceptions.Error):
+	"""Raised when the provided daemon location Multiaddr does not match any
+	of the supported patterns."""
+	
+	def __init__(self, addr):
+		self.addr = addr
+		Error.__init__(self, "Unsupported MultiAddr pattern: {0}".format(addr))
 
 
 class VersionMismatch(Error):

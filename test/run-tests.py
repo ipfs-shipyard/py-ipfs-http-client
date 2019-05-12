@@ -37,8 +37,7 @@ BASE_PATH = pathlib.Path(__file__).parent.parent
 TEST_PATH = BASE_PATH / "build" / "test-{}".format(ENVNAME)
 IPFS_PATH = TEST_PATH / "ipfs-path"
 
-HOST = "127.0.0.1"
-PORT = random.randrange(40000, 65535)
+ADDR = "/ip4/127.0.0.1/tcp/{0}".format(random.randrange(40000, 65535))
 
 
 ###########################
@@ -53,8 +52,7 @@ os.chdir(str(BASE_PATH))
 
 # Export environment variables required for testing
 os.environ["IPFS_PATH"] = str(IPFS_PATH)
-os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_HOST"] = str(HOST)
-os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_PORT"] = str(PORT)
+os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR"] = str(ADDR)
 
 # Make sure the IPFS data directory exists and is empty
 with contextlib.suppress(OSError):  #PY2: Replace with `FileNotFoundError`
@@ -66,7 +64,7 @@ with contextlib.suppress(OSError):  #PY2: Replace with `FileExistsError`
 # Initialize the IPFS data directory
 subprocess.call(["ipfs", "init"])
 subprocess.call(["ipfs", "config", "Addresses.Gateway", ""])
-subprocess.call(["ipfs", "config", "Addresses.API",     "/ip4/{}/tcp/{}".format(HOST, PORT)])
+subprocess.call(["ipfs", "config", "Addresses.API",     ADDR])
 subprocess.call(["ipfs", "config", "--bool", "Experimental.FilestoreEnabled", "true"])
 
 
@@ -82,7 +80,7 @@ elif sys.version_info >= (3, 0, 0):  #PY35: `subprocess.Popen` encoding paramete
 	extra_args["universal_newlines"] = True
 
 # Spawn IPFS daemon in data directory
-print("Starting IPFS daemon on /ip4/{0}/tcp/{1}…".format(HOST, PORT), file=sys.stderr)
+print("Starting IPFS daemon on {0}…".format(ADDR), file=sys.stderr)
 DAEMON = subprocess.Popen(
 	["ipfs", "daemon", "--enable-pubsub-experiment"],
 	stdout=subprocess.PIPE,
