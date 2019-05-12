@@ -13,11 +13,11 @@ import re
 import tarfile
 from six.moves import http_client
 
-import requests
 import six
 
 from . import encoding
 from . import exceptions
+from . import requests_wrapper as requests
 
 
 def pass_defaults(func):
