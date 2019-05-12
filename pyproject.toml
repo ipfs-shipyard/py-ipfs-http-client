@@ -7,7 +7,7 @@ module = "ipfshttpclient"
 
 author       = "py-ipfs-http-client team"
 author-email = ""
-home-page    = "https://github.com/ipfs/py-ipfs-http-client"
+home-page    = "https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/"
 keywords     = "ipfs storage distribution development"
 license      = "MIT License"
 description-file = "README.md"
@@ -47,5 +47,5 @@ classifiers = [
 ]
 
 [tool.flit.metadata.urls]
-Documentation = "https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/"
+Documentation = "https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/"
 
