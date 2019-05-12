@@ -310,7 +310,8 @@ autodoc_member_order = 'groupwise'
 # External documentation link mapping
 intersphinx_mapping = {
 	'python': ('https://docs.python.org/3', None),
-	'cid': ('https://py-cid.readthedocs.io/en/master/', None)
+	'cid': ('https://py-cid.readthedocs.io/en/master/', None),
+	'multiaddr': ('https://multiaddr.readthedocs.io/en/latest/', None)
 }
 
 # -- Napoleon settings ----------------------------------------------------
@@ -382,7 +383,7 @@ class ClientClassDocumenterBase(sphinx.ext.autodoc.ClassDocumenter):
 	def format_signature(self):
 		"""Hide inheritance signature since it's not applicable helpful for
 		these classes."""
-		return ""
+		return "({0})".format(self.args) if self.args is not None else ""
 
 class ClientClassDocumenter(ClientClassDocumenterBase):
 	objtype = "clientclass"

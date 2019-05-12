@@ -12,7 +12,7 @@ import warnings
 
 import multiaddr
 
-DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001'))
+DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
 VERSION_MINIMUM = "0.4.3"
@@ -107,6 +107,9 @@ class Client(files.Base, miscellaneous.Base):
 	as :func:`connect`, to prevent the client from checking for an active and
 	compatible version of the daemon.
 	"""
+	
+	__doc__ += base.ClientBase.__doc__
+	
 	bitswap   = base.SectionProperty(bitswap.Section)
 	block     = base.SectionProperty(block.Section)
 	bootstrap = base.SectionProperty(bootstrap.Section)

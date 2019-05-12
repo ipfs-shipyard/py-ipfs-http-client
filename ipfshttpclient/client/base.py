@@ -82,20 +82,15 @@ class SectionBase(object):
 
 
 class ClientBase(object):
-	"""A TCP client for interacting with an IPFS daemon.
-
-	A :class:`~ipfshttpclient.Client` instance will not actually establish a
-	connection to the daemon until at least one of it's methods is called.
-
+	"""
 	Parameters
 	----------
-	addr : Union[str, multiaddr.Multiaddr]
+	addr : Union[bytes, str, multiaddr.Multiaddr]
 		The `MultiAddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
-		daemon location, as used in the *API* key of
-		`go-ipfs *Addresses* section <https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
-		(defaults to ``/dns/localhost/tcp/5001``)
+		API daemon location, as used in the *API* key of
+		`go-ipfs Addresses section <https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
 		
-		Supported formats are currently:
+		Supported addressing patterns are currently:
 		
 		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
 		  * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
@@ -103,7 +98,8 @@ class ClientBase(object):
 		
 		Additional forms (proxying) may be supported in the future.
 	base : str
-		Path of the deamon's API (currently always ``api/v0``)
+		The HTTP URL path prefix (or “base”) at which the API is exposed on the
+		API daemon
 	chunk_size : int
 		The size of the chunks to break uploaded files and text content into
 	"""
