@@ -310,56 +310,6 @@ class Base(base.ClientBase):
 		return resp
 	
 	
-	@base.returns_single_item
-	def file_ls(self, multihash, **kwargs):
-		"""Lists directory contents for Unix filesystem objects.
-
-		The result contains size information. For files, the child size is the
-		total size of the file contents. For directories, the child size is the
-		IPFS link size.
-
-		The path can be a prefixless reference; in this case, it is assumed
-		that it is an ``/ipfs/`` reference and not ``/ipns/``.
-
-		.. code-block:: python
-
-			>>> client.file_ls('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
-			{
-				'Arguments': {'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D':
-				              'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D'},
-				'Objects': {
-					'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D': {
-						'Hash': 'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
-						'Size': 0, 'Type': 'Directory',
-						'Links': [
-							{'Hash': 'Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7dtPNFkcNMV',
-							 'Name': 'Makefile', 'Size': 163,    'Type': 'File'},
-							{'Hash': 'QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX',
-							 'Name': 'example',  'Size': 1463,   'Type': 'File'},
-							{'Hash': 'QmZAL3oHMQYqsV61tGvoAVtQLs1WzRe1zkkamv9qxqnDuK',
-							 'Name': 'home',     'Size': 3947,   'Type': 'Directory'},
-							{'Hash': 'QmZNPyKVriMsZwJSNXeQtVQSNU4v4KEKGUQaMT61LPahso',
-							 'Name': 'lib',      'Size': 268261, 'Type': 'Directory'},
-							{'Hash': 'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
-							 'Name': 'published-version', 'Size': 47, 'Type': 'File'}
-						]
-					}
-				}
-			}
-
-		Parameters
-		----------
-		multihash : str
-			The path to the object(s) to list links from
-
-		Returns
-		-------
-			dict
-		"""
-		args = (multihash,)
-		return self._client.request('/file/ls', args, decoder='json', **kwargs)
-	
-	
 	def get(self, cid, **kwargs):
 		"""Downloads a file, or directory of files from IPFS.
 
