@@ -194,7 +194,7 @@ installing a `pre-commit` hook:
     $ ./tools/pre-commit --install
 
 Please make sure to include new unit tests for new features or changes in
-behavior.
+behavior. We aim to bring coverage to 100% at some point.
 
 ## License
 
