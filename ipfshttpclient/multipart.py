@@ -18,10 +18,10 @@ default_chunk_size = 4096
 
 
 #PY34: String formattings for binary types not supported
-if hasattr(six.binary_type, "__mod__"):
+if hasattr(six.binary_type, "__mod__"):  #PY35+
 	def bytes_fmt(b, *a):
 		return b % a
-else:
+else:  #PY34
 	def bytes_fmt(base, *args):
 		# Decode each argument as ISO-8859-1 which causes each by to be
 		# reinterpreted as character
@@ -487,7 +487,10 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 		directory = self.directory
 		if not isinstance(self.directory, int):
 			directory = os.fspath(directory) if hasattr(os, "fspath") else directory
-			if not isinstance(directory, str):
+			if isinstance(directory, six.text_type) and not isinstance(sep, six.text_type):  #PY2
+				import sys
+				sep = sep.decode(sys.getfilesystemencoding())
+			elif isinstance(directory, six.binary_type) and not isinstance(sep, six.binary_type):  #PY3 noqa
 				sep = os.fsencode(sep)
 			while sep * 2 in directory:
 				directory.replace(sep * 2, sep)
@@ -645,7 +648,7 @@ def stream_directory(directory, recursive=False, patterns='**', chunk_size=defau
 		return stream.body(), stream.headers()
 
 	# Note that `os.fwalk` is never available on Windows and Python 2
-	if hasattr(os, "fwalk") and not isinstance(directory, int):
+	if hasattr(os, "fwalk") and not isinstance(directory, int):  #PY3
 		def auto_close_iter_fd(fd, iter):
 			try:
 				#PY2: Use `yield from` instead
@@ -739,18 +742,17 @@ def stream_text(text, chunk_size=default_chunk_size):
 	if inspect.isgenerator(text):
 		def binary_stream():
 			for item in text:
-				if six.PY2 and isinstance(item, six.binary_type):
-					#PY2: Allow binary strings under Python 2 since
+				if six.PY2 and isinstance(item, six.binary_type):  #PY2
+					# Allow binary strings under Python 2 since
 					# Python 2 code is not expected to always get the
 					# distinction between text and binary strings right.
 					yield item
-				else:
+				else:  #PY3
 					yield item.encode("utf-8")
 		data = binary_stream()
-	elif six.PY2 and isinstance(text, six.binary_type):
-		#PY2: See above.
+	elif six.PY2 and isinstance(text, six.binary_type):  #PY2: See above.
 		data = text
-	else:
+	else:  #PY3
 		data = text.encode("utf-8")
 
 	return stream_bytes(data, chunk_size)

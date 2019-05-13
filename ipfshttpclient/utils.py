@@ -3,10 +3,9 @@
 
 from __future__ import absolute_import
 
-try:
+try:  #PY3
 	import collections.abc
-except ImportError:
-	#PY2: The relevant classes used to be somewhere else
+except ImportError:  #PY2: The relevant classes used to be somewhere else
 	class collections:
 		import collections as abc
 import mimetypes
@@ -24,7 +23,7 @@ if hasattr(os, "PathLike"):  #PY36+
 	def convert_path(path):
 		# Not needed since all system APIs also accept an `os.PathLike`
 		return path
-else:
+else:  #PY35
 	try:  #PY2: doesn't have `pathlib`
 		import pathlib
 		path_obj_types += (pathlib.PurePath,)
