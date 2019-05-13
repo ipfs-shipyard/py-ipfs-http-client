@@ -7,6 +7,8 @@ Classes:
 """
 from __future__ import absolute_import
 
+import functools
+import inspect
 import os
 import re
 import warnings
@@ -186,6 +188,21 @@ class Client(ipfshttpclient.Client):
 		
 		addr = "/{0}/{1}/tcp/{2}/{3}".format(host_type, url.hostname, url.port, url.scheme)
 		super(Client, self).__init__(addr, base, chunk_size, **defaults)
+
+
+	def __getattribute__(self, name):
+		value = super(Client, self).__getattribute__(name)
+		if inspect.ismethod(value):
+			@functools.wraps(value)
+			def wrapper(*args, **kwargs):
+				# Rewrite changed named parameter names
+				if "multihash" in kwargs:
+					kwargs["cid"] = kwargs.pop("multihash")
+				if "multihashes" in kwargs:
+					kwargs["cids"] = kwargs.pop("multihashes")
+				return value(*args, **kwargs)
+			return wrapper
+		return value
 
 
 	def add(self, files, recursive=False, pattern='**', *args, **kwargs):
