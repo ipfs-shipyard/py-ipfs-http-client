@@ -4,18 +4,14 @@
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
 [![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![](https://img.shields.io/pypi/v/ipfsapi.svg?style=flat-square)](https://pypi.python.org/pypi/ipfsapi)
-[![Build Status](https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-api)
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
-Check out [the client API reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/) for the full command reference.
+## Deprecation Notice
 
-**Important:** The `py-ipfs-api` PIP package and Python module have both been renamed to `ipfsapi` (no dash, lower-case `a`).  
-The legacy `ipfs-api`/`ipfsApi` package/module will only work for IPFS 0.3.x and Python 2 and is deprecated. [Please upgrade](#important-changes-from-ipfsapi-02x)!
+**Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient` and this library has been converted into a thin wrapper around that other library. Only critical bug-fixes will be accepted for this package. Please see [migration notes on the new package](https://github.com/ipfs/py-ipfs-http-client/blob/master/README.md#important-changes-from-ipfsapi-04x) for details on how to proceed.
 
-**Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.10](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.10).
-You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
+*The remainder of this README remains as a historical curiousity and will not be updated anymore.*
 
 ## Table of Contents
 
