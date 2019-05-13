@@ -16,33 +16,32 @@ from functools import wraps
 
 
 
-path_types = (six.text_type, six.binary_type)
+path_str_types = (six.text_type, six.binary_type)
+path_obj_types = ()
 if hasattr(os, "PathLike"):  #PY36+
-	path_types += (os.PathLike,)
+	path_obj_types += (os.PathLike,)
 
 	def convert_path(path):
 		# Not needed since all system APIs also accept an `os.PathLike`
 		return path
 else:
-	_pathlib_types = ()
 	try:  #PY2: doesn't have `pathlib`
 		import pathlib
-		_pathlib_types += (pathlib.PurePath,)
+		path_obj_types += (pathlib.PurePath,)
 	except ImportError:
 		pass
 	# Independently maintained forward-port of `pathlib` for Py27 and others
 	try:
 		import pathlib2
-		_pathlib_types += (pathlib2.PurePath,)
+		path_obj_types += (pathlib2.PurePath,)
 	except ImportError:
 		pass
-	path_types += _pathlib_types
 	
 	def convert_path(path):
 		# `pathlib`'s PathLike objects need to be treated specially and
 		# converted to strings when interacting with system APIs
-		return str(path) if isinstance(path, _pathlib_types) else path
-
+		return str(path) if isinstance(path, path_obj_types) else path
+path_types = path_str_types + path_obj_types
 
 
 def guess_mimetype(filename):
