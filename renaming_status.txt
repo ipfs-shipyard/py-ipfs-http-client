@@ -23,7 +23,7 @@ FOR README.md:
     https://travis-ci.org/ipfs/py-ipfs-api.svg?branch=master -> https://travis-ci.org/ipfs/py-ipfs-http-client.svg?branch=master        line 7
     https://travis-ci.org/ipfs/py-ipfs-api -> https://travis-ci.org/ipfs/py-ipfs-http-client                                            line 7
     https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/ ->
-                    https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/                 line 11,118
+                    https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/                 line 11,118
     The PIP package and Python module: ipfshttpclient
     The Github repo: py-ipfs-api -> py-ipfs-http-client
     PROJECT RENAME:        Python IPFS API -> Python IPFS HTTP Client
@@ -50,7 +50,7 @@ FOR pyproject.toml:
 * Changes:  module = "ipfsapi" -> module = "ipfshttpclient"             Line 6
             py-ipfs-api -> py-ipfs-http-client
             https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/ ->
-                    https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/
+                    https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/
 * Doubtful: Line 3
 
 
