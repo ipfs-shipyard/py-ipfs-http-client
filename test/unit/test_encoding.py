@@ -10,7 +10,6 @@ import pickle
 
 import pytest
 import six
-from httmock import urlmatch, HTTMock
 
 import ipfsapi.encoding
 import ipfsapi.exceptions

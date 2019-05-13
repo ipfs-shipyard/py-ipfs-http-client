@@ -1,4 +1,3 @@
-httmock
 pathlib ; python_version < "3.4"
 pytest
 pytest-cov
