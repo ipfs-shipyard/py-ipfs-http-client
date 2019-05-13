@@ -48,18 +48,41 @@ Basic use-case (requires a running instance of IPFS daemon):
 
 ```py
 >>> import ipfshttpclient
->>> http_client = ipfshttpclient.connect('127.0.0.1', 5001)
->>> res = http_client.add('test.txt')
+>>> client = ipfshttpclient.connect('127.0.0.1', 5001)
+>>> res = client.add('test.txt')
 >>> res
 {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
->>> http_client.cat(res['Hash'])
+>>> client.cat(res['Hash'])
 'fdsafkljdskafjaksdjf\n'
+```
+
+For real-world scripts you can reuse TCP connections using a context manager or manually closing the session after use:
+
+```py
+import ipfshttpclient
+
+# Share TCP connections using a context manager
+with ipfshttpclient.connect() as client:
+	hash = client.add('test.txt')['Hash']
+	print(client.stat(hash))
+
+# Share TCP connections until the client session is closed
+class SomeObject:
+	def __init__(self):
+		self._client = ipfshttpclient.connect(session=True)
+
+	def do_something(self):
+		hash = self._client.add('test.txt')['Hash']
+		print(self._client.stat(hash))
+
+	def close(self):  # Call this when your done
+		self._client.close()
 ```
 
 Administrative functions:
 
 ```py
->>> http_client.id()
+>>> client.id()
 {'Addresses': ['/ip4/127.0.0.1/tcp/4001/ipfs/QmS2C4MjZsv2iP1UDMMLCYqJ4WeJw8n3vXx1VKxW1UbqHS',
                '/ip6/::1/tcp/4001/ipfs/QmS2C4MjZsv2iP1UDMMLCYqJ4WeJw8n3vXx1VKxW1UbqHS'],
  'AgentVersion': 'go-ipfs/0.4.10',
@@ -71,7 +94,7 @@ Administrative functions:
 Pass in API options:
 
 ```py
->>> http_client.pin_ls(type='all')
+>>> client.pin_ls(type='all')
 {'Keys': {'QmNMELyizsfFdNZW3yKTi1SE2pErifwDTXx6vvQBfwcJbU': {'Count': 1,
                                                              'Type': 'indirect'},
           'QmNQ1h6o1xJARvYzwmySPsuv9L5XfzS4WTvJSTAWwYRSd8': {'Count': 1,
@@ -82,7 +105,7 @@ Pass in API options:
 Add a directory and match against a filename pattern:
 
 ```py
->>> http_client.add('photos', pattern='*.jpg')
+>>> client.add('photos', pattern='*.jpg')
 [{'Hash': 'QmcqBstfu5AWpXUqbucwimmWdJbu89qqYmE3WXVktvaXhX',
   'Name': 'photos/photo1.jpg'},
  {'Hash': 'QmSbmgg7kYwkSNzGLvWELnw1KthvTAMszN5TNg3XQ799Fu',
@@ -94,7 +117,7 @@ Add a directory and match against a filename pattern:
 Or add a directory recursively:
 
 ```py
->>> http_client.add('fake_dir', recursive=True)
+>>> client.add('fake_dir', recursive=True)
 [{'Hash': 'QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX',
   'Name': 'fake_dir/fsdfgh'},
  {'Hash': 'QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ',
@@ -109,9 +132,9 @@ This module also contains some helper functions for adding strings and JSON to I
 
 ```py
 >>> lst = [1, 77, 'lol']
->>> http_client.add_json(lst)
+>>> client.add_json(lst)
 'QmQ4R5cCUYBWiJpNL7mFe4LDrwD6qBr5Re17BoRAY9VNpd'
->>> http_client.get_json(_)
+>>> client.get_json(_)
 [1, 77, 'lol']
 ```
 
