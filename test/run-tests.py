@@ -103,16 +103,12 @@ try:
 	os.environ["CI"] = "true"
 	
 	# Make sure all required py.test plugins are loaded
-	os.environ["PYTEST_PLUGINS"] = ",".join(["pytest_cov", "pytest_ordering"])
+	os.environ["PYTEST_PLUGINS"] = ",".join(["pytest_ordering"])
 	
 	# Launch py.test in-process
 	import pytest
 	PYTEST_CODE = pytest.main([
-		"--verbose",
-		"--cov=ipfsapi",
-		"--cov-report=term",
-		"--cov-report=html:{}".format(str(TEST_PATH / "cov_html")),
-		"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml"))
+		"--verbose"
 	] + sys.argv[1:])
 finally:
 	# Make sure daemon was terminated during the tests
