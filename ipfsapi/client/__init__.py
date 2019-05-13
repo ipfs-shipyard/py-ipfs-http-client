@@ -188,6 +188,13 @@ class Client(ipfshttpclient.Client):
 		super(Client, self).__init__(addr, base, chunk_size, **defaults)
 
 
+	def add(self, files, recursive=False, pattern='**', *args, **kwargs):
+		# Signature changed to: add(self, *files, recursive=False, pattern='**', **kwargs)
+		if not isinstance(files, (list, tuple)):
+			files = (files,)
+		return super(Client, self).add(*files, recursive=recursive, pattern=pattern, **kwargs)
+
+
 	# Dropped utility methods
 	def add_pyobj(self, py_obj, **kwargs):
 		"""Adds a picklable Python object as a file to IPFS.
