@@ -6,7 +6,10 @@ TestUtils -- defines a set of unit tests for untils.py
 
 import io
 import os.path
+import sys
 import unittest
+
+import six
 
 import ipfshttpclient.utils as utils
 
@@ -43,14 +46,32 @@ class TestUtils(unittest.TestCase):
 		# Closing stringIO after test assertions.
 		f.close()
 
-	def test_clean_file_unopened(self):
-		"""Tests utils.clean_file() with a filepath.
+	def test_clean_file_unopened_textpath(self):
+		"""Tests utils.clean_file() with a text string filepath.
 
 		This test relies on the openability of the file 'fsdfgh'
 		located in 'test/functional/fake_dir'.
 		"""
-		path = os.path.join(os.path.dirname(__file__),
-		                    "..", "functional", "fake_dir", "fsdfgh")
+		path = os.path.dirname(__file__)
+		if isinstance(path, six.binary_type):  #PY2
+			path = path.decode(sys.getfilesystemencoding())
+		path = os.path.join(path, u"..", u"functional", u"fake_dir", u"fsdfgh")
+		f, opened = utils.clean_file(path)
+		assert hasattr(f, 'read')
+		assert opened
+		# Closing file after test assertions.
+		f.close()
+
+	def test_clean_file_unopened_binarypath(self):
+		"""Tests utils.clean_file() with a binary string filepath.
+
+		This test relies on the openability of the file 'fsdfgh'
+		located in 'test/functional/fake_dir'.
+		"""
+		path = os.path.dirname(__file__)
+		if isinstance(path, six.text_type):  #PY3
+			path = path.encode(sys.getfilesystemencoding())
+		path = os.path.join(path, b"..", b"functional", b"fake_dir", b"fsdfgh")
 		f, opened = utils.clean_file(path)
 		assert hasattr(f, 'read')
 		assert opened
