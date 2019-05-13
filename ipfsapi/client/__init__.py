@@ -200,7 +200,14 @@ class Client(ipfshttpclient.Client):
 					kwargs["cid"] = kwargs.pop("multihash")
 				if "multihashes" in kwargs:
 					kwargs["cids"] = kwargs.pop("multihashes")
-				return value(*args, **kwargs)
+				
+				try:
+					return value(*args, **kwargs)
+				# Partial error responses used to incorrectly just return
+				# the parts that were successfully received followed by the
+				# (undetected) error frame
+				except exceptions.PartialErrorResponse as error:
+					return error.partial + [{"Type": "error", "Message": str(error)}]
 			return wrapper
 		return value
 

@@ -28,7 +28,7 @@ class DeprecatedMethodProperty(object):
 			)
 			warnings.warn(message, FutureWarning)
 			self.warned = True
-		print()
+		
 		for name in self.props:
 			print(name, obj)
 			obj = getattr(obj, name)
