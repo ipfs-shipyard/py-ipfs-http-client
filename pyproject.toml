@@ -7,7 +7,7 @@ module = "ipfsapi"
 
 author       = "py-ipfs-api team"
 author-email = ""
-home-page    = "https://github.com/ipfs/py-ipfs-api"
+home-page    = "https://github.com/ipfs/py-ipfs-http-client/tree/py-ipfs-api"
 keywords     = "ipfs storage distribution development"
 license      = "MIT License"
 description-file = "README.md"
@@ -47,5 +47,5 @@ classifiers = [
 ]
 
 [tool.flit.metadata.urls]
-Documentation = "https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/"
+Documentation = "https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/"
 
