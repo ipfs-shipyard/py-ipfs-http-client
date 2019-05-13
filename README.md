@@ -8,7 +8,7 @@
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
-Check out [the HTTP Client reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/) for the full command reference.
+Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
 
 **Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
 See the [relevant section of the README](#important-changes-from-ipfsapi-04x) for details.
@@ -142,7 +142,7 @@ This module also contains some helper functions for adding strings and JSON to I
 
 Documentation (currently mostly API documentation unfortunately) is available on IPFS:
 
-https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/
+https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/
 
 The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) may also be useful in some cases.
 
