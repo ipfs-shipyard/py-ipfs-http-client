@@ -152,13 +152,18 @@ The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) m
  * The Python package has been renamed from `ipfsapi` to `ipfshttpclient`
  * The PIP module has been renamed from `ipfsapi` to `ipfshttpclient` (please update your requirement files)
  * The `client.*_pyobj` family of functions has been dropped due to security concerns
+ * The `client.bitswap.unwant` method has been dropped – it's endpoint has been removed by *go-ipfs*
+ * The `client.files.file_ls` method has been dropped – deprecated for a long time, use `client.ls` instead
  * Passing a list of parameters to `client.add` will now fail, just pass several individual parameters instead
+ * Some functions that may also return multiple items, will now also return a list when returning only a single item (don't worry about it unless it actually breaks for you)
  * The API deamon location is now described using MultiAddr, hence rather then doing `ipfshttpclient.connect(host, port)` to pass the network address parameters, use:
     * `ipfshttpclient.connect("/dns/<host>/tcp/<port>/http")` (for hostnames such as `localhost`)
     * `ipfshttpclient.connect("/ip4/<IP-address>/tcp/<port>/http")` (for IPv4 addresses)
     * `ipfshttpclient.connect("/ip6/<IP-address>/tcp/<port>/http")` (for IPv6 addresses)
     * Use `…/https` rather then `…/http` to connect to the API deamon using HTTPS
  * The client now supports [keeping session contexts around between API calls](#usage), you probably should make use of this facility in your code
+
+Thank you @AlibabasMerchant, @lordcirth and @radfish (in order of subjective contributions) for helping making this happen!
 
 ## Featured Projects
 
