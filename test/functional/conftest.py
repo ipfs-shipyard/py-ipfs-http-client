@@ -49,13 +49,15 @@ def client():
 
 	Each test function should instantiate a fresh client, so use this
 	fixture in test functions."""
-	return get_client()
+	with get_client() as client:
+		yield client
 
 
 @pytest.fixture(scope="function")
 def offline_client():
 	"""Create a client in offline mode with function lifetimme"""
-	return get_client(offline=True)
+	with get_client(offline=True) as client:
+		yield client
 
 
 @pytest.fixture(scope="module")
@@ -66,13 +68,15 @@ def module_client():
 	automatically using a fixture (to keep client creation code centralized
 	here), that client-creating fixture must also be module-scope, so use
 	this fixture in module-scoped fixtures."""
-	return get_client()
+	with get_client() as client:
+		yield client
 
 
 @pytest.fixture(scope="module")
 def module_offline_client():
 	"""Create a client in offline mode with module lifetime."""
-	return get_client(offline=True)
+	with get_client(offline=True) as client:
+		yield client
 
 
 @pytest.fixture

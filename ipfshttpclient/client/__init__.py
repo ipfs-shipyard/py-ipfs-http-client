@@ -72,7 +72,8 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 
 
 def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
-            chunk_size=multipart.default_chunk_size, **defaults):
+            chunk_size=multipart.default_chunk_size,
+            session=False, **defaults):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
 	daemon to validate that its version is supported.
 
@@ -94,7 +95,7 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
 		:class:`~ipfshttpclient.Client`
 	"""
 	# Create client instance
-	client = Client(addr, base, chunk_size, **defaults)
+	client = Client(addr, base, chunk_size, session, **defaults)
 
 	# Query version number from daemon and validate it
 	assert_version(client.version()['Version'])
@@ -111,7 +112,42 @@ class Client(files.Base, miscellaneous.Base):
 	
 	It is possible to instantiate this class directly, using the same parameters
 	as :func:`connect`, to prevent the client from checking for an active and
-	compatible version of the daemon.
+	compatible version of the daemon. In general however, calling
+	:func:`connect` should be preferred.
+	
+	In order to reduce latency between individual API calls, this class may keep
+	a pool of TCP connections between this client and the API daemon open
+	between requests. The only caveat of this is that the client object should
+	be closed when it is not used anymore to prevent resource leaks.
+	
+	The easiest way of using this “session management” facility is using a
+	context manager::
+	
+		with ipfshttpclient.connect() as client:
+			print(client.version())  # These calls…
+			print(client.version())  # …will reuse their TCP connection
+	
+	A client object may be re-opened several times::
+	
+		client = ipfshttpclient.connect()
+		print(client.version())  # Perform API call on separate TCP connection
+		with client:
+			print(client.version())  # These calls…
+			print(client.version())  # …will share a TCP connection
+		with client:
+			print(client.version())  # These calls…
+			print(client.version())  # …will share a different TCP connection
+	
+	When storing a long-running :class:`Client` object use it like this::
+	
+		class Consumer:
+			def __init__(self):
+				self._client = ipfshttpclient.connect(session=True)
+			
+			# … other code …
+			
+			def close(self):  # Call this when you're done
+				self._client.close()
 	"""
 	
 	__doc__ += base.ClientBase.__doc__
@@ -129,6 +165,31 @@ class Client(files.Base, miscellaneous.Base):
 	repo      = base.SectionProperty(repo.Section)
 	swarm     = base.SectionProperty(swarm.Section)
 	unstable  = base.SectionProperty(unstable.Section)
+	
+	
+	######################
+	# SESSION MANAGEMENT #
+	######################
+	
+	def __enter__(self):
+		self._client.open_session()
+		return self
+	
+	def __exit__(self, exc_type, exc_value, traceback):
+		self.close()
+	
+	def close(self):
+		"""Close any currently open client session and free any associated
+		resources.
+		
+		If there was no session currently open this method does nothing. An open
+		session is not a requirement for using a :class:`~ipfshttpclient.Client`
+		object and as such all method defined on it will continue to work, but
+		a new TCP connection will be established for each and every API call
+		invoked. Such a usage should therefor be avoided and may cause a warning
+		in the future. See the class's description for details.
+		"""
+		self._client.close_session()
 	
 	
 	###########
