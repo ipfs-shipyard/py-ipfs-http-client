@@ -117,8 +117,8 @@ try:
 	# Run tests in CI-mode (will stop the daemon at the end through the API)
 	os.environ["CI"] = "true"
 	
-	# Make sure all required py.test plugins are loaded
-	os.environ["PYTEST_PLUGINS"] = ",".join(["pytest_cov", "pytest_ordering"])
+	# Make sure all required pytest plugins are loaded
+	os.environ["PYTEST_PLUGINS"] = ",".join(["pytest_cov", "pytest_localserver", "pytest_mock", "pytest_ordering"])
 	
 	# Launch py.test in-process
 	import pytest
