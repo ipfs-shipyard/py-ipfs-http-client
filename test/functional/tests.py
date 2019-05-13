@@ -360,7 +360,7 @@ class IpfsApiTest(unittest.TestCase):
         try:
             test_hash = self.fake[8]['Hash'] + '/fsdfgh'
             
-            self.api.get(test_hash)
+            self.api.get(multihash=test_hash)
             assert 'fsdfgh' in os.listdir(os.getcwd())
             
             os.remove('fsdfgh')
@@ -622,7 +622,7 @@ class TestBlockFunctions(unittest.TestCase):
 
     def test_block_stat(self):
         expected_keys = ['Key', 'Size']
-        res = self.api.block_stat(self.multihash)
+        res = self.api.block_stat(multihash=self.multihash)
         for key in expected_keys:
             self.assertTrue(key in res)
 
