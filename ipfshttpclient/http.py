@@ -12,7 +12,7 @@ import functools
 import tarfile
 from six.moves import http_client
 import socket
-try:
+try:  #PY3
 	import urllib.parse
 except ImportError:  #PY2
 	class urllib:
@@ -98,8 +98,7 @@ class StreamDecodeIterator(object):
 				self._parser_iter   = iter(self._parser.parse_finalize())
 
 	#PY2: Old iterator syntax
-	def next(self):
-		return self.__next__()
+	next = __next__
 
 	def __enter__(self):
 		return self
