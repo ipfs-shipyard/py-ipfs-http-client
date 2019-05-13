@@ -158,6 +158,7 @@ The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) m
     * `ipfshttpclient.connect("/ip4/<IP-address>/tcp/<port>/http")` (for IPv4 addresses)
     * `ipfshttpclient.connect("/ip6/<IP-address>/tcp/<port>/http")` (for IPv6 addresses)
     * Use `…/https` rather then `…/http` to connect to the API deamon using HTTPS
+ * The client now supports [keeping session contexts around between API calls](#usage), you probably should make use of this facility in your code
 
 ## Featured Projects
 
