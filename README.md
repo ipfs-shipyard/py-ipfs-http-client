@@ -10,19 +10,23 @@
 
 Check out [the HTTP Client reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfshttpclient/) for the full command reference.
 
-**Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`  
-The legacy `ipfs-api`/`ipfsApi` package/module will only work for IPFS 0.3.x and Python 2 and is deprecated. [Please upgrade](#important-changes-from-ipfsapi-02x)!
+**Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
+See the [relevant section of the README](#important-changes-from-ipfsapi-04x) for details.
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.10](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.10).
+Currently, this library is tested against [go-ipfs v0.4.19](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.19).
 You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
+
+The following versions have been expliciently backlisted for know compatiblity problems:
+
+  * 0.4.20
 
 ## Table of Contents
 
 - [Install](#install)
 - [Usage](#usage)
 - [Documentation](#documentation)
-  - [Important changes from ipfsApi 0.2.x](#important-changes-from-ipfsapi-02x)
+  - [Important changes from ipfsapi 0.4.x](#important-changes-from-ipfsapi-04x)
 - [Featured Projects](#featured-projects)
 - [Contribute](#contribute)
   - [IRC](#irc)
@@ -119,21 +123,18 @@ https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Pyt
 
 The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) may also be useful in some cases.
 
-### Important changes from `ipfsApi 0.2.x`
+### Important changes from `ipfsapi 0.4.x`
 
- * The Python package has been renamed from `ipfsApi` to `ipfsapi`
- * The PIP module has been renamed from `ipfs-api` to `ipfsapi` (please update your requirement files)
- * A lot of changes in the internal code
-    - Commands have been completely removed
-    - Usage of `requests` or other libraries is considered an implementation detail from now on
- * Most parts of the library (except for `Client()`) are now considered internal and may therefore break at any time
-   ([reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/internal_ref.html))
-    - We will try to keep breakage for these modules at a minimum
-    - If you require stabilisation of some feature please open an issue with the feature in question and your preceived use-case
- * Raised exceptions have been completely changed and are now documented with guaranteed backwards compatibility
-   ([reference](https://ipfs.io/ipns/QmZ86ow1byeyhNRJEatWxGPJKcnQKG7s51MtbHdxxUddTH/Software/Python/ipfsapi/api_ref.html#module-ipfsapi.exceptions))
- * The new `ipfsapi.connect()` function allows creating a `Client` instance, while also checking whether a compatible IPFS daemon instance is actually available
- * Methods in `Client()` now have parameters for options
+ * Tons of methods has been renamed, ensure that you code runs without warnings with the last version of `ipfsapi` before attempting to upgrade!
+ * The Python package has been renamed from `ipfsapi` to `ipfshttpclient`
+ * The PIP module has been renamed from `ipfsapi` to `ipfshttpclient` (please update your requirement files)
+ * The `client.*_pyobj` family of functions has been dropped due to security concerns
+ * Passing a list of parameters to `client.add` will now fail, just pass several individual parameters instead
+ * The API deamon location is now described using MultiAddr, hence rather then doing `ipfshttpclient.connect(host, port)` to pass the network address parameters, use:
+    * `ipfshttpclient.connect("/dns/<host>/tcp/<port>/http")` (for hostnames such as `localhost`)
+    * `ipfshttpclient.connect("/ip4/<IP-address>/tcp/<port>/http")` (for IPv4 addresses)
+    * `ipfshttpclient.connect("/ip6/<IP-address>/tcp/<port>/http")` (for IPv6 addresses)
+    * Use `…/https` rather then `…/http` to connect to the API deamon using HTTPS
 
 ## Featured Projects
 
