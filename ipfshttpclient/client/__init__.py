@@ -15,8 +15,9 @@ import multiaddr
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
-VERSION_MINIMUM = "0.4.3"
-VERSION_MAXIMUM = "0.5.0"
+VERSION_MINIMUM   = "0.4.3"
+VERSION_BLACKLIST = ["0.4.20"]
+VERSION_MAXIMUM   = "0.5.0"
 
 from . import bitswap
 from . import block
@@ -39,7 +40,7 @@ from . import unstable
 from .. import encoding, exceptions, multipart, utils
 
 
-def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
+def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, blacklist=VERSION_BLACKLIST):
 	"""Make sure that the given daemon version is supported by this client
 	version.
 
@@ -63,6 +64,11 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM):
 
 	if minimum > version or version >= maximum:
 		raise exceptions.VersionMismatch(version, minimum, maximum)
+	
+	for blacklisted in blacklist:
+		blacklisted = list(map(int, blacklisted.split('-', 1)[0].split('.')))
+		if version == blacklisted:
+			raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
 def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
