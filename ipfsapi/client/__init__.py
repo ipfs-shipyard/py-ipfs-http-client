@@ -8,9 +8,16 @@ Classes:
 from __future__ import absolute_import
 
 import os
+import re
 import warnings
+try:  #PY3
+	import urllib.parse
+except ImportError:  #PY2
+	class urllib:
+		import urlparse as parse
 
 import ipfshttpclient
+import netaddr
 
 DEFAULT_HOST = str(os.environ.get("PY_IPFSAPI_DEFAULT_HOST", 'localhost'))
 DEFAULT_PORT = int(os.environ.get("PY_IPFSAPI_DEFAULT_PORT", 5001))
@@ -161,6 +168,24 @@ class Client(ipfshttpclient.Client):
 	log_tail  = base.DeprecatedMethodProperty("unstable", "log", "tail")
 
 	shutdown = base.DeprecatedMethodProperty("stop")
+	
+	
+	def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, base=DEFAULT_BASE,
+	             chunk_size=4096, **defaults):
+		# Assemble and parse the URL these parameters are supposed to represent
+		if not re.match('^https?://', host.lower()):
+			host = 'http://' + host
+		url = urllib.parse.urlsplit('%s:%s/%s' % (host, port, base))
+		
+		# Detect whether `host` is a (DNS) hostname or an IP address
+		host_type = "dns"
+		try:
+			host_type = "ip{0}".format(netaddr.IPAddress(url.hostname).version)
+		except netaddr.AddrFormatError:
+			pass
+		
+		addr = "/{0}/{1}/tcp/{2}/{3}".format(host_type, url.hostname, url.port, url.scheme)
+		super(Client, self).__init__(addr, base, chunk_size, **defaults)
 
 
 	# Dropped utility methods
