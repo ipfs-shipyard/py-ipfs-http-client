@@ -163,6 +163,7 @@ try:
 			"--cov=ipfshttpclient",
 			"--cov-branch",
 			"--cov-config={0}".format(coveragerc.name),
+			"--cov-fail-under=84",
 			"--cov-report=term",
 			"--cov-report=html:{}".format(str(TEST_PATH / "cov_html")),
 			"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml"))
