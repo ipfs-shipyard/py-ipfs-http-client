@@ -219,6 +219,29 @@ class Client(ipfshttpclient.Client):
 		return super(Client, self).add(*files, recursive=recursive, pattern=pattern, **kwargs)
 
 
+	# Dropped API methods
+	def bitswap_unwant(self, key, **kwargs):
+		"""Deprecated method: Do not use anymore"""
+		warnings.warn(
+			"IPFS API function “bitswap_unwant” support has been dropped "
+			"from go-ipfs", FutureWarning
+		)
+		
+		args = (key,)
+		return self._client.request('/bitswap/unwant', args, **kwargs)
+	
+	
+	def file_ls(self, multihash, **kwargs):
+		"""Deprecated method: Replace usages with the similar “client.ls”"""
+		warnings.warn(
+			"IPFS API function “file_ls” support is highly deprecated and will "
+			"be removed soon from go-ipfs, use plain “ls” instead", FutureWarning
+		)
+		
+		args = (multihash,)
+		return self._client.request('/file/ls', args, decoder='json', **kwargs)
+
+
 	# Dropped utility methods
 	def add_pyobj(self, py_obj, **kwargs):
 		"""Adds a picklable Python object as a file to IPFS.
