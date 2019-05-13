@@ -187,7 +187,7 @@ class Client(ipfshttpclient.Client):
 			pass
 		
 		addr = "/{0}/{1}/tcp/{2}/{3}".format(host_type, url.hostname, url.port, url.scheme)
-		super(Client, self).__init__(addr, base, chunk_size, **defaults)
+		super(Client, self).__init__(addr, base, chunk_size, timeout=None, **defaults)
 
 
 	def __getattribute__(self, name):
