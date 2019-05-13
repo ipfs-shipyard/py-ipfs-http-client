@@ -184,9 +184,14 @@ def test_session(http_client, http_server):
 	"""Tests that a session is established and then closed."""
 	http_server.serve_content("okay", 200)
 	
-	with http_client.session():
+	assert http_client._session is None
+	try:
+		http_client.open_session()
+		http_client._session is not None
 		res = http_client.request("/okay")
 		assert res == b"okay"
+	finally:
+		http_client.close_session()
 	assert http_client._session is None
 
 

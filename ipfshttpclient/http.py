@@ -7,7 +7,6 @@ by an asynchronous version.
 from __future__ import absolute_import
 
 import abc
-import contextlib
 import functools
 import tarfile
 from six.moves import http_client
@@ -217,6 +216,24 @@ class HTTPClient(object):
 		
 		self.defaults = defaults
 		self._session = None
+	
+	def open_session(self):
+		"""Open a persistent backend session that allows reusing HTTP
+		connections between individual HTTP requests.
+		
+		It is an error to call this function if a session is already open."""
+		assert self._session is None
+		self._session = requests.Session()
+	
+	def close_session(self):
+		"""Close a session opened by
+		:meth:`~ipfshttpclient.http.HTTPClient.open_session`.
+		
+		If there is no session currently open (ie: it was already closed), then
+		this method does nothing."""
+		if self._session is not None:
+			self._session.close()
+			self._session = None
 
 	def _do_request(self, *args, **kwargs):
 		for name, value in self._kwargs.items():
@@ -416,15 +433,3 @@ class HTTPClient(object):
 
 		with tarfile.open(fileobj=res.raw, mode=mode) as tf:
 			tf.extractall(path=wd)
-
-	@contextlib.contextmanager
-	def session(self):
-		"""A context manager for this client's session.
-
-		This function closes the current session when this client goes out of
-		scope.
-		"""
-		self._session = requests.Session()
-		yield
-		self._session.close()
-		self._session = None

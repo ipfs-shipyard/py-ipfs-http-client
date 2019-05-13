@@ -103,15 +103,20 @@ class ClientBase(object):
 		API daemon
 	chunk_size : int
 		The size of the chunks to break uploaded files and text content into
+	session : bool
+		Create this :class:`~ipfshttpclient.Client` instance with a session
+		already open? (Useful for long-running client objects.)
 	"""
 
 	_clientfactory = http.HTTPClient
 
 	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE,
 	             chunk_size=multipart.default_chunk_size,
-	             **defaults):
+	             session=False, **defaults):
 		"""Connects to the API port of an IPFS node."""
 
 		self.chunk_size = chunk_size
 
 		self._client = self._clientfactory(addr, base, **defaults)
+		if session:
+			self._client.open_session()
