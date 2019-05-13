@@ -163,7 +163,7 @@ class Json(Encoding):
 			else:
 				self._buffer.extend(lines)
 		except UnicodeDecodeError as error:
-			raise exceptions.DecodingError('json', error)
+			six.raise_from(exceptions.DecodingError('json', error), error)
 
 		# Process data buffer
 		index = 0
@@ -247,12 +247,12 @@ class Json(Encoding):
 				# Raise exception for remaining bytes in bytes decoder
 				self._decoder1.decode(b'', True)
 			except UnicodeDecodeError as error:
-				raise exceptions.DecodingError('json', error)
+				six.raise_from(exceptions.DecodingError('json', error), error)
 
 			# Late raise errors that looked like they could have been fixed if
 			# the caller had provided more data
 			if self._buffer:
-				raise exceptions.DecodingError('json', self._lasterror)
+				six.raise_from(exceptions.DecodingError('json', self._lasterror), self._lasterror)
 		finally:
 			# Reset state
 			self._buffer    = []
@@ -285,7 +285,7 @@ class Json(Encoding):
 			else:  #PY2
 				return result
 		except (UnicodeEncodeError, TypeError) as error:
-			raise exceptions.EncodingError('json', error)
+			six.raise_from(exceptions.EncodingError('json', error), error)
 
 
 class Protobuf(Encoding):
@@ -328,4 +328,4 @@ def get_encoding(name):
 	try:
 		return __encodings[name.lower()]()
 	except KeyError:
-		raise exceptions.EncoderMissingError(name)
+		six.raise_from(exceptions.EncoderMissingError(name), None)
