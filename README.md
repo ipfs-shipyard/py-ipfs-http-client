@@ -144,10 +144,10 @@ Use an IPFS server with basic auth (replace username and password with real cred
 
 ```py
 >>> import base64
->>> import ipfsapi
+>>> import ipfshttpclient
 >>> creds = base64.b64encode(b"username:password").decode("utf-8")
 >>> headers = {"Authorization" : "Basic " + creds}
->>> api = ipfsapi.connect('https://ipfs-api.example.com', 443, headers=headers)
+>>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
 ```
 
 
