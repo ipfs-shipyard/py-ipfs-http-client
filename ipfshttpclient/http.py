@@ -24,6 +24,7 @@ import six
 
 from . import encoding
 from . import exceptions
+from . import utils
 PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
                   not in ("false", "no"))
 if PATCH_REQUESTS:
@@ -45,8 +46,8 @@ def pass_defaults(func):
 	@functools.wraps(func)
 	def wrapper(self, *args, **kwargs):
 		merged = {}
-		merged.update(self.defaults)
-		merged.update(kwargs)
+		merged = utils.deep_update(merged, self.defaults)
+		merged = utils.deep_update(merged, kwargs)
 		return func(self, *args, **merged)
 	return wrapper
 

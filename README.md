@@ -154,6 +154,22 @@ This module also contains some helper functions for adding strings and JSON to I
 [1, 77, 'lol']
 ```
 
+Use an IPFS server with basic auth (replace username and password with real creds):
+
+```py
+>>> import ipfshttpclient
+>>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', username="foo", password="bar")
+```
+
+Pass custom headers to your IPFS api with each request:
+```py
+>>> import ipfshttpclient
+>>> headers = {"CustomHeader": "foobar"}
+>>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
+```
+
+
+
 ## Documentation
 
 Documentation (currently mostly API documentation unfortunately) is available on IPFS:
