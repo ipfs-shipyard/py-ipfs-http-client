@@ -10,6 +10,7 @@ import abc
 import functools
 import tarfile
 from six.moves import http_client
+import os
 import socket
 try:  #PY3
 	import urllib.parse
@@ -23,7 +24,12 @@ import six
 
 from . import encoding
 from . import exceptions
-from . import requests_wrapper as requests
+PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
+                  not in ("false", "no"))
+if PATCH_REQUESTS:
+	from . import requests_wrapper as requests
+else:  # pragma: no cover (always enabled in production)
+	import requests
 
 
 def pass_defaults(func):
@@ -210,9 +216,9 @@ class HTTPClient(object):
 			query    = "",
 			fragment = ""
 		).geturl()
-		self._kwargs = {
-			"family": family
-		}
+		self._kwargs = {}
+		if PATCH_REQUESTS:  # pragma: no branch (always enabled in production)
+			self._kwargs["family"] = family
 		
 		self.defaults = defaults
 		self._session = None
