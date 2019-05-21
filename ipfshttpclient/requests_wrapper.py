@@ -97,8 +97,9 @@ class ConnectionOverrideMixin:
 			extra_kw['socket_options'] = self.socket_options
 
 		try:
+			dns_host = getattr(self, "_dns_host", self.host)
 			conn = create_connection(
-				(self._dns_host, self.port), self.timeout, **extra_kw)
+				(dns_host, self.port), self.timeout, **extra_kw)
 		except socket.timeout:
 			raise urllib3.exceptions.ConnectTimeoutError(
 				self, "Connection to %s timed out. (connect timeout=%s)" %
@@ -128,7 +129,7 @@ class HTTPConnectionPool(urllib3.HTTPConnectionPool):
 	ConnectionCls = HTTPConnection
 
 
-class HTTPSConnectionPool(urllib3.HTTPConnectionPool):
+class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):
 	ConnectionCls = HTTPSConnection
 
 
@@ -158,11 +159,14 @@ class PoolManager(urllib3.PoolManager):
 		if request_context is None:
 			request_context = self.connection_pool_kw.copy()
 		
+		for key in ('host', 'port'):
+			request_context.pop(key, None)
+		
 		if scheme == "http" or scheme.startswith("http+"):
 			for kw in urllib3.poolmanager.SSL_KEYWORDS:
 				request_context.pop(kw, None)
 		
-		return pool_cls(**request_context)
+		return pool_cls(host, port, **request_context)
 
 	def connection_from_pool_key(self, pool_key, request_context=None):
 		# Copied from `urllib3` so that we continue to ensure that this will
