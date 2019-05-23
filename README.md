@@ -48,13 +48,15 @@ Basic use-case (requires a running instance of IPFS daemon):
 
 ```py
 >>> import ipfshttpclient
->>> client = ipfshttpclient.connect('127.0.0.1', 5001)
+>>> client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001/http')
 >>> res = client.add('test.txt')
 >>> res
 {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
 >>> client.cat(res['Hash'])
 'fdsafkljdskafjaksdjf\n'
 ```
+
+*Please note*: You should specify the address for an IPFS *API server*, using the address of a *gateway* (such as the public `ipfs.io` one at `/dns/ipfs.io/tcp/443/https`) will only give you [extremely limited access](https://github.com/ipfs/go-ipfs/blob/master/docs/gateway.md#read-only-api) and may not work at all. If you are only interested in downloading IPFS content through public gateway servers then this library is unlikely of being of much help.
 
 For real-world scripts you can reuse TCP connections using a context manager or manually closing the session after use:
 
