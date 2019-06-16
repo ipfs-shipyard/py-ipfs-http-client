@@ -96,8 +96,9 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
 		:class:`~ipfshttpclient.Client`
 	"""
 	if username is not None:
-		creds = base64.b64encode(f'{username}:{"" if password is None else password}'.encode()).decode("utf-8")
-		args = {"headers": {"Authorization": "Basic " + creds}}
+		creds = '{0}:{1}'.format(username, "" if password is None else password)
+		encoded_creds = base64.b64encode(creds.encode()).decode("utf-8")
+		args = {"headers": {"Authorization": "Basic " + encoded_creds}}
 		defaults = utils.deep_update(defaults, args)
 
 	# Create client instance

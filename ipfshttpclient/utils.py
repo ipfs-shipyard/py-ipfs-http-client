@@ -8,7 +8,6 @@ try:  #PY3
 except ImportError:  #PY2: The relevant classes used to be somewhere else
 	class collections:
 		import collections as abc
-import collections
 import mimetypes
 import os
 import six

@@ -9,7 +9,6 @@ from __future__ import absolute_import
 import abc
 import functools
 import tarfile
-import collections
 from six.moves import http_client
 import os
 import socket
