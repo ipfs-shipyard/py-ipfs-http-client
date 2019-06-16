@@ -8,6 +8,7 @@ try:  #PY3
 except ImportError:  #PY2: The relevant classes used to be somewhere else
 	class collections:
 		import collections as abc
+import collections
 import mimetypes
 import os
 import six
@@ -35,7 +36,7 @@ else:  #PY35
 		path_obj_types += (pathlib2.PurePath,)
 	except ImportError:
 		pass
-	
+
 	def convert_path(path):
 		# `pathlib`'s PathLike objects need to be treated specially and
 		# converted to strings when interacting with system APIs
@@ -142,3 +143,14 @@ class return_field(object):
 			res = cmd(*args, **kwargs)
 			return res[self.field]
 		return wrapper
+
+
+def deep_update(d, u):
+	""" Performs a deep recursive merge/update of u into d.
+	"""
+	for k, v in u.items():
+		if isinstance(v, collections.Mapping):
+			d[k] = deep_update(d.get(k, {}), v)
+		else:
+			d[k] = v
+	return d

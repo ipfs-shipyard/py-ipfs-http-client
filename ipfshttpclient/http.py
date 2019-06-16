@@ -25,21 +25,13 @@ import six
 
 from . import encoding
 from . import exceptions
+from . import utils
 PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
                   not in ("false", "no"))
 if PATCH_REQUESTS:
 	from . import requests_wrapper as requests
 else:  # pragma: no cover (always enabled in production)
 	import requests
-
-
-def deep_update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.Mapping):
-            d[k] = deep_update(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
 
 
 def pass_defaults(func):
@@ -55,8 +47,8 @@ def pass_defaults(func):
 	@functools.wraps(func)
 	def wrapper(self, *args, **kwargs):
 		merged = {}
-		merged = deep_update(merged, self.defaults)
-		merged = deep_update(merged, kwargs)
+		merged = utils.deep_update(merged, self.defaults)
+		merged = utils.deep_update(merged, kwargs)
 		return func(self, *args, **merged)
 	return wrapper
 

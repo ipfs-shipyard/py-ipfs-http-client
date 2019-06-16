@@ -143,10 +143,14 @@ This module also contains some helper functions for adding strings and JSON to I
 Use an IPFS server with basic auth (replace username and password with real creds):
 
 ```py
->>> import base64
 >>> import ipfshttpclient
->>> creds = base64.b64encode(b"username:password").decode("utf-8")
->>> headers = {"Authorization" : "Basic " + creds}
+>>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', username="foo", password="bar")
+```
+
+Pass custom headers to your IPFS api with each request:
+```py
+>>> import ipfshttpclient
+>>> headers = {"CustomHeader": "foobar"}
 >>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
 ```
 

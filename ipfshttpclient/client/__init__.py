@@ -9,7 +9,7 @@ from __future__ import absolute_import
 
 import os
 import warnings
-
+import base64
 import multiaddr
 
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
@@ -73,7 +73,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 
 def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
             chunk_size=multipart.default_chunk_size,
-            session=False, **defaults):
+            session=False, username=None, password=None, **defaults):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
 	daemon to validate that its version is supported.
 
@@ -88,12 +88,18 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
 
 
 	All parameters are identical to those passed to the constructor of the
-	:class:`~ipfshttpclient.Client` class.
+	:class:`~ipfshttpclient.Client` class, except username and password,
+	which are converted to a 'headers' keyword argument.
 
 	Returns
 	-------
 		:class:`~ipfshttpclient.Client`
 	"""
+	if username is not None:
+		creds = base64.b64encode(f'{username}:{"" if password is None else password}'.encode()).decode("utf-8")
+		args = {"headers": {"Authorization": "Basic " + creds}}
+		defaults = utils.deep_update(defaults, args)
+
 	# Create client instance
 	client = Client(addr, base, chunk_size, session, **defaults)
 
