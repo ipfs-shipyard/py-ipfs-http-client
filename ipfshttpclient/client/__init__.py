@@ -98,7 +98,15 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
 	client = Client(addr, base, chunk_size, session, **defaults)
 
 	# Query version number from daemon and validate it
-	assert_version(client.version()['Version'])
+	version_str = client.version()["Version"]
+	assert_version(version_str)
+	
+	# Apply workarounds based on daemon version
+	version = tuple(map(int, version_str.split('-', 1)[0].split('.')))
+	if version < (0, 4, 19):  # pragma: no cover (workaround)
+		#WORKAROUND: Go-IPFS randomly fucks up streaming requests if they are not
+		#            `Connection: close` (https://github.com/ipfs/go-ipfs/issues/5168)
+		client._workarounds.add("close_conn_on_upload")
 
 	return client
 
