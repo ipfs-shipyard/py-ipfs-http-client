@@ -148,7 +148,7 @@ def deep_update(d, u):
 	""" Performs a deep recursive merge/update of u into d.
 	"""
 	for k, v in u.items():
-		if isinstance(v, collections.Mapping):
+		if isinstance(v, collections.abc.Mapping):
 			d[k] = deep_update(d.get(k, {}), v)
 		else:
 			d[k] = v
