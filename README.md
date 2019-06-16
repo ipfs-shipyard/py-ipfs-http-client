@@ -16,7 +16,7 @@ Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwa
 See the [relevant section of the README](#important-changes-from-ipfsapi-04x) for details.
 
 **Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.19](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.19).
+Currently, this library is tested against [go-ipfs v0.4.21](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.21).
 You may experience compatibility issues when attempting to use it with other versions of go-ipfs.
 
 The following versions have been expliciently backlisted for know compatiblity problems:
