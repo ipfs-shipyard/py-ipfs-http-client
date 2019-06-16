@@ -120,3 +120,5 @@ class ClientBase(object):
 		self._client = self._clientfactory(addr, base, **defaults)
 		if session:
 			self._client.open_session()
+		
+		self._workarounds = self._client.workarounds

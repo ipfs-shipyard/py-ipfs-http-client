@@ -138,10 +138,6 @@ class StreamBase(object):
 		self._headers = content_disposition_headers(name, disptype='form-data')
 		self._headers.update(multipart_content_type_headers(self._boundary, subtype='form-data'))
 
-		#WORKAROUND: Go-IPFS randomly fucks up streaming requests if they are not
-		#            `Connection: close` (https://github.com/ipfs/go-ipfs/issues/5168)
-		self._headers["Connection"] = "close"
-
 		super(StreamBase, self).__init__()
 
 	def headers(self):

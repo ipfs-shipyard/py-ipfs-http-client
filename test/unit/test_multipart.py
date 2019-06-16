@@ -142,8 +142,7 @@ class TestStreamBase(unittest.TestCase):
 		name = "test_name"
 		generator = StreamBaseSub(name)
 
-		expected = b'Connection: close\r\n' \
-		         + b'Content-Disposition: form-data; filename="test_name"\r\n' \
+		expected = b'Content-Disposition: form-data; filename="test_name"\r\n' \
 		         + b'Content-Type: multipart/form-data; ' \
 		         + b'boundary="' + generator._boundary.encode() + b'"\r\n\r\n'
 
