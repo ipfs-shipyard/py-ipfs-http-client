@@ -1,42 +1,32 @@
-# Testing Python 3.7 requires using the `xenial` dist which uses
-# virtual machines rather than LXC and tends to take longer, so
-# use it only where necessary.
-# Testing on macOS/darwin always uses virtual machines so only
-# test the bare minimum.
+# Config file for automatic testing at travis-ci.com
+
+language: python
+
 matrix:
   include:
-  - os: linux
-    language: python
-    python: "2.7"
+  - python: 2.7
     env: TOXENV=py27
-  - os: linux
-    language: python
-    python: "3.4"
+  - python: 3.4
     env: TOXENV=py34
-  - os: linux
-    language: python
-    python: "3.5"
+  - python: 3.5
     env: TOXENV=py35
-  - os: linux
-    language: python
-    python: "3.6"
+  - python: 3.6
     env: TOXENV=py36
-  - os: linux
-    language: python
-    dist: xenial
-    python: "3.7"
+  - python: 3.7
     env: TOXENV=py37
-  - os: osx
-    language: generic
+  - python: 3.8
+    env: TOXENV=py38
+  - python: 3.8
+    env: TOXENV=codestyle
+    before_install: ":"
+  - # Testing on macOS/Darwin always uses virtual machines so only
+    # test the bare minimum.
+    os: osx
+    language: shell
     env: TOXENV=py27
   - os: osx
-    language: generic
+    language: shell
     env: TOXENV=py34
-  - os: linux
-    language: python
-    python: "3.6"
-    env: TOXENV=codestyle
-    before_install: true
 
 env:
   global:
@@ -73,3 +63,5 @@ install:
   - pip install tox
 
 script: tox
+
+cache: pip
