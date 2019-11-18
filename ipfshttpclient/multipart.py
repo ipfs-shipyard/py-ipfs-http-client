@@ -181,7 +181,7 @@ class StreamBase(object):
 		for data in gen:
 			#PERF: This is zero-copy if `len(data) <= self.chunk_size`
 			for offset in range(0, len(data), self.chunk_size):
-				yield data[offset:self.chunk_size]
+				yield data[offset:(self.chunk_size + offset)]
 
 	def _gen_item_start(self):
 		"""Yields the body section for the content.
