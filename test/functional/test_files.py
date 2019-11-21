@@ -151,12 +151,12 @@ def test_add_multiple_from_list(client, cleanup_pins):
 	assert pytest_cid.match(FAKE_FILES_HASH) == res
 
 
+@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_with_raw_leaves(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, raw_leaves=True)
 	check_add_with_raw_leaves(client, res)
 
 
-@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def check_add_with_raw_leaves(client, res):
 	assert pytest_cid.match(FAKE_FILE1_RAW_LEAVES_HASH) == res
 	assert res["Hash"] in client.pin.ls(type="recursive")["Keys"]
