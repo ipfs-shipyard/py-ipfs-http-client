@@ -3,6 +3,10 @@ import os
 import shutil
 
 import pytest
+try:
+	import pytest_cid
+except ImportError:
+	pytest_cid = None
 
 import ipfshttpclient.exceptions
 
@@ -116,10 +120,11 @@ def calc_path_rel_to_cwd(p):
 	return relpath
 
 
+@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_single_from_str_with_dir(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, wrap_with_directory=True)
 	
-	assert FAKE_FILE1_DIR_HASH == res
+	assert pytest_cid.match(FAKE_FILE1_DIR_HASH) == res
 	
 	dir_hash = None
 	for item in res:
@@ -128,20 +133,22 @@ def test_add_single_from_str_with_dir(client, cleanup_pins):
 	assert dir_hash in client.pin.ls(type="recursive")["Keys"]
 
 
+@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_only_hash_file(client):
 	client.repo.gc()
 	
 	res = client.add(FAKE_FILE1_PATH, only_hash=True)
 	
-	assert FAKE_FILE1_HASH == res
+	assert pytest_cid.match(FAKE_FILE1_HASH) == res
 	
 	assert res["Hash"] not in client.pin.ls(type="recursive")
 	assert res["Hash"] not in list(map(lambda i: i["Ref"], client.unstable.refs.local()))
 
 
+@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_multiple_from_list(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, FAKE_FILE2_PATH)
-	assert FAKE_FILES_HASH == res
+	assert pytest_cid.match(FAKE_FILES_HASH) == res
 
 
 def test_add_with_raw_leaves(client, cleanup_pins):
@@ -149,8 +156,9 @@ def test_add_with_raw_leaves(client, cleanup_pins):
 	check_add_with_raw_leaves(client, res)
 
 
+@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def check_add_with_raw_leaves(client, res):
-	assert FAKE_FILE1_RAW_LEAVES_HASH == res
+	assert pytest_cid.match(FAKE_FILE1_RAW_LEAVES_HASH) == res
 	assert res["Hash"] in client.pin.ls(type="recursive")["Keys"]
 
 
@@ -179,9 +187,10 @@ def check_no_copy(client, res):
 	# TODO: assert client.filestore.verify(res["Hash"])["Status"] == 0
 
 
+@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_relative_path(client, cleanup_pins):
 	res = client.add(calc_path_rel_to_cwd(FAKE_FILE1_PATH))
-	assert FAKE_FILE1_HASH == res
+	assert pytest_cid.match(FAKE_FILE1_HASH) == res
 	assert res["Hash"] in client.pin.ls(type="recursive")["Keys"]
 
 

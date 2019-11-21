@@ -5,4 +5,4 @@ pytest-localserver ~= 0.5
 pytest-mock ~= 1.10
 pytest-ordering ~= 0.6
 
-py-cid ; python_version >= "3.5"
+pytest-cid ; python_version >= "3.5"
