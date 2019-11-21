@@ -1,3 +1,0 @@
-multiaddr>=0.0.7
-requests>=2.11
-six
