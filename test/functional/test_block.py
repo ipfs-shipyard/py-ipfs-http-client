@@ -13,7 +13,7 @@ TEST1_CID_STR  = "QmPevo2B1pwvDyuZyJbWVfhwkaGPee3f1kX36wFmqx1yna"
 TEST1_SIZE     = 8
 
 TEST2_CONTENT = b"Hello World!"
-TEST2_CID_STR = "zb2rhfE3SX3q7Ha6UErfMqQReKsmLn73BvdDRagHDM6X1eRFN"
+TEST2_CID_STR = "bafkreid7qoywk77r7rj3slobqfekdvs57qwuwh5d2z3sqsw52iabe3mqne"
 TEST2_CID_OBJ = cid.make_cid(TEST2_CID_STR) if cid else None
 TEST2_SIZE    = len(TEST2_CONTENT)
 
