@@ -15,7 +15,7 @@ import multiaddr
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
-VERSION_MINIMUM   = "0.4.17"
+VERSION_MINIMUM   = "0.4.18"
 VERSION_BLACKLIST = ["0.4.20"]
 VERSION_MAXIMUM   = "0.5.0"
 

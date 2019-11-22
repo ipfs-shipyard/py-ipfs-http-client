@@ -30,9 +30,9 @@ matrix:
 
 env:
   global:
-    - IPFS_VERSION=0.4.21
-    - IPFS_SHA512_LINUX=f344969cad4c2a4f81692c5e7e11dafc420694653fa37d1e389b5c458ee88ea34ea22efceb747351bb579247f1c494e47f667e7a178e8197ba4cad43a6e52f87
-    - IPFS_SHA512_DARWIN=cbb85560182a6af4187029b24414a217d706c4dd636aa0634061479d103ca9ec9f94b44787d131e9697d1347c6026dd42e70a9185e0917920bbe81f010154051
+    - IPFS_VERSION=0.4.22
+    - IPFS_SHA512_LINUX=49b99fec741d67f7bad8fb6fbbd984967f06dfc3de846d10dca34b166f621a182d12f13cf5ccf4e4f33747b67cede6f4205b4cd9b57ce5244128d1385ec82c85
+    - IPFS_SHA512_DARWIN=d0e79b0fff555c23c3628e1a182c312cd18e36a81c71f97675df083adde3f77330e3fe76375f1fb212d81ce96eea4a16ebd9f4c87c6cb4eb52d0210f42ffb4b4
 
 
 # Ensure go-IPFS is available for testing
@@ -46,7 +46,7 @@ before_install:
   - wget "https://dist.ipfs.io/go-ipfs/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${IPFS_PLATFORM}.tar.gz" -O "/tmp/ipfs.tar.gz"
   # Verify the checksum
   - echo "${IPFS_SHA512}  /tmp/ipfs.tar.gz" | sha512sum -c
-  # Extract verify archive
+  # Extract verified archive
   - tar -xzvf "/tmp/ipfs.tar.gz"
   # Set up path
   - export PATH="${PWD}/go-ipfs:${PATH}"
