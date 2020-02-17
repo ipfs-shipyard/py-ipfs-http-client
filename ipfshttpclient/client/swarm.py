@@ -103,7 +103,7 @@ class Section(base.SectionBase):
 				Multiaddrs of peers by peer id
 		
 		+-------+-------------------------------------------------------+
-		| Addrs | Mapping of PeerIDs to a list its advatised MultiAddrs |
+		| Addrs | Mapping of PeerIDs to a list its advatised Multiaddrs |
 		+-------+-------------------------------------------------------+
 		"""
 		return self._client.request('/swarm/addrs', decoder='json', **kwargs)
@@ -188,7 +188,7 @@ class Section(base.SectionBase):
 			dict
 		
 		+---------+----------------------------------------------------+
-		| Strings | List of MultiAddrs that the daemon is connected to |
+		| Strings | List of Multiaddrs that the daemon is connected to |
 		+---------+----------------------------------------------------+
 		"""
 		return self._client.request('/swarm/peers', decoder='json', **kwargs)

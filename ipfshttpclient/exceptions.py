@@ -32,7 +32,7 @@ class AddressError(Error, multiaddr.exceptions.Error):
 	
 	def __init__(self, addr):
 		self.addr = addr
-		Error.__init__(self, "Unsupported MultiAddr pattern: {0}".format(addr))
+		Error.__init__(self, "Unsupported Multiaddr pattern: {0}".format(addr))
 
 
 class VersionMismatch(Error):

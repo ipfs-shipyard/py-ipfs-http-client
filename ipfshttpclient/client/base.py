@@ -86,7 +86,7 @@ class ClientBase(object):
 	Parameters
 	----------
 	addr : Union[bytes, str, multiaddr.Multiaddr]
-		The `MultiAddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
+		The `Multiaddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
 		API daemon location, as used in the *API* key of `go-ipfs Addresses
 		section
 		<https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
