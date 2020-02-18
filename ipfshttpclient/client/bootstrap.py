@@ -12,7 +12,7 @@ class Section(base.SectionBase):
 		Parameters
 		----------
 		peer : str
-			IPFS MultiAddr of a peer to add to the list
+			IPFS Multiaddr of a peer to add to the list
 
 		Returns
 		-------
@@ -58,7 +58,7 @@ class Section(base.SectionBase):
 		Parameters
 		----------
 		peer : str
-			IPFS MultiAddr of a peer to remove from the list
+			IPFS Multiaddr of a peer to remove from the list
 
 		Returns
 		-------

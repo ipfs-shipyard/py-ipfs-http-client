@@ -14,7 +14,7 @@ This release features several breaking changes, as compared to the previous *py-
 
  * A new import name: `ipfsapi` → `ipfshttpclient` (thanks to @AlibabasMerchant)
  * The client API is now structured according to the [IPFS interface core specification](https://github.com/ipfs/interface-ipfs-core/tree/master/SPEC)
- * Deamon location is now described using [MultiAddr](https://github.com/multiformats/multiaddr)
+ * Deamon location is now described using [Multiaddr](https://github.com/multiformats/multiaddr)
  * Some deprecated methods have been dropped:
     * `bitswap_unwant`: API endpoint dropped by *go-ipfs*
 	* `{get,set}_pyobj`: Can too easily be abused for abitrary code execution, use `pickle.{loads,dumps}` if you really need this
