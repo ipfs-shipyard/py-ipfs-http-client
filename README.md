@@ -42,6 +42,12 @@ Install with pip:
 pip install ipfshttpclient
 ```
 
+## Dev Install
+
+```sh
+python setup.py develop
+```
+
 ## Usage
 
 Basic use-case (requires a running instance of IPFS daemon):
