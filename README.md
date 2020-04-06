@@ -1,8 +1,10 @@
 # py-ipfs-http-client
 
+[![Made by the IPFS Community](https://img.shields.io/badge/made%20by-IPFS%20Community-blue.svg?style=flat-square)](https://docs.ipfs.io/community/)
 [![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.io/)
-[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](https://webchat.freenode.net/?channels=%23ipfs)
-[![standard-readme compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![IRC #py-ipfs on chat.freenode.net](https://img.shields.io/badge/freenode%20IRC-%23py--ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23py-ipfs)
+[![Matrix #py-ipfs:ninetailed.ninja](https://img.shields.io/matrix/py-ipfs:ninetailed.ninja?color=blue&label=matrix+chat&style=flat-square)](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one)
+[![Standard README Compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 [![](https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
 [![Build Status](https://travis-ci.org/ipfs/py-ipfs-http-client.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-http-client)
 
@@ -187,10 +189,11 @@ Projects that currently use py-ipfs-http-client. If your project isn't here, fee
 
 ## Contribute
 
-### IRC
+### Chat (IRC/Matrix)
 
-Join us on IRC at `#ipfs` on [chat.freenode.net](https://webchat.freenode.net) if you have any suggestions or questions,
-or if you just want to discuss IPFS and python.
+You can find us on [#py-ipfs on chat.freenode.org](http://webchat.freenode.net/?channels=%23py-ipfs) or in our [Matrix chat room](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one). Oin us if you have any suggestions, questions or if you just want to discuss IPFS and Python in general.
+
+Please note that the channel is not monitored all the time and hence you may only receive a reply to your message later that day. Using Matrix makes it easier to stay connected in the background, so please prefer the Matrix option or use an IRC bouncer.
 
 ### Bug reports
 
