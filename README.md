@@ -42,6 +42,17 @@ Install with pip:
 pip install ipfshttpclient
 ```
 
+## Development install from Source
+
+```sh
+# Clone the source repository
+git clone https://github.com/ipfs/py-ipfs-http-client.git
+cd py-ipfs-http-client
+
+# Link ipfs-api-client into your Python Path
+flit install --pth-file
+```
+
 ## Usage
 
 Basic use-case (requires a running instance of IPFS daemon):
