@@ -110,7 +110,7 @@ Administrative functions:
 Pass in API options:
 
 ```py
->>> client.pin_ls(type='all')
+>>> client.pin.ls(type='all')
 {'Keys': {'QmNMELyizsfFdNZW3yKTi1SE2pErifwDTXx6vvQBfwcJbU': {'Count': 1,
                                                              'Type': 'indirect'},
           'QmNQ1h6o1xJARvYzwmySPsuv9L5XfzS4WTvJSTAWwYRSd8': {'Count': 1,
