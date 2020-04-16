@@ -171,11 +171,13 @@ def test_add_nocopy_without_raw_leaves(client):
 	assert error_msg is not None and "--raw-leaves" in error_msg
 
 
+@pytest.mark.xfail(reason="Reports \"cannot add filestore references outside ipfs root\"")
 def test_nocopy_with_raw_leaves_file(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, nocopy=True, raw_leaves=True)
 	check_no_copy(client, res)
 
 
+@pytest.mark.xfail(reason="Reports \"cannot add filestore references outside ipfs root\"")
 def test_nocopy_with_default_raw_leaves_file(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, nocopy=True)
 	check_no_copy(client, res)
