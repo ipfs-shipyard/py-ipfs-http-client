@@ -10,7 +10,7 @@ class Section(base.SectionBase):
 		"""Returns blocks currently on the bitswap wantlist.
 		
 		.. code-block:: python
-			
+		
 			>>> client.bitswap.wantlist()
 			{'Keys': [
 				'QmeV6C6XVt1wf7V7as7Yak3mxPma8jzpqyhtRtCvpKcfBb',
@@ -40,7 +40,7 @@ class Section(base.SectionBase):
 		"""Returns some diagnostic information from the bitswap agent.
 		
 		.. code-block:: python
-			
+		
 			>>> client.bitswap.stat()
 			{'BlocksReceived': 96,
 			 'DupBlksReceived': 73,

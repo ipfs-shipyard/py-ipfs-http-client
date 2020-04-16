@@ -277,8 +277,8 @@ class HTTPClient(object):
 			# use that as the exception message; otherwise, just pass
 			# the exception on to the caller.
 			if len(content) == 1 \
-			and isinstance(content[0], dict) \
-			and "Message" in content[0]:
+			   and isinstance(content[0], dict) \
+			   and "Message" in content[0]:
 				msg = content[0]["Message"]
 				six.raise_from(exceptions.ErrorResponse(msg, error), error)
 			else:
@@ -287,7 +287,7 @@ class HTTPClient(object):
 	def _request(self, method, url, params, parser, stream=False, files=None,
 	             headers={}, data=None, timeout=120):
 		if "close_conn_on_upload" in self.workarounds \
-		and method.upper() not in ("GET", "HEAD"):  # pragma: no cover (workaround)
+		   and method.upper() not in ("GET", "HEAD"):  # pragma: no cover (workaround)
 			headers = headers.copy()
 			headers["Connection"] = "close"
 		

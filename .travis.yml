@@ -20,7 +20,7 @@ matrix:
   - python: 3.8
     env: TOXENV=py38
   - python: 3.8
-    env: TOXENV=codestyle
+    env: TOXENV=styleck
     before_install: ":"
   - # Testing on macOS/Darwin always uses virtual machines so only
     # test the bare minimum.

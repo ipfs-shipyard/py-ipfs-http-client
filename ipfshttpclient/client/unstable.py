@@ -132,7 +132,7 @@ class RefsSection(base.SectionBase):
 		use :meth:`~ipfshttpclient.object.links` instead.
 		
 		.. code-block:: python
-			
+		
 			>>> client.unstable.refs('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
 			[{'Ref': 'Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7 … cNMV', 'Err': ''},
 			 …
@@ -157,7 +157,7 @@ class RefsSection(base.SectionBase):
 		**This API is subject to future change or removal!**
 		
 		.. code-block:: python
-			
+		
 			>>> client.unstable.refs.local()
 			[{'Ref': 'Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7 … cNMV', 'Err': ''},
 			 …
