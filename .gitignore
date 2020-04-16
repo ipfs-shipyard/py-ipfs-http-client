@@ -24,6 +24,7 @@
 docs/build/
 
 # Testing artefacts
+go-ipfs/
 .coverage
 .pytest_cache/
 .tox/
