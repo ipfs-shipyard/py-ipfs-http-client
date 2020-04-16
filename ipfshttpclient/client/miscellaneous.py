@@ -99,7 +99,7 @@ class Base(base.ClientBase):
 		and prints out round-trip latency information.
 		
 		.. code-block:: python
-			
+		
 			>>> client.ping("QmTzQ1JRkWErjk39mryYw2WVaphAZNAREyMchXzYQ7c15n")
 			[{'Success': True,  'Time': 0,
 			  'Text': 'Looking up peer QmTzQ1JRkWErjk39mryYw2WVaphAZN … c15n'},
@@ -107,7 +107,7 @@ class Base(base.ClientBase):
 			  'Text': 'Peer lookup error: routing: not found'}]
 		
 		.. hint::
-			
+		
 			Pass ``stream=True`` to receive ping progress reports as they
 			arrive.
 		
@@ -143,7 +143,7 @@ class Base(base.ClientBase):
 		identifiers.
 		
 		.. code-block:: python
-			
+		
 			>>> client.resolve("/ipfs/QmTkzDwWqPbnAh5YiV5VwcTLnGdw … ca7D/Makefile")
 			{'Path': '/ipfs/Qmd2xkBfEwEs9oMTk77A6jrsgurpF3ugXSg7dtPNFkcNMV'}
 			>>> client.resolve("/ipns/ipfs.io")
@@ -191,7 +191,7 @@ class Base(base.ClientBase):
 		"""Returns the software version of the currently connected node.
 		
 		.. code-block:: python
-			
+		
 			>>> client.version()
 			{'Version': '0.4.3-rc2', 'Repo': '4', 'Commit': '',
 			 'System': 'amd64/linux', 'Golang': 'go1.6.2'}

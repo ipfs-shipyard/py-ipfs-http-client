@@ -92,7 +92,7 @@ class ClientBase(object):
 		<https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
 		
 		Supported addressing patterns are currently:
-		 
+		
 		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
 		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
 		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
