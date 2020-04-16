@@ -1,14 +1,17 @@
 # Config file for automatic testing at travis-ci.com
 
 language: python
+dist: bionic  # PIP is too old on xenial
 
 matrix:
   include:
   - python: 2.7
     env: TOXENV=py27
   - python: 3.4
+    dist: xenial
     env: TOXENV=py34
   - python: 3.5
+    dist: xenial
     env: TOXENV=py35
   - python: 3.6
     env: TOXENV=py36
@@ -58,7 +61,9 @@ install:
   - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then sudo installer -pkg /tmp/python.pkg -target /; fi
   # Just install PIP on the native Python 2.7 stack for Python 2 testing on Darwin
   - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py27" ]; then sudo easy_install pip; fi
-  
+  # Update VirtualEnv on Ubuntu xenial based images to support PEP-518 build backends
+  - if [ "${TRAVIS_OS_NAME}" = "linux" -a "${TRAVIS_DIST}" = "xenial" ]; then pip install -U virtualenv; fi
+
   # Install the test runner
   - pip install tox
 
