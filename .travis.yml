@@ -17,6 +17,8 @@ matrix:
   - python: pypy3
     env: TOXENV=pypy3
   - python: 3.8
+    env: TOXENV=py38 IPFS_VERSION_TYPE=compat
+  - python: 3.8
     env: TOXENV=styleck
     before_install: ":"
   - # Testing on macOS/Darwin tends to be much slower so only
@@ -30,9 +32,13 @@ matrix:
 
 env:
   global:
+    # Details of latest supported version
     - IPFS_VERSION=0.5.0-rc2
     - IPFS_SHA512_LINUX=e6731c9dcfc12d1c7d8b712d54223edbe805251dfff1bf145b8bdfba0eda92ea6ecc74eef4ec6279108aad867e8adb4ce526198e502419984b42c4c44fa819d8
     - IPFS_SHA512_DARWIN=5eecd0d3cc3794d15fe64fae61576e96a97f75ee3ab6dd6a1b86a57f10d4efff7015c6160ca6c9c9ee78943f89a166dc2b19464bfa18406f0aa518f814ff48bc
+    # Details of earliest supported version
+    - IPFS_COMPAT_VERSION=0.4.21
+    - IPFS_COMPAT_SHA512_LINUX=f344969cad4c2a4f81692c5e7e11dafc420694653fa37d1e389b5c458ee88ea34ea22efceb747351bb579247f1c494e47f667e7a178e8197ba4cad43a6e52f87
 
 
 # Ensure go-IPFS is available for testing
@@ -41,6 +47,7 @@ before_install:
   - export PATH="$(echo /usr/local/Cellar/coreutils/*/libexec/gnubin):${PATH}"
   
   # Figure out parameters based on environment
+  - if [ "${IPFS_VERSION_TYPE:-latest}" = "compat" ]; then export IPFS_VERSION="${IPFS_COMPAT_VERSION}" IPFS_SHA512_LINUX="${IPFS_COMPAT_SHA512_LINUX}"; fi
   - if [ "${TRAVIS_OS_NAME}" != "osx" ]; then export IPFS_PLATFORM="linux-amd64" IPFS_SHA512="${IPFS_SHA512_LINUX}"; else export IPFS_PLATFORM="darwin-amd64" IPFS_SHA512="${IPFS_SHA512_DARWIN}"; fi
   # Download the daemon application
   - wget "https://dist.ipfs.io/go-ipfs/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${IPFS_PLATFORM}.tar.gz" -O "/tmp/ipfs.tar.gz"
@@ -52,7 +59,7 @@ before_install:
   - export PATH="${PWD}/go-ipfs:${PATH}"
 
 install:
-  # Install Python 3.5.4 or 3.8.2 for Python 3 testing on Darwin
+  # Install Python 3.6.8 or 3.8.2 for Python 3 testing on Darwin
   - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py36" ]; then wget "https://www.python.org/ftp/python/3.6.8/python-3.6.8-macosx10.9.pkg" -O /tmp/python.pkg; fi
   - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py36" ]; then echo "786c4d9183c754f58751d52f509bc971  /tmp/python.pkg" | md5sum -c; fi
   - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py38" ]; then wget "https://www.python.org/ftp/python/3.8.2/python-3.8.2-macosx10.9.pkg" -O /tmp/python.pkg; fi
