@@ -7,31 +7,26 @@ matrix:
   include:
   - python: 3.5
     dist: xenial
-    env: TOXENV=py35
   - python: 3.6
-    env: TOXENV=py36
   - python: 3.7
-    env: TOXENV=py37
   - python: 3.8
-    env: TOXENV=py38
   - python: pypy3
-    env: TOXENV=pypy3
   - python: 3.8
-    env: TOXENV=py38 IPFS_VERSION_TYPE=compat
+    env: IPFS_VERSION_TYPE=compat
   - python: 3.8
     env: TOXENV=styleck
     before_install: ":"
-  - # Testing on macOS/Darwin tends to be much slower so only
-    # test the bare minimum.
+  - # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
     os: osx
     language: shell
-    env: TOXENV=py36
+    env: TRAVIS_PYTHON_VERSION=3.6
   - os: osx
     language: shell
-    env: TOXENV=py38
+    env: TRAVIS_PYTHON_VERSION=3.8
 
 env:
   global:
+    - IPFS_VERSION_TYPE=latest
     # Details of latest supported version
     - IPFS_VERSION=0.5.0-rc2
     - IPFS_SHA512_LINUX=e6731c9dcfc12d1c7d8b712d54223edbe805251dfff1bf145b8bdfba0eda92ea6ecc74eef4ec6279108aad867e8adb4ce526198e502419984b42c4c44fa819d8
@@ -43,11 +38,11 @@ env:
 
 # Ensure go-IPFS is available for testing
 before_install:
-  # Make the `sha512sum` available on macOS under that name!
+  # Make the `sha512sum` command available on macOS under that name!
   - export PATH="$(echo /usr/local/Cellar/coreutils/*/libexec/gnubin):${PATH}"
   
   # Figure out parameters based on environment
-  - if [ "${IPFS_VERSION_TYPE:-latest}" = "compat" ]; then export IPFS_VERSION="${IPFS_COMPAT_VERSION}" IPFS_SHA512_LINUX="${IPFS_COMPAT_SHA512_LINUX}"; fi
+  - if [ "${IPFS_VERSION_TYPE}" = "compat" ]; then export IPFS_VERSION="${IPFS_COMPAT_VERSION}" IPFS_SHA512_LINUX="${IPFS_COMPAT_SHA512_LINUX}"; fi
   - if [ "${TRAVIS_OS_NAME}" != "osx" ]; then export IPFS_PLATFORM="linux-amd64" IPFS_SHA512="${IPFS_SHA512_LINUX}"; else export IPFS_PLATFORM="darwin-amd64" IPFS_SHA512="${IPFS_SHA512_DARWIN}"; fi
   # Download the daemon application
   - wget "https://dist.ipfs.io/go-ipfs/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${IPFS_PLATFORM}.tar.gz" -O "/tmp/ipfs.tar.gz"
@@ -57,6 +52,9 @@ before_install:
   - tar -xzvf "/tmp/ipfs.tar.gz"
   # Set up path
   - export PATH="${PWD}/go-ipfs:${PATH}"
+
+  # Set up TOXENV testing value
+  - if [[ "${TRAVIS_PYTHON_VERSION}" =~ py* ]]; then export TOXENV="${TRAVIS_PYTHON_VERSION/./}"; else export TOXENV="py${TRAVIS_PYTHON_VERSION/./}"; fi
 
 install:
   # Install Python 3.6.8 or 3.8.2 for Python 3 testing on Darwin
