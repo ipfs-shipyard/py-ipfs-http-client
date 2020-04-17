@@ -285,33 +285,34 @@ class HTTPClient(object):
 			else:
 				six.raise_from(exceptions.StatusError(error), error)
 
-	def _request(self, method, url, params, parser, stream=False, files=None,
-	             headers={}, data=None, timeout=120):
+	def _request(self, method, url, params, stream=False, files=None,
+	             headers={}, username=None, password=None, data=None,
+	             timeout=120):
 		if "close_conn_on_upload" in self.workarounds \
 		   and method.upper() not in ("GET", "HEAD"):  # pragma: no cover (workaround)
 			headers = headers.copy()
 			headers["Connection"] = "close"
 		
+		auth = None
+		print(username, password, username or password)
+		if username or password:
+			auth = (username, password)
+		
 		# Do HTTP request (synchronously)
 		res = self._do_request(method, url, params=params, stream=stream,
-		                       files=files, headers=headers, data=data,
-		                       timeout=timeout)
-
+		                       files=files, headers=headers, auth=auth,
+		                       data=data, timeout=timeout)
+		
 		# Raise exception for response status
-		# (optionally incorpating the response message, if applicable)
+		# (optionally incorporating the response message, if applicable)
 		self._do_raise_for_status(res)
-
-		if stream:
-			# Decode each item as it is read
-			return StreamDecodeIterator(res, parser)
-		else:
-			# Decode received item immediately
-			return stream_decode_full(res, parser)
+		
+		return res
 
 	@pass_defaults
 	def request(self, path,
-	            args=[], files=[], opts={}, stream=False,
-	            decoder=None, headers={}, data=None,
+	            args=[], files=[], opts={}, stream=False, data=None,
+	            decoder=None, headers={}, username=None, password=None,
 	            timeout=120, offline=False, return_result=True):
 		"""Makes an HTTP request to the IPFS daemon.
 
@@ -338,6 +339,12 @@ class HTTPClient(object):
 			Query string paramters to be sent along with the HTTP request
 		decoder : str
 			The encoder to use to parse the HTTP response
+		headers : Union[Dict[str, str], Sequence[Tuple[str, str]]]
+			Custom HTTP headers to pass send along with the request
+		username : str
+			HTTP basic authentication username to send
+		password : str
+			HTTP basic authentication password to send
 		timeout : float
 			How many seconds to wait for the server to send data
 			before giving up
@@ -376,14 +383,22 @@ class HTTPClient(object):
 
 		parser = encoding.get_encoding(decoder if decoder else "none")
 
-		ret = self._request(method, url, params, parser, stream,
-		                    files, headers, data, timeout=timeout)
-
-		return ret if return_result else None
+		res = self._request(method, url, params, stream, files, headers,
+		                    username, password, data, timeout)
+		
+		if not return_result:
+			return None
+		elif stream:
+			# Decode each item as it is read
+			return StreamDecodeIterator(res, parser)
+		else:
+			# Decode received item immediately
+			return stream_decode_full(res, parser)
 
 	@pass_defaults
 	def download(self, path, args=[], filepath=None, opts={},
-	             compress=True, timeout=120, offline=False):
+	             compress=True, headers={}, username=None,
+	             password=None, timeout=120, offline=False):
 		"""Makes a request to the IPFS daemon to download a file.
 
 		Downloads a file or files from IPFS into the current working
@@ -412,6 +427,12 @@ class HTTPClient(object):
 		compress : bool
 			Whether the downloaded file should be GZip compressed by the
 			daemon before being sent to the client
+		headers : Union[Dict[str, str], Sequence[Tuple[str, str]]]
+			Custom HTTP headers to pass send along with the request
+		username : str
+			HTTP basic authentication username to send
+		password : str
+			HTTP basic authentication password to send
 		timeout : float
 			How many seconds to wait for the server to send data
 			before giving up
@@ -439,10 +460,8 @@ class HTTPClient(object):
 
 		method = 'get'
 
-		res = self._do_request(method, url, params=params, stream=True,
-		                       timeout=timeout)
-
-		self._do_raise_for_status(res)
+		res = self._request(method, url, params, stream=True, headers=headers,
+		                    username=username, password=password, timeout=timeout)
 
 		# try to stream download as a tar file stream
 		mode = 'r|gz' if compress else 'r|'

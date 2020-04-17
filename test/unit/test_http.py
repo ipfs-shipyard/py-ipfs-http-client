@@ -41,7 +41,7 @@ def http_client(http_server):
 
 def slow_http_server_app(environ, start_response):
 	"""
-	HTTP server application that will be slow to responsed (2 seconds)
+	HTTP server application that will be slower to respond (0.5 seconds)
 	"""
 	start_response("400 Bad Request", [
 		("Content-Type", "text/json")
@@ -210,3 +210,13 @@ def test_stream_close(mocker, http_client, http_server):
 	
 	http_client.request("/okay")
 	assert ipfshttpclient.http._notify_stream_iter_closed.call_count == 3
+
+
+def test_basic_auth(http_client, http_server):
+	http_server.serve_content("okay", 200)
+	del http_server.requests[:]
+	
+	http_client.request("/okay", username="hallo", password="welt")
+	
+	request_auth = http_server.requests[0].authorization
+	assert request_auth.username == "hallo" and request_auth.password == "welt"

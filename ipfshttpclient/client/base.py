@@ -101,6 +101,10 @@ class ClientBase(object):
 	base : str
 		The HTTP URL path prefix (or “base”) at which the API is exposed on the
 		API daemon
+	username : str
+		HTTP basic authentication username to send to the API daemon
+	password : str
+		HTTP basic authentication password to send to the API daemon
 	chunk_size : int
 		The size of the chunks to break uploaded files and text content into
 	session : bool
@@ -111,13 +115,16 @@ class ClientBase(object):
 	_clientfactory = http.HTTPClient
 
 	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE,
+	             username=None, password=None,
 	             chunk_size=multipart.default_chunk_size,
 	             session=False, **defaults):
 		"""Connects to the API port of an IPFS node."""
-
+		
 		self.chunk_size = chunk_size
-
-		self._client = self._clientfactory(addr, base, **defaults)
+		
+		self._client = self._clientfactory(
+			addr, base, username=username, password=password, **defaults
+		)
 		if session:
 			self._client.open_session()
 		
