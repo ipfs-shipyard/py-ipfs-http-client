@@ -33,17 +33,16 @@ def test_log_tail(client):
 	t.start()
 
 	# Gets the response object.
-	tail = client.unstable.log.tail(timeout=5)
+	with client.unstable.log.tail(timeout=5) as log_tail_iter:
+		# In case the log was not empty, we may return earlier
+		# than the timer. If we return while the GC is still
+		# running, we risk racing with test exit, so wait.
+		t.cancel()
+		time.sleep(TIME_TO_GC)
 
-	# In case the log was not empty, we may return earlier
-	# than the timer. If we return while the GC is still
-	# running, we risk racing with test exit, so wait.
-	t.cancel()
-	time.sleep(TIME_TO_GC)
-
-	# The log should have been parsed into a dictionary object with
-	# various keys depending on the event that occured.
-	assert type(next(tail)) is dict
+		# The log should have been parsed into a dictionary object with
+		# various keys depending on the event that occured.
+		assert type(next(log_tail_iter)) is dict
 
 
 ############
