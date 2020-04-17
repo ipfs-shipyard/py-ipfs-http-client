@@ -5,10 +5,8 @@ import abc
 import inspect
 import os
 import re
-from six.moves import urllib
+import urllib.parse
 import uuid
-
-import six
 
 from . import utils
 
@@ -34,7 +32,7 @@ def content_disposition_headers(filename, disptype="form-data"):
 	disptype : str
 		Rhe disposition type to use for the file
 	"""
-	disp = '{}; filename="{}"'.format(
+	disp = '{0}; filename="{1}"'.format(
 		disptype,
 		urllib.parse.quote(filename, safe='')
 	)
@@ -604,8 +602,8 @@ def stream_directory(directory, recursive=False, patterns='**', chunk_size=defau
 		                         dirname=dirname, chunk_size=chunk_size)
 		return stream.body(), stream.headers()
 
-	# Note that `os.fwalk` is never available on Windows and Python 2
-	if hasattr(os, "fwalk") and not isinstance(directory, int):  #PY3
+	# Note that `os.fwalk` is never available on Windows
+	if hasattr(os, "fwalk") and not isinstance(directory, int):
 		def auto_close_iter_fd(fd, iter):
 			try:
 				yield from iter

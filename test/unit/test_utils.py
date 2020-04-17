@@ -9,8 +9,6 @@ import os.path
 import sys
 import unittest
 
-import six
-
 import ipfshttpclient.utils as utils
 
 class TestUtils(unittest.TestCase):
@@ -66,9 +64,7 @@ class TestUtils(unittest.TestCase):
 		This test relies on the openability of the file 'fsdfgh'
 		located in 'test/functional/fake_dir'.
 		"""
-		path = os.path.dirname(__file__)
-		if isinstance(path, str):  #PY3
-			path = path.encode(sys.getfilesystemencoding())
+		path = os.fsencode(os.path.dirname(__file__))
 		path = os.path.join(path, b"..", b"functional", b"fake_dir", b"fsdfgh")
 		f, opened = utils.clean_file(path)
 		assert hasattr(f, 'read')

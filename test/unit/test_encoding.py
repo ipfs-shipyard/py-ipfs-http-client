@@ -2,7 +2,6 @@
 import json
 
 import pytest
-import six
 
 import ipfshttpclient.encoding
 import ipfshttpclient.exceptions
@@ -17,7 +16,7 @@ def json_encoder():
 def test_json_parse(json_encoder):
 	"""Asserts parsed key/value json matches expected output."""
 	data = {'key': 'value'}
-	raw = six.b(json.dumps(data))
+	raw = json.dumps(data).encode("utf-8")
 	res = json_encoder.parse(raw)
 	assert res['key'] == 'value'
 
@@ -28,13 +27,13 @@ def test_json_parse_partial(json_encoder):
 	data2 = {'key2': 'value2'}
 	
 	# Try single fragmented data set
-	data1_binary = six.b(json.dumps(data1))
+	data1_binary = json.dumps(data1).encode("utf-8")
 	assert list(json_encoder.parse_partial(data1_binary[:8])) == []
 	assert list(json_encoder.parse_partial(data1_binary[8:])) == [data1]
 	assert list(json_encoder.parse_finalize()) == []
 	
 	# Try multiple data sets contained in whitespace
-	data2_binary = six.b(json.dumps(data2))
+	data2_binary = json.dumps(data2).encode("utf-8")
 	data2_final  = b"  " + data1_binary + b"  \r\n  " + data2_binary + b"  "
 	assert list(json_encoder.parse_partial(data2_final)) == [data1, data2]
 	assert list(json_encoder.parse_finalize()) == []
@@ -52,8 +51,8 @@ def test_json_with_newlines(json_encoder):
 	
 	data_expected = json.loads(data1 + data2)
 	
-	assert list(json_encoder.parse_partial(six.b(data1))) == []
-	assert list(json_encoder.parse_partial(six.b(data2))) == [data_expected]
+	assert list(json_encoder.parse_partial(data1.encode("utf-8"))) == []
+	assert list(json_encoder.parse_partial(data2.encode("utf-8"))) == [data_expected]
 	assert list(json_encoder.parse_finalize()) == []
 
 
@@ -73,7 +72,8 @@ def test_json_parse_chained(json_encoder):
 	data1 = {'key1': 'value1'}
 	data2 = {'key2': 'value2'}
 	res = json_encoder.parse(
-		six.b(json.dumps(data1)) + six.b(json.dumps(data2)))
+		json.dumps(data1).encode("utf-8") + json.dumps(data2).encode("utf-8")
+	)
 	assert len(res) == 2
 	assert res[0]['key1'] == 'value1'
 	assert res[1]['key2'] == 'value2'
@@ -84,7 +84,8 @@ def test_json_parse_chained_newlines(json_encoder):
 	data1 = {'key1': 'value1'}
 	data2 = {'key2': 'value2'}
 	res = json_encoder.parse(
-		six.b(json.dumps(data1)) + b'\n' + six.b(json.dumps(data2)))
+		json.dumps(data1).encode("utf-8") + b'\n' + json.dumps(data2).encode("utf-8")
+	)
 	assert len(res) == 2
 	assert res[0]['key1'] == 'value1'
 	assert res[1]['key2'] == 'value2'

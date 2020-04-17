@@ -10,8 +10,6 @@ import abc
 import codecs
 import json
 
-import six
-
 from . import exceptions
 
 
@@ -123,7 +121,7 @@ class Dummy(Encoding):
 		-------
 			bytes
 		"""
-		return six.b(str(obj))
+		return str(obj).encode()
 
 
 class Json(Encoding):
@@ -149,7 +147,7 @@ class Json(Encoding):
 			generator
 		"""
 		try:
-			# Python 3 requires all JSON data to be a text string
+			# Python requires all JSON data to text strings
 			lines = self._decoder1.decode(data, False).split("\n")
 
 			# Add first input line to last buffer line, if applicable, to

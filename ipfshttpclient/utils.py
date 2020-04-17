@@ -5,7 +5,6 @@
 import collections.abc
 import mimetypes
 import os
-import six
 from functools import wraps
 
 

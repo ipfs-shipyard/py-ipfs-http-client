@@ -1,7 +1,5 @@
 import functools
 
-import six
-
 from . import DEFAULT_ADDR, DEFAULT_BASE
 
 from .. import multipart, http

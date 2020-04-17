@@ -1,7 +1,4 @@
-try:
-	import cid
-except ImportError:
-	cid = None
+import cid
 import io
 import pytest
 
@@ -48,7 +45,6 @@ def test_put_str(client):
 	assert res["Key"] == TEST2_CID_STR
 
 
-@pytest.mark.skipif(not cid, reason="requires py-cid (Python 3.5+ only)")
 @pytest.mark.run(after="test_put_str")
 def test_stat_cid_obj(client):
 	assert len(client.block.get(TEST2_CID_OBJ)) == TEST2_SIZE

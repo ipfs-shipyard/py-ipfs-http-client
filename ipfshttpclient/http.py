@@ -6,15 +6,14 @@ by an asynchronous version.
 
 import abc
 import functools
+import http.client
 import tarfile
-from six.moves import http_client
 import os
 import socket
 import urllib.parse
 
 import multiaddr
 from multiaddr.protocols import (P_DNS, P_DNS4, P_DNS6, P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP)
-import six
 
 from . import encoding
 from . import exceptions
@@ -248,7 +247,7 @@ class HTTPClient:
 			raise exceptions.TimeoutError(error) from error
 		except requests.ConnectionError as error:
 			raise exceptions.ConnectionError(error) from error
-		except http_client.HTTPException as error:
+		except http.client.HTTPException as error:
 			raise exceptions.ProtocolError(error) from error
 
 	def _do_raise_for_status(self, response):
