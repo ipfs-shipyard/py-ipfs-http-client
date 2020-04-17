@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 """IPFS API Bindings for Python.
 
 Classes:
 
  * Client – a TCP client for interacting with an IPFS daemon
 """
-from __future__ import absolute_import
 
 import os
 import warnings
@@ -71,7 +69,7 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 			raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
-def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
+def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
             chunk_size=multipart.default_chunk_size,
             session=False, **defaults):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
@@ -95,7 +93,7 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE,
 		:class:`~ipfshttpclient.Client`
 	"""
 	# Create client instance
-	client = Client(addr, base, chunk_size, session, **defaults)
+	client = Client(addr, base, chunk_size=chunk_size, session=session, **defaults)
 
 	# Query version number from daemon and validate it
 	version_str = client.version()["Version"]

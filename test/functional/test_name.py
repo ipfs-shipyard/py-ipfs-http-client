@@ -1,5 +1,3 @@
-# _*_ coding: utf-8 -*-
-
 import pytest
 
 
@@ -25,7 +23,7 @@ def hash_to_ipns_path(h):
 	return hash_to_path("ipns", h)
 
 
-class Resources(object):
+class Resources:
 	def __init__(self, offline_client):
 		self.client = offline_client
 
@@ -45,7 +43,7 @@ class Resources(object):
 		self.client.key.rm(self.key_test1["Name"], self.key_test2["Name"])
 
 
-class PublishedMapping(object):
+class PublishedMapping:
 	def __init__(self, name, path):
 		self.name = name
 		self.path = path

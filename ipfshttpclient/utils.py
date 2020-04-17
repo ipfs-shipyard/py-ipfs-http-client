@@ -1,21 +1,15 @@
 """A module to handle generic operations.
 """
 
-from __future__ import absolute_import
 
-try:  #PY3
-	import collections.abc
-except ImportError:  #PY2: The relevant classes used to be somewhere else
-	class collections:
-		import collections as abc
+import collections.abc
 import mimetypes
 import os
-import six
 from functools import wraps
 
 
 
-path_str_types = (six.text_type, six.binary_type)
+path_str_types = (str, bytes)
 path_obj_types = ()
 if hasattr(os, "PathLike"):  #PY36+
 	path_obj_types += (os.PathLike,)
@@ -24,18 +18,16 @@ if hasattr(os, "PathLike"):  #PY36+
 		# Not needed since all system APIs also accept an `os.PathLike`
 		return path
 else:  #PY35
-	try:  #PY2: doesn't have `pathlib`
-		import pathlib
-		path_obj_types += (pathlib.PurePath,)
-	except ImportError:
-		pass
+	import pathlib
+	path_obj_types += (pathlib.PurePath,)
+	
 	# Independently maintained forward-port of `pathlib` for Py27 and others
 	try:
 		import pathlib2
 		path_obj_types += (pathlib2.PurePath,)
 	except ImportError:
 		pass
-
+	
 	def convert_path(path):
 		# `pathlib`'s PathLike objects need to be treated specially and
 		# converted to strings when interacting with system APIs
@@ -109,7 +101,7 @@ def clean_files(files):
 		yield clean_file(files)
 
 
-class return_field(object):
+class return_field:
 	"""Decorator that returns the given field of a json response.
 
 	Parameters

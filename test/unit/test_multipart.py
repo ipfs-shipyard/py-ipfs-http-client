@@ -14,16 +14,11 @@ import io
 import os
 import re
 import unittest
-import urllib
+import urllib.parse
 
 import pytest
-import six
-
-from six.moves import urllib_parse
 
 import ipfshttpclient.multipart
-
-ENC = "UTF-8"
 
 class TestContentHelpers(unittest.TestCase):
 	"""Tests the functionality of the three content-oriented helper functions.
@@ -203,9 +198,9 @@ class TestStreamFileMixin(unittest.TestCase):
 		file.seek(0)
 
 		expected = b'--' + generator._boundary.encode() + b'\r\n'
-		expected += b'Abspath: ' + name.encode(ENC) + b'\r\n' if abspath else b''
+		expected += b'Abspath: ' + name.encode("utf-8") + b'\r\n' if abspath else b''
 		expected += b'Content-Disposition: file; '\
-		         + b'filename="' + urllib_parse.quote_plus(name).encode(ENC) + b'"\r\n'\
+		         + b'filename="' + urllib.parse.quote_plus(name).encode("utf-8") + b'"\r\n'\
 			 + b'Content-Type: text/plain\r\n'\
 			 + b'\r\n' \
 		         + b'!234\r\n'
@@ -229,8 +224,8 @@ class TestStreamFileMixin(unittest.TestCase):
 		generator = StreamFileMixinSub(name)
 
 		expected = b'--' + generator._boundary.encode() + b'\r\n'
-		expected += b'Abspath: ' + file_location.encode(ENC) + b'\r\n' if abspath else b''
-		expected += b'Content-Disposition: file; filename="' + name.encode(ENC) + b'"\r\n'\
+		expected += b'Abspath: ' + file_location.encode("utf-8") + b'\r\n' if abspath else b''
+		expected += b'Content-Disposition: file; filename="' + name.encode("utf-8") + b'"\r\n'\
 			  + b'Content-Type: application/octet-stream\r\n'\
 			  + b'\r\n'
 
@@ -314,18 +309,14 @@ class TestFilesStream(unittest.TestCase):
 		self.check_test_body(instance, abspath=False)
 
 	def check_test_body(self, instance, abspath):
-		expected = r"(--\S+\r\n"
-		expected += r"Abspath: \S+\r\n" if abspath else r""
-		expected += r"Content-Disposition: file; filename=\"\S+\"\r\n"
-		expected += r"Content-Type: application/\S+\r\n"
-		expected += r"\r\n(.|\n)*\r\n)+--\S+--\r\n"
-		actual = ""
+		expected = rb"(--\S+\r\n"
+		expected += rb"Abspath: \S+\r\n" if abspath else rb""
+		expected += rb"Content-Disposition: file; filename=\"\S+\"\r\n"
+		expected += rb"Content-Type: application/\S+\r\n"
+		expected += rb"\r\n(.|\n)*\r\n)+--\S+--\r\n"
+		actual = b""
 		for i in instance.body():
-			if type(i) is not str and type(i) is not memoryview:
-				i = i.decode()
-			elif six.PY3 and type(i) is memoryview:
-				i = i.tobytes().decode()
-			actual += i
+			actual += bytes(i)
 		assert re.search(expected, actual)
 
 

@@ -7,7 +7,7 @@ All of this has only been tested on Debian 11 (Linux).
 
 ## Building and updating the project
 
-### Python 3 with the `flit` project manager
+### The `flit` project manager
 
 APT line: `sudo apt install python3-pip && sudo pip3 install flit`  
 DNF line: `sudo dnf install python3-flit`

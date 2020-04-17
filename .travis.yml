@@ -1,15 +1,10 @@
 # Config file for automatic testing at travis-ci.com
 
 language: python
-dist: bionic  # PIP is too old on xenial
+dist: bionic  # VirtualEnv is too old on xenial
 
 matrix:
   include:
-  - python: 2.7
-    env: TOXENV=py27
-  - python: 3.4
-    dist: xenial
-    env: TOXENV=py34
   - python: 3.5
     dist: xenial
     env: TOXENV=py35
@@ -19,17 +14,19 @@ matrix:
     env: TOXENV=py37
   - python: 3.8
     env: TOXENV=py38
+  - python: pypy3
+    env: TOXENV=pypy3
   - python: 3.8
     env: TOXENV=styleck
     before_install: ":"
-  - # Testing on macOS/Darwin always uses virtual machines so only
+  - # Testing on macOS/Darwin tends to be much slower so only
     # test the bare minimum.
     os: osx
     language: shell
-    env: TOXENV=py27
+    env: TOXENV=py36
   - os: osx
     language: shell
-    env: TOXENV=py34
+    env: TOXENV=py38
 
 env:
   global:
@@ -55,18 +52,19 @@ before_install:
   - export PATH="${PWD}/go-ipfs:${PATH}"
 
 install:
-  # Install Python 3.4.4 (the last release binary version) for Python 3 testing on Darwin
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then wget "https://www.python.org/ftp/python/3.4.4/python-3.4.4-macosx10.6.pkg" -O /tmp/python.pkg; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then echo "349c61e374f6aeb44ca85481ee14d2f5  /tmp/python.pkg" | md5sum -c; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py34" ]; then sudo installer -pkg /tmp/python.pkg -target /; fi
-  # Just install PIP on the native Python 2.7 stack for Python 2 testing on Darwin
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py27" ]; then sudo easy_install pip; fi
+  # Install Python 3.5.4 or 3.8.2 for Python 3 testing on Darwin
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py36" ]; then wget "https://www.python.org/ftp/python/3.6.8/python-3.6.8-macosx10.9.pkg" -O /tmp/python.pkg; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py36" ]; then echo "786c4d9183c754f58751d52f509bc971  /tmp/python.pkg" | md5sum -c; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py38" ]; then wget "https://www.python.org/ftp/python/3.8.2/python-3.8.2-macosx10.9.pkg" -O /tmp/python.pkg; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py38" ]; then echo "f12203128b5c639dc08e5a43a2812cc7  /tmp/python.pkg" | md5sum -c; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then sudo installer -pkg /tmp/python.pkg -target /; fi
+
   # Update VirtualEnv on Ubuntu xenial based images to support PEP-518 build backends
   - if [ "${TRAVIS_OS_NAME}" = "linux" -a "${TRAVIS_DIST}" = "xenial" ]; then pip install -U virtualenv; fi
 
   # Install the test runner
-  - pip install tox
+  - pip3 install tox
 
-script: tox
+script: python3 -m tox
 
 cache: pip

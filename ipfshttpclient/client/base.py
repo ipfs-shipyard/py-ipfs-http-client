@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
 import functools
-
-import six
 
 from . import DEFAULT_ADDR, DEFAULT_BASE
 
@@ -30,7 +26,7 @@ def returns_no_item(func):
 	@functools.wraps(func)
 	def wrapper(*args, **kwargs):
 		result = func(*args, **kwargs)
-		if isinstance(result, (list, six.binary_type)):
+		if isinstance(result, (list, bytes)):
 			assert len(result) == 0, ("Called IPFS HTTP-Client function should "
 			                          "never return an item")
 			return
@@ -42,7 +38,7 @@ def returns_no_item(func):
 	return wrapper
 
 
-class SectionProperty(object):
+class SectionProperty:
 	def __init__(self, cls):
 		self.__prop_cls__ = cls
 
@@ -62,7 +58,7 @@ class SectionProperty(object):
 			return self.__prop_cls__
 
 
-class SectionBase(object):
+class SectionBase:
 	# Accept parent object from property descriptor
 	def __init__(self, parent):
 		self.__parent = parent
@@ -81,7 +77,7 @@ class SectionBase(object):
 		self.__parent.chunk_size = value
 
 
-class ClientBase(object):
+class ClientBase:
 	"""
 	Parameters
 	----------
@@ -114,9 +110,10 @@ class ClientBase(object):
 
 	_clientfactory = http.HTTPClient
 
-	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE,
+	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
+	             username=None, password=None,
 	             chunk_size=multipart.default_chunk_size,
-	             session=False, username=None, password=None, **defaults):
+	             session=False, **defaults):
 		"""Connects to the API port of an IPFS node."""
 		
 		self.chunk_size = chunk_size

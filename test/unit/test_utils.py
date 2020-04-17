@@ -9,8 +9,6 @@ import os.path
 import sys
 import unittest
 
-import six
-
 import ipfshttpclient.utils as utils
 
 class TestUtils(unittest.TestCase):
@@ -39,7 +37,7 @@ class TestUtils(unittest.TestCase):
 
 	def test_clean_file_opened(self):
 		"""Tests utils.clean_file() with a stringIO object."""
-		string_io = io.StringIO(u'Mary had a little lamb')
+		string_io = io.StringIO('Mary had a little lamb')
 		f, opened = utils.clean_file(string_io)
 		assert hasattr(f, 'read')
 		assert not opened
@@ -53,9 +51,7 @@ class TestUtils(unittest.TestCase):
 		located in 'test/functional/fake_dir'.
 		"""
 		path = os.path.dirname(__file__)
-		if isinstance(path, six.binary_type):  #PY2
-			path = path.decode(sys.getfilesystemencoding())
-		path = os.path.join(path, u"..", u"functional", u"fake_dir", u"fsdfgh")
+		path = os.path.join(path, "..", "functional", "fake_dir", "fsdfgh")
 		f, opened = utils.clean_file(path)
 		assert hasattr(f, 'read')
 		assert opened
@@ -68,9 +64,7 @@ class TestUtils(unittest.TestCase):
 		This test relies on the openability of the file 'fsdfgh'
 		located in 'test/functional/fake_dir'.
 		"""
-		path = os.path.dirname(__file__)
-		if isinstance(path, six.text_type):  #PY3
-			path = path.encode(sys.getfilesystemencoding())
+		path = os.fsencode(os.path.dirname(__file__))
 		path = os.path.join(path, b"..", b"functional", b"fake_dir", b"fsdfgh")
 		f, opened = utils.clean_file(path)
 		assert hasattr(f, 'read')
@@ -97,7 +91,7 @@ class TestUtils(unittest.TestCase):
 		"""Tests utils.clean_files() with a list of files/stringIO objects."""
 		path = os.path.join(os.path.dirname(__file__),
 		                    "..", "functional", "fake_dir", "fsdfgh")
-		string_io = io.StringIO(u'Mary had a little lamb')
+		string_io = io.StringIO('Mary had a little lamb')
 		files = [path, string_io]
 		gen = utils.clean_files(files)
 		for i in range(0, 2):
@@ -117,7 +111,7 @@ class TestUtils(unittest.TestCase):
 
 	def test_return_field_call(self):
 		"""Tests utils.return_field.__call__()."""
-		expected_hash = u'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
+		expected_hash = 'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab'
 
 		@utils.return_field('Hash')
 		def wrapper(string, *args, **kwargs):

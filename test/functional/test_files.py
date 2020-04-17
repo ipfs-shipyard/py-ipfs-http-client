@@ -1,12 +1,8 @@
-# _*_ coding: utf-8 -*-
 import os
 import shutil
 
 import pytest
-try:
-	import pytest_cid
-except ImportError:
-	pytest_cid = None
+import pytest_cid
 
 import ipfshttpclient.exceptions
 
@@ -113,14 +109,13 @@ FAKE_DIR_HASH = [
 
 
 def calc_path_rel_to_cwd(p):
-	p = str(p)  # for Python < 3.5
+	p = str(p)  # PY35
 	prefix = os.path.commonprefix([p, os.getcwd()])
 	relpath = os.path.relpath(p, prefix)
 	assert not os.path.isabs(relpath)
 	return relpath
 
 
-@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_single_from_str_with_dir(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, wrap_with_directory=True)
 	
@@ -133,7 +128,6 @@ def test_add_single_from_str_with_dir(client, cleanup_pins):
 	assert dir_hash in client.pin.ls(type="recursive")["Keys"]
 
 
-@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_only_hash_file(client):
 	client.repo.gc()
 	
@@ -145,13 +139,11 @@ def test_only_hash_file(client):
 	assert res["Hash"] not in list(map(lambda i: i["Ref"], client.unstable.refs.local()))
 
 
-@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_multiple_from_list(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, FAKE_FILE2_PATH)
 	assert pytest_cid.match(FAKE_FILES_HASH) == res
 
 
-@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_with_raw_leaves(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, raw_leaves=True)
 	check_add_with_raw_leaves(client, res)
@@ -189,7 +181,6 @@ def check_no_copy(client, res):
 	# TODO: assert client.filestore.verify(res["Hash"])["Status"] == 0
 
 
-@pytest.mark.skipif(not pytest_cid, reason="requires pytest-cid (Python 3.5+ only)")
 def test_add_relative_path(client, cleanup_pins):
 	res = client.add(calc_path_rel_to_cwd(FAKE_FILE1_PATH))
 	assert pytest_cid.match(FAKE_FILE1_HASH) == res
@@ -295,11 +286,11 @@ TEST_MFS_FILES = {
 	"test_file1": {
 		"Name": conftest.TEST_DIR / "fake_dir" / "popoiopiu",
 		"Stat": {
-			u"Type": "file",
-			u"Hash": "QmUvobKqcCE56brA8pGTRRRsGy2SsDEKSxFLZkBQFv7Vvv",
-			u"Blocks": 1,
-			u"CumulativeSize": 73,
-			u"Size": 15
+			"Type": "file",
+			"Hash": "QmUvobKqcCE56brA8pGTRRRsGy2SsDEKSxFLZkBQFv7Vvv",
+			"Blocks": 1,
+			"CumulativeSize": 73,
+			"Size": 15
 		}
 	}
 }
@@ -349,7 +340,7 @@ def test_mfs_dir_make_fill_list_delete(client):
 		)
 
 	# Verify directory contents
-	contents = client.files.ls(TEST_MFS_DIRECTORY)[u"Entries"]
+	contents = client.files.ls(TEST_MFS_DIRECTORY)["Entries"]
 	filenames1 = list(map(lambda d: d["Name"], contents))
 	filenames2 = list(TEST_MFS_FILES.keys())
 	assert filenames1 == filenames2

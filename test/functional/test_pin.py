@@ -1,10 +1,9 @@
-# _*_ coding: utf-8 -*-
 import pytest
 
 import ipfshttpclient.exceptions
 
 
-class Resources(object):
+class Resources:
 	def __init__(self, client):
 		self.msg = client.add_str("Mary had a little lamb")
 		self.msg2 = client.add_str("Mary had a little alpaca")

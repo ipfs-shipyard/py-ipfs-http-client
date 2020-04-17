@@ -1,35 +1,17 @@
 """HTTP :mimetype:`multipart/*`-encoded file streaming.
 """
-from __future__ import absolute_import
 
 import abc
 import inspect
 import os
 import re
-from six.moves import urllib
+import urllib.parse
 import uuid
-
-import six
 
 from . import utils
 
 
 default_chunk_size = 4096
-
-
-#PY34: String formattings for binary types not supported
-if hasattr(six.binary_type, "__mod__"):  #PY35+
-	def bytes_fmt(b, *a):
-		return b % a
-else:  #PY34
-	def bytes_fmt(base, *args):
-		# Decode each argument as ISO-8859-1 which causes each by to be
-		# reinterpreted as character
-		base = base.decode("iso-8859-1")
-		args = tuple(map(lambda b: bytes(b).decode("iso-8859-1"), args))
-
-		# Apply format and convert back
-		return (base % args).encode("iso-8859-1")
 
 
 def content_disposition_headers(filename, disptype="form-data"):
@@ -50,7 +32,7 @@ def content_disposition_headers(filename, disptype="form-data"):
 	disptype : str
 		Rhe disposition type to use for the file
 	"""
-	disp = '%s; filename="%s"' % (
+	disp = '{0}; filename="{1}"'.format(
 		disptype,
 		urllib.parse.quote(filename, safe='')
 	)
@@ -105,7 +87,7 @@ def multipart_content_type_headers(boundary, subtype='mixed'):
 	subtype : str
 		The subtype in :mimetype:`multipart/*`-domain to put into the header
 	"""
-	ctype = 'multipart/%s; boundary="%s"' % (
+	ctype = 'multipart/{}; boundary="{}"'.format(
 		subtype,
 		boundary
 	)
@@ -113,7 +95,7 @@ def multipart_content_type_headers(boundary, subtype='mixed'):
 
 
 
-class StreamBase(object):
+class StreamBase:
 	"""Generator that encodes multipart/form-data.
 
 	An abstract buffered generator class which encodes
@@ -138,7 +120,7 @@ class StreamBase(object):
 		self._headers = content_disposition_headers(name, disptype='form-data')
 		self._headers.update(multipart_content_type_headers(self._boundary, subtype='form-data'))
 
-		super(StreamBase, self).__init__()
+		super().__init__()
 
 	def headers(self):
 		return self._headers.copy()
@@ -152,8 +134,7 @@ class StreamBase(object):
 		"""Yields the body of this stream.
 		"""
 		# Cap all returned body chunks to the given chunk size
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_chunks(self._body()): yield chunk
+		yield from self._gen_chunks(self._body())
 
 	def _gen_headers(self, headers):
 		"""Yields the HTTP header text for some content.
@@ -164,7 +145,7 @@ class StreamBase(object):
 			The headers to yield
 		"""
 		for name, value in sorted(headers.items(), key=lambda i: i[0]):
-			yield bytes_fmt(b"%s: %s\r\n", name.encode("ascii"), value.encode("utf-8"))
+			yield b"%s: %s\r\n" % (name.encode("ascii"), value.encode("utf-8"))
 		yield b"\r\n"
 
 	def _gen_chunks(self, gen):
@@ -186,7 +167,7 @@ class StreamBase(object):
 	def _gen_item_start(self):
 		"""Yields the body section for the content.
 		"""
-		yield bytes_fmt(b"--%s\r\n", self._boundary.encode("ascii"))
+		yield b"--%s\r\n" % (self._boundary.encode("ascii"))
 
 	def _gen_item_end(self):
 		"""Yields the body section for the content.
@@ -195,10 +176,10 @@ class StreamBase(object):
 
 	def _gen_end(self):
 		"""Yields the closing text of a multipart envelope."""
-		yield bytes_fmt(b'--%s--\r\n', self._boundary.encode("ascii"))
+		yield b'--%s--\r\n' % (self._boundary.encode("ascii"))
 
 
-class StreamFileMixin(object):
+class StreamFileMixin:
 	def _gen_file(self, filename, file_location=None, file=None, content_type=None):
 		"""Yields the entire contents of a file.
 
@@ -215,12 +196,10 @@ class StreamFileMixin(object):
 		content_type : str
 			The Content-Type of the file; if not set a value will be guessed
 		"""
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_file_start(filename, file_location, content_type):
-			yield chunk
+		yield from self._gen_file_start(filename, file_location, content_type)
 		if file:
-			for chunk in self._gen_file_chunks(file): yield chunk
-		for chunk in self._gen_file_end(): yield chunk
+			yield from self._gen_file_chunks(file)
+		yield from self._gen_file_end()
 
 	def _gen_file_start(self, filename, file_location=None, content_type=None):
 		"""Yields the opening text of a file section in multipart HTTP.
@@ -234,15 +213,13 @@ class StreamFileMixin(object):
 		content_type : str
 			The Content-Type of the file; if not set a value will be guessed
 		"""
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_item_start(): yield chunk
+		yield from self._gen_item_start()
 
 		headers = content_disposition_headers(filename.replace(os.sep, "/"), disptype="file")
 		headers.update(content_type_headers(filename, content_type))
 		if file_location and os.path.isabs(file_location):
 			headers.update({"Abspath": file_location})
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_headers(headers): yield chunk
+		yield from self._gen_headers(headers)
 
 	def _gen_file_chunks(self, file):
 		"""Yields chunks of a file.
@@ -282,7 +259,7 @@ class FilesStream(StreamBase, StreamFileMixin):
 	def __init__(self, files, name="files", chunk_size=default_chunk_size):
 		self.files = utils.clean_files(files)
 
-		super(FilesStream, self).__init__(name, chunk_size=chunk_size)
+		super().__init__(name, chunk_size=chunk_size)
 
 	def _body(self):
 		"""Yields the body of the buffered file."""
@@ -294,16 +271,13 @@ class FilesStream(StreamBase, StreamFileMixin):
 				except AttributeError:
 					file_location = None
 					filename = ''
-
-				#PY2: Use `yield from` instead
-				for chunk in self._gen_file(filename, file_location, file):
-					yield chunk
+				
+				yield from self._gen_file(filename, file_location, file)
 			finally:
 				if need_close:
 					file.close()
-
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_end(): yield chunk
+		
+		yield from self._gen_end()
 
 
 def glob_compile(pat):
@@ -370,7 +344,7 @@ def glob_compile(pat):
 					stuff = '^' + stuff[1:]
 				elif stuff[0] in ('^', '['):
 					stuff = '\\' + stuff
-				res = '%s[%s]' % (res, stuff)
+				res = '{}[{}]'.format(res, stuff)
 		else:
 			res = res + re.escape(c)
 	return re.compile(r'^' + res + r'\Z$', flags=re.M | re.S)
@@ -413,7 +387,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 		self.dirname   = dirname
 
 		name = os.path.basename(self.directory) if not isinstance(self.directory, int) else ""
-		super(DirectoryStream, self).__init__(name, chunk_size=chunk_size)
+		super().__init__(name, chunk_size=chunk_size)
 
 	def _body_directory(self, short_path, visited_directories):
 		# Do not continue if this directory has already been added
@@ -432,12 +406,10 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 		# Add missing intermediate directory nodes in the right order
 		while dir_parts:
 			dir_base = os.path.join(dir_base, dir_parts.pop())
-
+			
 			# Generate directory as special empty file
-			#PY2: Use `yield from` instead
-			for chunk in self._gen_file(dir_base, content_type="application/x-directory"):
-				yield chunk
-
+			yield from self._gen_file(dir_base, content_type="application/x-directory")
+			
 			# Remember that this directory has already been sent
 			visited_directories.add(dir_base)
 
@@ -449,9 +421,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 				f_path_or_desc = file_location
 			# Stream file to client
 			with open(f_path_or_desc, "rb") as file:
-				#PY2: Use `yield from`
-				for chunk in self._gen_file(short_path, file_location, file):
-					yield chunk
+				yield from self._gen_file(short_path, file_location, file)
 		except OSError as e:
 			print(e)
 			# File might have disappeared between `os.walk()` and `open()`
@@ -483,10 +453,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 		directory = self.directory
 		if not isinstance(self.directory, int):
 			directory = os.fspath(directory) if hasattr(os, "fspath") else directory
-			if isinstance(directory, six.text_type) and not isinstance(sep, six.text_type):  #PY2
-				import sys
-				sep = sep.decode(sys.getfilesystemencoding())
-			elif isinstance(directory, six.binary_type) and not isinstance(sep, six.binary_type):  #PY3 noqa
+			if isinstance(directory, bytes):
 				sep = os.fsencode(sep)
 			while sep * 2 in directory:
 				directory.replace(sep * 2, sep)
@@ -546,8 +513,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 			# Always add directories within wildcard directories - even if they
 			# are empty
 			if wildcard_directory:
-				#PY2: Use `yield from` instead
-				for chunk in self._body_directory(short_path, visited_directories): yield chunk
+				yield from self._body_directory(short_path, visited_directories)
 
 			# Iterate across the files in the current directory
 			for filename in filenames:
@@ -560,21 +526,15 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 
 				if wildcard_directory:
 					# Always add files in wildcard directories
-					#PY2: Use `yield from` instead
-					for chunk in self._body_file(short_file_path, file_location, dir_fd=dir_fd):
-						yield chunk
+					yield from self._body_file(short_file_path, file_location, dir_fd=dir_fd)
 				else:
 					# Add file (and all missing intermediary directories)
 					# if it matches one of the patterns
 					if match_short_path(short_file_path):
-						#PY2: Use `yield from` instead
-						for chunk in self._body_directory(short_path, visited_directories):
-							yield chunk
-						for chunk in self._body_file(short_file_path, file_location, dir_fd=dir_fd):
-							yield chunk
-
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_end(): yield chunk
+						yield from self._body_directory(short_path, visited_directories)
+						yield from self._body_file(short_file_path, file_location, dir_fd=dir_fd)
+		
+		yield from self._gen_end()
 
 
 class BytesFileStream(FilesStream):
@@ -589,17 +549,16 @@ class BytesFileStream(FilesStream):
 		The maximum size of a single data chunk
 	"""
 	def __init__(self, data, name="bytes", chunk_size=default_chunk_size):
-		super(BytesFileStream, self).__init__([], name=name, chunk_size=chunk_size)
+		super().__init__([], name=name, chunk_size=chunk_size)
 
 		self.data = data if inspect.isgenerator(data) else (data,)
 
 	def body(self):
 		"""Yields the encoded body."""
-		#PY2: Use `yield from` instead
-		for chunk in self._gen_file_start(self.name): yield chunk
-		for chunk in self._gen_chunks(self.data): yield chunk
-		for chunk in self._gen_file_end(): yield chunk
-		for chunk in self._gen_end(): yield chunk
+		yield from self._gen_file_start(self.name)
+		yield from self._gen_chunks(self.data)
+		yield from self._gen_file_end()
+		yield from self._gen_end()
 
 
 def stream_files(files, chunk_size=default_chunk_size):
@@ -643,13 +602,11 @@ def stream_directory(directory, recursive=False, patterns='**', chunk_size=defau
 		                         dirname=dirname, chunk_size=chunk_size)
 		return stream.body(), stream.headers()
 
-	# Note that `os.fwalk` is never available on Windows and Python 2
-	if hasattr(os, "fwalk") and not isinstance(directory, int):  #PY3
+	# Note that `os.fwalk` is never available on Windows
+	if hasattr(os, "fwalk") and not isinstance(directory, int):
 		def auto_close_iter_fd(fd, iter):
 			try:
-				#PY2: Use `yield from` instead
-				for item in iter:
-					yield item
+				yield from iter
 			finally:
 				os.close(fd)
 
@@ -738,17 +695,9 @@ def stream_text(text, chunk_size=default_chunk_size):
 	if inspect.isgenerator(text):
 		def binary_stream():
 			for item in text:
-				if six.PY2 and isinstance(item, six.binary_type):  #PY2
-					# Allow binary strings under Python 2 since
-					# Python 2 code is not expected to always get the
-					# distinction between text and binary strings right.
-					yield item
-				else:  #PY3
-					yield item.encode("utf-8")
+				yield item.encode("utf-8")
 		data = binary_stream()
-	elif six.PY2 and isinstance(text, six.binary_type):  #PY2: See above.
-		data = text
-	else:  #PY3
+	else:
 		data = text.encode("utf-8")
 
 	return stream_bytes(data, chunk_size)

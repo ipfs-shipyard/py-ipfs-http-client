@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """Defines encoding related classes.
 
 .. note::
@@ -6,18 +5,15 @@
 	The XML and ProtoBuf encoders are currently not functional.
 """
 
-from __future__ import absolute_import
 
 import abc
 import codecs
 import json
 
-import six
-
 from . import exceptions
 
 
-class Encoding(object):
+class Encoding:
 	"""Abstract base for a data parser/encoder interface.
 	"""
 	__metaclass__ = abc.ABCMeta
@@ -125,7 +121,7 @@ class Dummy(Encoding):
 		-------
 			bytes
 		"""
-		return six.b(str(obj))
+		return str(obj).encode()
 
 
 class Json(Encoding):
@@ -151,7 +147,7 @@ class Json(Encoding):
 			generator
 		"""
 		try:
-			# Python 3 requires all JSON data to be a text string
+			# Python requires all JSON data to text strings
 			lines = self._decoder1.decode(data, False).split("\n")
 
 			# Add first input line to last buffer line, if applicable, to
@@ -163,7 +159,7 @@ class Json(Encoding):
 			else:
 				self._buffer.extend(lines)
 		except UnicodeDecodeError as error:
-			six.raise_from(exceptions.DecodingError('json', error), error)
+			raise exceptions.DecodingError('json', error) from error
 
 		# Process data buffer
 		index = 0
@@ -247,12 +243,12 @@ class Json(Encoding):
 				# Raise exception for remaining bytes in bytes decoder
 				self._decoder1.decode(b'', True)
 			except UnicodeDecodeError as error:
-				six.raise_from(exceptions.DecodingError('json', error), error)
+				raise exceptions.DecodingError('json', error) from error
 
 			# Late raise errors that looked like they could have been fixed if
 			# the caller had provided more data
 			if self._buffer:
-				six.raise_from(exceptions.DecodingError('json', self._lasterror), self._lasterror)
+				raise exceptions.DecodingError('json', self._lasterror) from self._lasterror
 		finally:
 			# Reset state
 			self._buffer    = []
@@ -280,12 +276,9 @@ class Json(Encoding):
 		try:
 			result = json.dumps(obj, sort_keys=True, indent=None,
 			                    separators=(',', ':'), ensure_ascii=False)
-			if isinstance(result, six.text_type):  #PY3
-				return result.encode("utf-8")
-			else:  #PY2
-				return result
+			return result.encode("utf-8")
 		except (UnicodeEncodeError, TypeError) as error:
-			six.raise_from(exceptions.EncodingError('json', error), error)
+			raise exceptions.EncodingError('json', error) from error
 
 
 class Protobuf(Encoding):
@@ -328,4 +321,4 @@ def get_encoding(name):
 	try:
 		return __encodings[name.lower()]()
 	except KeyError:
-		six.raise_from(exceptions.EncoderMissingError(name), None)
+		raise exceptions.EncoderMissingError(name) from None
