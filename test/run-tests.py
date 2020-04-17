@@ -118,54 +118,62 @@ try:
 	])
 	
 	with tempfile.NamedTemporaryFile("r+") as coveragerc:
-		# Assemble list of coverage data exclusion patterns (also escape the
-		# hash sign [#] as it has a special meaning [comment] in the generated
-		# configuration file)
-		exclusions = [
-			# Add the standard coverage exclusion statement
-			"pragma: no cover"
-		]
-		if sys.version_info.major == 2:
-			exclusions.append(r"\#PY3")
-		else:
-			# Exclude the past
-			exclusions.append(r"\#PY2")
-			# Exclude code only used for compatiblity with a previous Python version
-			exclusions.append(r"\#PY3({0})[^\d+]".format(
-				"|".join(map(str, range(0, sys.version_info.minor)))
-			))
-			# Exclude code only used for in upcoming Python versions
-			exclusions.append(r"\#PY3({0})\+".format(
-				"|".join(map(str, range(sys.version_info.minor + 1, 20)))
-			))
-		
-		# Create temporary file with extended *coverage.py* configuration data
-		coveragerc.file.writelines(map(lambda s: s + "\n", [
-			"[run]",
-			"omit =",
-			"	ipfshttpclient/requests_wrapper.py",
-			"[report]",
-			"# Exclude lines specific to some other Python version from coverage",
-			"exclude_lines ="
-		] + list(map(lambda s: "\t" + s, exclusions))))
-		coveragerc.file.flush()
+		coverage_args = []
+		if os.name != "nt":
+			# Assemble list of coverage data exclusion patterns (also escape the
+			# hash sign [#] as it has a special meaning [comment] in the generated
+			# configuration file)
+			exclusions = [
+				# Add the standard coverage exclusion statement
+				"pragma: no cover"
+			]
+			if sys.version_info.major == 2:
+				exclusions.append(r"\#PY3")
+			else:
+				# Exclude the past
+				exclusions.append(r"\#PY2")
+				# Exclude code only used for compatiblity with a previous Python version
+				exclusions.append(r"\#PY3({0})[^\d+]".format(
+					"|".join(map(str, range(0, sys.version_info.minor)))
+				))
+				# Exclude code only used for in upcoming Python versions
+				exclusions.append(r"\#PY3({0})\+".format(
+					"|".join(map(str, range(sys.version_info.minor + 1, 20)))
+				))
+			
+			# Create temporary file with extended *coverage.py* configuration data
+			coveragerc.file.writelines(map(lambda s: s + "\n", [
+				"[run]",
+				"omit =",
+				"	ipfshttpclient/requests_wrapper.py",
+				"[report]",
+				"# Exclude lines specific to some other Python version from coverage",
+				"exclude_lines ="
+			] + list(map(lambda s: "\t" + s, exclusions))))
+			coveragerc.file.flush()
+			
+			coverage_args = [
+				"--cov=ipfshttpclient",
+				"--cov-branch",
+				"--cov-config={0}".format(coveragerc.name),
+				"--cov-fail-under=83",
+				"--cov-report=term",
+				"--cov-report=html:{}".format(str(TEST_PATH / "cov_html")),
+				"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml")),
+			]
 		
 		# Launch py.test in-process
 		import pytest
 		PYTEST_CODE = pytest.main([
 			"--verbose",
-			"--cov=ipfshttpclient",
-			"--cov-branch",
-			"--cov-config={0}".format(coveragerc.name),
-			"--cov-fail-under=83",
-			"--cov-report=term",
-			"--cov-report=html:{}".format(str(TEST_PATH / "cov_html")),
-			"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml"))
-		] + sys.argv[1:])
+		] + coverage_args + sys.argv[1:])
 finally:
-	# Move coverage file to test directory (so that the coverage files of different
-	# versions can be merged later on)
-	shutil.move(str(BASE_PATH / ".coverage"), str(TEST_PATH / "cov_raw"))
+	try:
+		# Move coverage file to test directory (so that the coverage files of different
+		# versions can be merged later on)
+		shutil.move(str(BASE_PATH / ".coverage"), str(TEST_PATH / "cov_raw"))
+	except FileNotFoundError:
+		pass  # Block crashed early or Windows (were coverage is broken)
 	
 	# Make sure daemon was terminated during the tests
 	if DAEMON.poll() is None:  # "if DAEMON is running"

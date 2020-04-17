@@ -4,72 +4,153 @@ language: python
 dist: bionic  # VirtualEnv is too old on xenial
 
 matrix:
-  include:
-  - python: 3.5
-    dist: xenial
-  - python: 3.6
-  - python: 3.7
-  - python: 3.8
-  - python: pypy3
-  - python: 3.8
-    env: IPFS_VERSION_TYPE=compat
-  - python: 3.8
-    env: TOXENV=styleck
-    before_install: ":"
-  - # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
-    os: osx
-    language: shell
-    env: TRAVIS_PYTHON_VERSION=3.6
-  - os: osx
-    language: shell
-    env: TRAVIS_PYTHON_VERSION=3.8
-
-env:
-  global:
-    - IPFS_VERSION_TYPE=latest
-    # Details of latest supported version
-    - IPFS_VERSION=0.5.0-rc2
-    - IPFS_SHA512_LINUX=e6731c9dcfc12d1c7d8b712d54223edbe805251dfff1bf145b8bdfba0eda92ea6ecc74eef4ec6279108aad867e8adb4ce526198e502419984b42c4c44fa819d8
-    - IPFS_SHA512_DARWIN=5eecd0d3cc3794d15fe64fae61576e96a97f75ee3ab6dd6a1b86a57f10d4efff7015c6160ca6c9c9ee78943f89a166dc2b19464bfa18406f0aa518f814ff48bc
-    # Details of earliest supported version
-    - IPFS_COMPAT_VERSION=0.4.21
-    - IPFS_COMPAT_SHA512_LINUX=f344969cad4c2a4f81692c5e7e11dafc420694653fa37d1e389b5c458ee88ea34ea22efceb747351bb579247f1c494e47f667e7a178e8197ba4cad43a6e52f87
-
+   include:
+      - python: "3.5"
+      - python: "3.6"
+      - python: "3.7"
+      - python: "3.8"
+      - python: "pypy3"
+      - python: "3.8"
+        env: IPFS_VERSION=compat
+      - python: "3.8"
+        env: TOXENV=styleck
+        before_install: ":"
+     
+      # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
+      #
+      # Minimum testing version is 3.6, since the 3.5 binaries from python.org fail
+      # with TLS error when trying to install `tox`.
+      #
+      # When changing any version here also update the relevant checksum below with
+      # the values found on the https://python.org/ website.
+      - os: osx
+        language: shell
+        env: PYTHON_VERSION=3.6.8-macosx10.9
+      - os: osx
+        language: shell
+        env: PYTHON_VERSION=3.8.2-macosx10.9
+     
+      # Minimum testing version for Windows is 3.7 due to `-X utf8` flag support
+      # being a life-saver for unbreaking the stupid INI parser used by all the
+      # Python testing tools
+      #
+      # Python version numbers must exactly match a version in chocolatey as that
+      # tool does not support version ranges at this time.
+      - os: windows
+        language: shell
+        env: PYTHON_VERSION=3.7.6.20200110
+      - os: windows
+        language: shell
+        env: PYTHON_VERSION=latest
 
 # Ensure go-IPFS is available for testing
 before_install:
-  # Make the `sha512sum` command available on macOS under that name!
-  - export PATH="$(echo /usr/local/Cellar/coreutils/*/libexec/gnubin):${PATH}"
-  
-  # Figure out parameters based on environment
-  - if [ "${IPFS_VERSION_TYPE}" = "compat" ]; then export IPFS_VERSION="${IPFS_COMPAT_VERSION}" IPFS_SHA512_LINUX="${IPFS_COMPAT_SHA512_LINUX}"; fi
-  - if [ "${TRAVIS_OS_NAME}" != "osx" ]; then export IPFS_PLATFORM="linux-amd64" IPFS_SHA512="${IPFS_SHA512_LINUX}"; else export IPFS_PLATFORM="darwin-amd64" IPFS_SHA512="${IPFS_SHA512_DARWIN}"; fi
-  # Download the daemon application
-  - wget "https://dist.ipfs.io/go-ipfs/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${IPFS_PLATFORM}.tar.gz" -O "/tmp/ipfs.tar.gz"
-  # Verify the checksum
-  - echo "${IPFS_SHA512}  /tmp/ipfs.tar.gz" | sha512sum -c
-  # Extract verified archive
-  - tar -xzvf "/tmp/ipfs.tar.gz"
-  # Set up path
-  - export PATH="${PWD}/go-ipfs:${PATH}"
+   - |-
+      ### ==== MODIFY THIS WHEN CHANGING TARGET OR MINIMUM IPFS VERSION ==== ###
+      case "${IPFS_VERSION:-latest}" in
+         latest)  # Currently targeted version
+            VERSION=0.5.0-rc2
+            SHA512_LINUX=e6731c9dcfc12d1c7d8b712d54223edbe805251dfff1bf145b8bdfba0eda92ea6ecc74eef4ec6279108aad867e8adb4ce526198e502419984b42c4c44fa819d8
+            SHA512_DARWIN=5eecd0d3cc3794d15fe64fae61576e96a97f75ee3ab6dd6a1b86a57f10d4efff7015c6160ca6c9c9ee78943f89a166dc2b19464bfa18406f0aa518f814ff48bc
+            SHA512_WINDOWS=50eb241f7ad7d6690348d2a4265bb0fad1b6e233e9d8ddaf924716aa7e05f6c9697e9c72c5c6f6bdc9cd421a782311842a00333b38cb4ffbba7e25a28563b85c
+         ;;
+         compat)  # Earliest supported version
+            VERSION=0.4.21
+            SHA512_LINUX=f344969cad4c2a4f81692c5e7e11dafc420694653fa37d1e389b5c458ee88ea34ea22efceb747351bb579247f1c494e47f667e7a178e8197ba4cad43a6e52f87
+         ;;
+      esac
+      ### ------------------------------ END ------------------------------- ###
+      
+      set -u
+      
+      # Derive usable parameters from the above constants
+      case "${TRAVIS_OS_NAME}" in
+         linux)
+            export IPFS_DL_PATH="go-ipfs/v${VERSION}/go-ipfs_v${VERSION}_linux-amd64.tar.gz"
+            export IPFS_DL_SHA512="${SHA512_LINUX}"
+         ;;
+         osx)
+            export IPFS_DL_PATH="go-ipfs/v${VERSION}/go-ipfs_v${VERSION}_darwin-amd64.tar.gz"
+            export IPFS_DL_SHA512="${SHA512_DARWIN}"
+            
+            # Make the `sha512sum` command available under that name
+            export PATH="$(echo /usr/local/Cellar/coreutils/*/libexec/gnubin):${PATH}"
+         ;;
+         windows)
+            export IPFS_DL_PATH="go-ipfs/v${VERSION}/go-ipfs_v${VERSION}_windows-amd64.zip"
+            export IPFS_DL_SHA512="${SHA512_WINDOWS}"
+         ;;
+      esac
+      export IPFS_DL_BASENAME="${IPFS_DL_PATH##*/}"
+      
+      set +u
 
-  # Set up TOXENV testing value
-  - if [[ "${TRAVIS_PYTHON_VERSION}" =~ py* ]]; then export TOXENV="${TRAVIS_PYTHON_VERSION/./}"; else export TOXENV="py${TRAVIS_PYTHON_VERSION/./}"; fi
+   # Download the daemon application
+   - wget "https://dist.ipfs.io/${IPFS_DL_PATH}" 2>&1
+   # Verify its checksum
+   - echo "${IPFS_DL_SHA512}  ${IPFS_DL_BASENAME}" | sha512sum -c
+   # Extract verified archive
+   - |-
+      if [[ "${IPFS_DL_BASENAME}" =~ .*\.zip ]];
+      then
+         unzip "${IPFS_DL_BASENAME}"
+      else
+         tar -xvf "${IPFS_DL_BASENAME}"
+      fi
+   # Add IPFS daemon to search path
+   - export PATH="${PWD}/go-ipfs:${PATH}"
 
 install:
-  # Install Python 3.6.8 or 3.8.2 for Python 3 testing on Darwin
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py36" ]; then wget "https://www.python.org/ftp/python/3.6.8/python-3.6.8-macosx10.9.pkg" -O /tmp/python.pkg; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py36" ]; then echo "786c4d9183c754f58751d52f509bc971  /tmp/python.pkg" | md5sum -c; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py38" ]; then wget "https://www.python.org/ftp/python/3.8.2/python-3.8.2-macosx10.9.pkg" -O /tmp/python.pkg; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${TOXENV}" = "py38" ]; then echo "f12203128b5c639dc08e5a43a2812cc7  /tmp/python.pkg" | md5sum -c; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then sudo installer -pkg /tmp/python.pkg -target /; fi
+   # Install suitable Python version for testing on Darwin and Windows;
+   # and fixup the environment whichever way required
+   - |-
+      export PYTHON_VERSION="${PYTHON_VERSION:-${TRAVIS_PYTHON_VERSION}}"
+      
+      ### ====== MODIFY THIS WHEN CHANGING MACOS PYTHON TEST VERSIONS ====== ###
+      case "${PYTHON_VERSION}" in
+         3.6.8-macosx10.9) MD5_MACOS="786c4d9183c754f58751d52f509bc971" ;;
+         3.8.2-macosx10.9) MD5_MACOS="f12203128b5c639dc08e5a43a2812cc7" ;;
+      esac
+      ### ------------------------------ END ------------------------------- ###
+      
+      set -eu
+      if [[ "${TRAVIS_OS_NAME}" = "osx" ]];
+      then
+         # Download and install official Python macOS installation package
+         wget "https://www.python.org/ftp/python/${PYTHON_VERSION%%-*}/python-${PYTHON_VERSION}.pkg" -O /tmp/python.pkg
+         echo "${MD5_MACOS}  /tmp/python.pkg" | md5sum -c
+         sudo installer -pkg /tmp/python.pkg -target /
+      elif [[ "${TRAVIS_OS_NAME}" = "windows" ]];
+      then
+         # Install Windows Python from chocolatey
+         VERSION_FLAG=""  # Use latest version
+         if [[ "${PYTHON_VERSION:-latest}" != latest ]];
+         then  # Use specific version
+            VERSION_FLAG="--version=${PYTHON_VERSION}"
+         fi
+         choco install python ${VERSION_FLAG}
+         
+         # Export sanely named python3 shell command
+         python3() {
+            py -3 -X utf8 "$@"
+         }
+         export -f python3
+      fi
+      set +eu
 
-  # Update VirtualEnv on Ubuntu xenial based images to support PEP-518 build backends
-  - if [ "${TRAVIS_OS_NAME}" = "linux" -a "${TRAVIS_DIST}" = "xenial" ]; then pip install -U virtualenv; fi
+   # Install the test runner
+   - python3 -m pip install tox
 
-  # Install the test runner
-  - pip3 install tox
+   # Fixup the tox environment name for PyPy
+   - |-
+      if [[ -z "${TOXENV+set}" && "${PYTHON_VERSION}" =~ pypy.* ]];
+      then
+         export TOXENV=pypy3
+      fi
 
-script: python3 -m tox
+script: python3 -m tox -e "${TOXENV:-py3}"
 
-cache: pip
+cache:
+   pip: true
+   directories:
+      - $HOME/AppData/Local/Temp/chocolatey
