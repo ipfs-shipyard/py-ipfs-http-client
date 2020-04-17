@@ -280,10 +280,7 @@ class Json(Encoding):
 		try:
 			result = json.dumps(obj, sort_keys=True, indent=None,
 			                    separators=(',', ':'), ensure_ascii=False)
-			if isinstance(result, six.text_type):  #PY3
-				return result.encode("utf-8")
-			else:  #PY2
-				return result
+			return result.encode("utf-8")
 		except (UnicodeEncodeError, TypeError) as error:
 			six.raise_from(exceptions.EncodingError('json', error), error)
 

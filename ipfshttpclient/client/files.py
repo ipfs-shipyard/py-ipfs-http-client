@@ -230,7 +230,9 @@ class Base(base.ClientBase):
 	files = base.SectionProperty(Section)
 	
 	
-	def add(self, file, *files, **kwargs):
+	def add(self, file, *files, recursive=False, pattern="**", trickle=False,
+	        only_hash=False, wrap_with_directory=False, chunker=None,
+	        pin=True, raw_leaves=None, nocopy=False, **kwargs):
 		"""Add a file, or directory of files to IPFS.
 
 		.. code-block:: python
@@ -248,7 +250,7 @@ class Base(base.ClientBase):
 			file or directory to add
 		recursive : bool
 			If ``file`` is some kind of directory, controls whether files in
-			subdirectories should also be added or not (Default: ``False``)
+			subdirectories should also be added or not
 		pattern : Union[str, list]
 			Single `*glob* <https://docs.python.org/3/library/glob.html>`_
 			pattern or list of *glob* patterns and compiled regular expressions
@@ -256,22 +258,20 @@ class Base(base.ClientBase):
 		trickle : bool
 			Use trickle-dag format (optimized for streaming) when generating
 			the dag; see `the FAQ <https://github.com/ipfs/faq/issues/218>` for
-			more information (Default: ``False``)
+			more information
 		only_hash : bool
-			Only chunk and hash, but do not write to disk (Default: ``False``)
+			Only chunk and hash, but do not write to disk
 		wrap_with_directory : bool
 			Wrap files with a directory object to preserve their filename
-			(Default: ``False``)
 		chunker : str
 			The chunking algorithm to use
 		pin : bool
-			Pin this object when adding (Default: ``True``)
+			Pin this object when adding
 		raw_leaves : bool
 			Use raw blocks for leaf nodes. (experimental). (Default: ``True``
 			when ``nocopy`` is True, or ``False`` otherwise)
 		nocopy : bool
 			Add the file using filestore. Implies raw-leaves. (experimental).
-			(Default: ``False``)
 
 		Returns
 		-------
@@ -279,22 +279,18 @@ class Base(base.ClientBase):
 				File name and hash of the added file node, will return a list
 				of one or more items unless only a single file was given
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		recursive = kwargs.pop("recursive", False)
-		pattern   = kwargs.pop("pattern", "**")
-		nocopy = kwargs.pop("nocopy", False)
 		opts = {
-			"trickle": kwargs.pop("trickle", False),
-			"only-hash": kwargs.pop("only_hash", False),
-			"wrap-with-directory": kwargs.pop("wrap_with_directory", False),
-			"pin": kwargs.pop("pin", True),
-			"raw-leaves": kwargs.pop("raw_leaves", nocopy),
-			'nocopy':  nocopy
+			"trickle": trickle,
+			"only-hash": only_hash,
+			"wrap-with-directory": wrap_with_directory,
+			"pin": pin,
+			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
+			"nocopy": nocopy
 		}
 		if "chunker" in kwargs:
 			opts["chunker"] = kwargs.pop("chunker")
 		kwargs.setdefault("opts", {}).update(opts)
-
+		
 		assert not isinstance(file, (tuple, list)), \
 		       "Use `client.add(name1, name2, …)` to add several items"
 		multiple = (len(files) > 0)
@@ -304,7 +300,7 @@ class Base(base.ClientBase):
 		)
 		
 		resp = self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)
-		if not multiple and not is_dir and not kwargs["opts"]["wrap-with-directory"]:
+		if not multiple and not is_dir and not wrap_with_directory:
 			assert len(resp) == 1
 			return resp[0]
 		return resp

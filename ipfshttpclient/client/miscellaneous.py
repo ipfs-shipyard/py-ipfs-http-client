@@ -92,7 +92,7 @@ class Base(base.ClientBase):
 	#TODO: isOnline()
 	
 	
-	def ping(self, peer, *peers, **kwargs):
+	def ping(self, peer, *peers, count=10, **kwargs):
 		"""Provides round-trip latency information for the routing system.
 		
 		Finds nodes via the routing system, sends pings, waits for pongs,
@@ -114,19 +114,16 @@ class Base(base.ClientBase):
 		Parameters
 		----------
 		peer : str
-			ID of peer to be pinged
+			ID of peer(s) to be pinged
 		count : int
-			Number of ping messages to send (Default: ``10``)
+			Number of ping messages to send
 		
 		Returns
 		-------
 			list
 				Progress reports from the ping
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		if "count" in kwargs:
-			kwargs.setdefault("opts", {})["count"] = kwargs["count"]
-			del kwargs["count"]
+		kwargs.setdefault("opts", {})["count"] = count
 		
 		args = (peer,) + peers
 		return self._client.request('/ping', args, decoder='json', **kwargs)

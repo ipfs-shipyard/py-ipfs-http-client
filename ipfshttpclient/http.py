@@ -12,11 +12,7 @@ import tarfile
 from six.moves import http_client
 import os
 import socket
-try:  #PY3
-	import urllib.parse
-except ImportError:  #PY2
-	class urllib:
-		import urlparse as parse
+import urllib.parse
 
 import multiaddr
 from multiaddr.protocols import (P_DNS, P_DNS4, P_DNS6, P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP)
@@ -102,16 +98,13 @@ class StreamDecodeIterator(object):
 				# iterate over the final fragments returned by the parser
 				self._response_iter = None
 				self._parser_iter   = iter(self._parser.parse_finalize())
-
-	#PY2: Old iterator syntax
-	next = __next__
-
+	
 	def __enter__(self):
 		return self
-
+	
 	def __exit__(self, *a):
 		self.close()
-
+	
 	def close(self):
 		# Clean up any open iterators first
 		if self._response_iter is not None:
@@ -222,7 +215,6 @@ class HTTPClient(object):
 		self._kwargs = {}
 		if PATCH_REQUESTS:  # pragma: no branch (always enabled in production)
 			self._kwargs["family"] = family
-		
 		self.defaults = defaults
 		self._session = None
 		

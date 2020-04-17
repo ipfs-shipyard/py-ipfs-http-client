@@ -56,10 +56,10 @@ os.environ["IPFS_PATH"] = str(IPFS_PATH)
 os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR"] = str(ADDR)
 
 # Make sure the IPFS data directory exists and is empty
-with contextlib.suppress(OSError):  #PY2: Replace with `FileNotFoundError`
+with contextlib.suppress(FileNotFoundError):
 	shutil.rmtree(str(IPFS_PATH))
 
-with contextlib.suppress(OSError):  #PY2: Replace with `FileExistsError`
+with contextlib.suppress(FileExistsError):
 	os.makedirs(str(IPFS_PATH))
 
 # Initialize the IPFS data directory
@@ -73,11 +73,10 @@ subprocess.call(["ipfs", "config", "--bool", "Experimental.FilestoreEnabled", "t
 # Start daemon #
 ################
 
-#PY2: Only add `encoding` parameter on Python 3 as it's not available on Unicode-hostile versions
 extra_args = {}
 if sys.version_info >= (3, 6, 0):
 	extra_args["encoding"] = locale.getpreferredencoding()
-elif sys.version_info >= (3, 0, 0):  #PY35: `subprocess.Popen` encoding parameter missing
+else:  #PY35: `subprocess.Popen` encoding parameter missing
 	extra_args["universal_newlines"] = True
 
 # Spawn IPFS daemon in data directory
@@ -97,13 +96,10 @@ if os.name == "posix":
 	signal.signal(signal.SIGCHLD, lambda *a: DAEMON.poll())
 
 # Wait for daemon to start up
-#PY2: Using `for line in DAEMON.stdout` hangs the process
-line = DAEMON.stdout.readline()
-while line is not None:
+for line in DAEMON.stdout:
 	print("\t{0}".format(line), end="", file=sys.stderr)
 	if line.strip() == "Daemon is ready":
 		break
-	line = DAEMON.stdout.readline()
 
 #XXX: This design will deadlock the test run if the daemon were to produce more output than fits
 #     into its output pipe before shutdown

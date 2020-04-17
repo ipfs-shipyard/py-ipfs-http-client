@@ -6,7 +6,7 @@ from . import base
 
 class Section(base.SectionBase):
 	@base.returns_single_item
-	def add(self, path, *paths, **kwargs):
+	def add(self, path, *paths, recursive=True, **kwargs):
 		"""Pins objects to local storage.
 
 		Stores an IPFS object(s) from a given path locally to disk.
@@ -31,16 +31,14 @@ class Section(base.SectionBase):
 		| Pins | List of IPFS objects that have been pinned by this action |
 		+------+-----------------------------------------------------------+
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		if "recursive" in kwargs:
-			kwargs.setdefault("opts", {})["recursive"] = kwargs.pop("recursive")
+		kwargs.setdefault("opts", {})["recursive"] = recursive
 
 		args = (path,) + paths
 		return self._client.request('/pin/add', args, decoder='json', **kwargs)
 	
 	
 	@base.returns_single_item
-	def ls(self, *cids, **kwargs):
+	def ls(self, *cids, type="all", **kwargs):
 		"""Lists objects pinned to local storage.
 
 		By default, all pinned objects are returned, but the ``type`` flag or
@@ -96,17 +94,13 @@ class Section(base.SectionBase):
 		| Keys | Mapping of IPFS object names currently pinned to their types |
 		+------+--------------------------------------------------------------+
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		opts = {
-			"type": kwargs.pop("type", "all")
-		}
-		kwargs.setdefault("opts", {}).update(opts)
-
+		kwargs.setdefault("opts", {})["type"] = type
+		
 		return self._client.request('/pin/ls', cids, decoder='json', **kwargs)
 
 
 	@base.returns_single_item
-	def rm(self, path, *paths, **kwargs):
+	def rm(self, path, *paths, recursive=True, **kwargs):
 		"""Removes a pinned object from local storage.
 
 		Removes the pin from the given object allowing it to be garbage
@@ -132,16 +126,14 @@ class Section(base.SectionBase):
 		| Pins | List of IPFS objects that have been unpinned by this action |
 		+------+-------------------------------------------------------------+
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		if "recursive" in kwargs:
-			kwargs.setdefault("opts", {})["recursive"] = kwargs.pop("recursive")
-
+		kwargs.setdefault("opts", {})["recursive"] = recursive
+		
 		args = (path,) + paths
 		return self._client.request('/pin/rm', args, decoder='json', **kwargs)
 	
 	
 	@base.returns_single_item
-	def update(self, from_path, to_path, **kwargs):
+	def update(self, from_path, to_path, *, unpin=True, **kwargs):
 		"""Replaces one pin with another.
 
 		Updates one pin to another, making sure that all objects in the new pin
@@ -164,7 +156,7 @@ class Section(base.SectionBase):
 		to_path : str
 			Path to the new object to be pinned
 		unpin : bool
-			Should the pin of the old object be removed? (Default: ``True``)
+			Should the pin of the old object be removed?
 
 		Returns
 		-------
@@ -174,15 +166,13 @@ class Section(base.SectionBase):
 		| Pins | List of IPFS objects that have been affected by this action |
 		+------+-------------------------------------------------------------+
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		if "unpin" in kwargs:
-			kwargs.setdefault("opts", {})["unpin"] = kwargs.pop("unpin")
-
+		kwargs.setdefault("opts", {})["unpin"] = unpin
+		
 		args = (from_path, to_path)
 		return self._client.request('/pin/update', args, decoder='json', **kwargs)
 
 
-	def verify(self, path, *paths, **kwargs):
+	def verify(self, path, *paths, verbose=False, **kwargs):
 		"""Verify that recursive pins are complete.
 
 		Scan the repo for pinned object graphs and check their integrity.
@@ -210,7 +200,7 @@ class Section(base.SectionBase):
 		path : str
 			Path to object(s) to be checked
 		verbose : bool
-			Also report status of items that were OK? (Default: ``False``)
+			Also report status of items that were OK?
 
 		Returns
 		-------
@@ -222,9 +212,7 @@ class Section(base.SectionBase):
 		| Ok  | Whether the given object was successfully verified |
 		+-----+----------------------------------------------------+
 		"""
-		#PY2: No support for kw-only parameters after glob parameters
-		if "verbose" in kwargs:
-			kwargs.setdefault("opts", {})["verbose"] = kwargs.pop("verbose")
-
+		kwargs.setdefault("opts", {})["verbose"] = verbose
+		
 		args = (path,) + paths
 		return self._client.request('/pin/verify', args, decoder='json', stream=True, **kwargs)

@@ -4,11 +4,7 @@
 the address family used when resolving a domain-name to an IP address.
 """
 import socket
-try:
-	import urllib.parse
-except ImportError:  #PY2
-	class urllib:
-		import urlparse as parse
+import urllib.parse
 
 import requests
 import requests.adapters

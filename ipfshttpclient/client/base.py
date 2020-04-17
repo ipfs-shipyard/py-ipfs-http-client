@@ -114,9 +114,10 @@ class ClientBase(object):
 
 	_clientfactory = http.HTTPClient
 
-	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE,
+	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
+	             username=None, password=None,
 	             chunk_size=multipart.default_chunk_size,
-	             session=False, username=None, password=None, **defaults):
+	             session=False, **defaults):
 		"""Connects to the API port of an IPFS node."""
 		
 		self.chunk_size = chunk_size

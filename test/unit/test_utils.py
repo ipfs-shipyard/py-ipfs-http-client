@@ -53,8 +53,6 @@ class TestUtils(unittest.TestCase):
 		located in 'test/functional/fake_dir'.
 		"""
 		path = os.path.dirname(__file__)
-		if isinstance(path, six.binary_type):  #PY2
-			path = path.decode(sys.getfilesystemencoding())
 		path = os.path.join(path, u"..", u"functional", u"fake_dir", u"fsdfgh")
 		f, opened = utils.clean_file(path)
 		assert hasattr(f, 'read')
