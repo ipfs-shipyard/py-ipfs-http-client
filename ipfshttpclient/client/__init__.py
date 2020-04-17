@@ -13,9 +13,9 @@ import multiaddr
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
-VERSION_MINIMUM   = "0.4.18"
-VERSION_BLACKLIST = ["0.4.20"]
-VERSION_MAXIMUM   = "0.5.0"
+VERSION_MINIMUM   = "0.4.21"
+VERSION_BLACKLIST = []
+VERSION_MAXIMUM   = "0.6.0"
 
 from . import bitswap
 from . import block
@@ -101,10 +101,11 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
 	
 	# Apply workarounds based on daemon version
 	version = tuple(map(int, version_str.split('-', 1)[0].split('.')))
-	if version < (0, 4, 19):  # pragma: no cover (workaround)
-		#WORKAROUND: Go-IPFS randomly fucks up streaming requests if they are not
-		#            `Connection: close` (https://github.com/ipfs/go-ipfs/issues/5168)
-		client._workarounds.add("close_conn_on_upload")
+	if version < (0, 5):  # pragma: no cover (workaround)
+		# Not really a workaround, but make use of HEAD requests on versions that
+		# support them to speed things up if we are not interested in the response
+		# anyways
+		client._workarounds.add("use_http_head_for_no_result")
 
 	return client
 

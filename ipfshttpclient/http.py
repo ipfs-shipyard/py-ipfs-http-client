@@ -274,17 +274,17 @@ class HTTPClient:
 			else:
 				raise exceptions.StatusError(error) from error
 
-	def _request(self, method, url, params, stream=False, files=None,
+	def _request(self, url, params, stream=False, files=None,
 	             headers={}, username=None, password=None, data=None,
-	             timeout=120):
-		if "close_conn_on_upload" in self.workarounds \
-		   and method.upper() not in ("GET", "HEAD"):  # pragma: no cover (workaround)
-			headers = headers.copy()
-			headers["Connection"] = "close"
-		
+	             timeout=120, return_result=True):
 		auth = None
 		if username or password:
 			auth = (username, password)
+		
+		# HTTP method must always be "POST"
+		method = "POST"
+		if "use_http_head_for_no_result" in self.workarounds and not return_result:
+			method = "HEAD"
 		
 		# Do HTTP request (synchronously)
 		res = self._do_request(method, url, params=params, stream=stream,
@@ -355,14 +355,7 @@ class HTTPClient:
 			params.append(opt)
 		for arg in args:
 			params.append(('arg', arg))
-
-		if (files or data):
-			method = 'post'
-		elif not return_result:
-			method = 'head'
-		else:
-			method = 'get'
-
+		
 		# Don't attempt to decode response or stream
 		# (which would keep an iterator open that will then never be waited for)
 		if not return_result:
@@ -370,9 +363,9 @@ class HTTPClient:
 			stream = False
 
 		parser = encoding.get_encoding(decoder if decoder else "none")
-
-		res = self._request(method, url, params, stream, files, headers,
-		                    username, password, data, timeout)
+		
+		res = self._request(url, params, stream, files, headers,
+		                    username, password, data, timeout, return_result)
 		
 		if not return_result:
 			return None
@@ -440,19 +433,17 @@ class HTTPClient:
 		params.append(('archive', 'true'))
 		if compress:
 			params.append(('compress', 'true'))
-
+		
 		for opt in opts.items():
 			params.append(opt)
 		for arg in args:
 			params.append(('arg', arg))
-
-		method = 'get'
-
-		res = self._request(method, url, params, stream=True, headers=headers,
+		
+		res = self._request(url, params, stream=True, headers=headers,
 		                    username=username, password=password, timeout=timeout)
-
+		
 		# try to stream download as a tar file stream
 		mode = 'r|gz' if compress else 'r|'
-
+		
 		with tarfile.open(fileobj=res.raw, mode=mode) as tf:
 			tf.extractall(path=wd)

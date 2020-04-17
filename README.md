@@ -15,14 +15,11 @@ Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwa
 **Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
 See the [relevant section of the README](#important-changes-from-ipfsapi-04x) for details.
 
-**Note:** This library constantly has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.4.22](https://github.com/ipfs/go-ipfs/releases/tag/v0.4.22).
-We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.18 therefor
-being to oldest supported version at this time.
-
-The following versions have been expliciently backlisted for know compatiblity problems:
-
-  * 0.4.20
+**Note:** This library occasionally has to change to stay compatible with the IPFS HTTP API.
+Currently, this library is tested against [go-ipfs v0.5.0-rc2](https://github.com/ipfs/go-ipfs/releases/tag/v0.5.0-rc2).
+We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.21 therefor
+being to oldest supported version at this time (version 0.4.20 was never supported due to major
+issues in the daemon itself).
 
 ## Table of Contents
 

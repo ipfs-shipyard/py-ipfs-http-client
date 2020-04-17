@@ -22,8 +22,8 @@ def is_available():  # noqa
 			ipfshttpclient.connect()
 		except ipfshttpclient.exceptions.Error as error:
 			__is_available = False
-
-			# Make sure version incompatiblity is displayed to the user
+			
+			# Make sure version incompatibility is displayed to users
 			if isinstance(error, ipfshttpclient.exceptions.VersionMismatch):
 				raise
 		else:
