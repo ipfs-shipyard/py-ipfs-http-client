@@ -294,7 +294,6 @@ class HTTPClient(object):
 			headers["Connection"] = "close"
 		
 		auth = None
-		print(username, password, username or password)
 		if username or password:
 			auth = (username, password)
 		
