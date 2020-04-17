@@ -7,7 +7,7 @@ All commands are accessed through the ``ipfshttpclient.Client`` class.
 
 ```eval_rst
 .. automodule:: ipfshttpclient.exceptions
-    :members:
+  :members:
 ```
 
 

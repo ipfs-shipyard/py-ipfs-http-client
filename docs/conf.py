@@ -417,6 +417,10 @@ def section_property_attrgetter(object, name, default=None):
 
 # app setup hook for reCommonMark's AutoStructify and our own extension
 def setup(app):
+	# Ensure we are building with reCommonMark 0.5+
+	import recommonmark
+	assert tuple(int(v) for v in recommonmark.__version__.split(".", 2)[0:2]) >= (0, 5)
+	
 	from recommonmark.transform import AutoStructify
 	app.add_config_value("recommonmark_config", {
 		"auto_toc_tree_section": "Contents",
