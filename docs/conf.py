@@ -60,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Python IPFS HTTP Client'
-copyright = '2019, py-ipfs-http-client team'
+copyright = '2020, py-ipfs-http-client team'
 author = 'py-ipfs-http-client team'
 
 # The version info for the project you're documenting, acts as replacement for

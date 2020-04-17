@@ -1,7 +1,7 @@
 Since releasing new versions is currently a somewhat complicated task, the current procedure
-(12.05.2018) will be outlined in this document.
+(17.02.2020) will be outlined in this document.
 
-All of this has only been tested on Debian 10 & Fedora 28 (Linux).
+All of this has only been tested on Debian 11 (Linux).
 
 # Prerequirements
 
@@ -12,7 +12,7 @@ All of this has only been tested on Debian 10 & Fedora 28 (Linux).
 APT line: `sudo apt install python3-pip && sudo pip3 install flit`  
 DNF line: `sudo dnf install python3-flit`
 
-*Note*: Version `1.1+` of `flit` is required!
+*Note*: Version `2.0+` of `flit` is required!
 
 ## Building the documentation
 
@@ -56,14 +56,14 @@ At the time of writing the officially used key is: *12D3KooWEqnTdgqHnkkwarSrJjeM
 ## Update the source code
 
  1. Make a GIT commit incrementing the version number in `ipfshttpclient/version.py`:  
-    `git commit -m "Release version 0.4.X" ipfshttpclient/version.py`)
+    `git commit -m "Release version 0.X.Y" ipfshttpclient/version.py`)
  2. Tag the GIT commit with the version number using an annotated and signed tag:  
-    `git tag --sign -m "Release version 0.4.X" 0.4.X`
+    `git tag --sign -m "Release version 0.X.Y" 0.X.Y`
  3. Push the new version
 
 ## Upload the new version to PyPI
 
-Run: `flit build && flit upload`
+Run: `flit build && flit publish`
 
 ## Re-generate and publish the documentation
 
