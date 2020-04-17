@@ -1,10 +1,8 @@
-# -*- encoding: utf-8 -*-
 """HTTP client for api requests.
 
 This is pluggable into the IPFS Api client and will hopefully be supplemented
 by an asynchronous version.
 """
-from __future__ import absolute_import
 
 import abc
 import functools
@@ -52,7 +50,7 @@ def _notify_stream_iter_closed():
 	pass  # Mocked by unit tests to determine check for proper closing
 
 
-class StreamDecodeIterator(object):
+class StreamDecodeIterator:
 	"""
 	Wrapper around `Iterable` that allows the iterable to be used in a
 	context manager (`with`-statement) allowing for easy cleanup.
@@ -135,7 +133,7 @@ def stream_decode_full(response, parser):
 		return result
 
 
-class HTTPClient(object):
+class HTTPClient:
 	"""An HTTP client for interacting with the IPFS daemon.
 
 	Parameters
@@ -199,7 +197,7 @@ class HTTPClient(object):
 			if not was_final:
 				raise exceptions.AddressError(addr)
 		except StopIteration:
-			six.raise_from(exceptions.AddressError(addr), None)
+			raise exceptions.AddressError(addr) from None
 
 		# Convert the parsed `addr` values to a URL base and parameters
 		# for `requests`
@@ -247,11 +245,11 @@ class HTTPClient(object):
 			else:
 				return requests.request(*args, **kwargs)
 		except (requests.ConnectTimeout, requests.Timeout) as error:
-			six.raise_from(exceptions.TimeoutError(error), error)
+			raise exceptions.TimeoutError(error) from error
 		except requests.ConnectionError as error:
-			six.raise_from(exceptions.ConnectionError(error), error)
+			raise exceptions.ConnectionError(error) from error
 		except http_client.HTTPException as error:
-			six.raise_from(exceptions.ProtocolError(error), error)
+			raise exceptions.ProtocolError(error) from error
 
 	def _do_raise_for_status(self, response):
 		try:
@@ -273,9 +271,9 @@ class HTTPClient(object):
 			   and isinstance(content[0], dict) \
 			   and "Message" in content[0]:
 				msg = content[0]["Message"]
-				six.raise_from(exceptions.ErrorResponse(msg, error), error)
+				raise exceptions.ErrorResponse(msg, error) from error
 			else:
-				six.raise_from(exceptions.StatusError(error), error)
+				raise exceptions.StatusError(error) from error
 
 	def _request(self, method, url, params, stream=False, files=None,
 	             headers={}, username=None, password=None, data=None,

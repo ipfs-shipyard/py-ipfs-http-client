@@ -1,12 +1,9 @@
-# _*_ coding: utf-8 -*-
-
-
 def test_stat(client):
 	# Verify that the correct key-value pairs are returned
 	stat = client.repo.stat()
 	assert sorted(stat.keys()) == [
-		u"NumObjects", u"RepoPath", u"RepoSize",
-		u"StorageMax", u"Version"
+		"NumObjects", "RepoPath", "RepoSize",
+		"StorageMax", "Version"
 	]
 
 

@@ -1,6 +1,5 @@
 """HTTP :mimetype:`multipart/*`-encoded file streaming.
 """
-from __future__ import absolute_import
 
 import abc
 import inspect
@@ -35,7 +34,7 @@ def content_disposition_headers(filename, disptype="form-data"):
 	disptype : str
 		Rhe disposition type to use for the file
 	"""
-	disp = '%s; filename="%s"' % (
+	disp = '{}; filename="{}"'.format(
 		disptype,
 		urllib.parse.quote(filename, safe='')
 	)
@@ -90,7 +89,7 @@ def multipart_content_type_headers(boundary, subtype='mixed'):
 	subtype : str
 		The subtype in :mimetype:`multipart/*`-domain to put into the header
 	"""
-	ctype = 'multipart/%s; boundary="%s"' % (
+	ctype = 'multipart/{}; boundary="{}"'.format(
 		subtype,
 		boundary
 	)
@@ -98,7 +97,7 @@ def multipart_content_type_headers(boundary, subtype='mixed'):
 
 
 
-class StreamBase(object):
+class StreamBase:
 	"""Generator that encodes multipart/form-data.
 
 	An abstract buffered generator class which encodes
@@ -123,7 +122,7 @@ class StreamBase(object):
 		self._headers = content_disposition_headers(name, disptype='form-data')
 		self._headers.update(multipart_content_type_headers(self._boundary, subtype='form-data'))
 
-		super(StreamBase, self).__init__()
+		super().__init__()
 
 	def headers(self):
 		return self._headers.copy()
@@ -182,7 +181,7 @@ class StreamBase(object):
 		yield b'--%s--\r\n' % (self._boundary.encode("ascii"))
 
 
-class StreamFileMixin(object):
+class StreamFileMixin:
 	def _gen_file(self, filename, file_location=None, file=None, content_type=None):
 		"""Yields the entire contents of a file.
 
@@ -262,7 +261,7 @@ class FilesStream(StreamBase, StreamFileMixin):
 	def __init__(self, files, name="files", chunk_size=default_chunk_size):
 		self.files = utils.clean_files(files)
 
-		super(FilesStream, self).__init__(name, chunk_size=chunk_size)
+		super().__init__(name, chunk_size=chunk_size)
 
 	def _body(self):
 		"""Yields the body of the buffered file."""
@@ -347,7 +346,7 @@ def glob_compile(pat):
 					stuff = '^' + stuff[1:]
 				elif stuff[0] in ('^', '['):
 					stuff = '\\' + stuff
-				res = '%s[%s]' % (res, stuff)
+				res = '{}[{}]'.format(res, stuff)
 		else:
 			res = res + re.escape(c)
 	return re.compile(r'^' + res + r'\Z$', flags=re.M | re.S)
@@ -552,7 +551,7 @@ class BytesFileStream(FilesStream):
 		The maximum size of a single data chunk
 	"""
 	def __init__(self, data, name="bytes", chunk_size=default_chunk_size):
-		super(BytesFileStream, self).__init__([], name=name, chunk_size=chunk_size)
+		super().__init__([], name=name, chunk_size=chunk_size)
 
 		self.data = data if inspect.isgenerator(data) else (data,)
 

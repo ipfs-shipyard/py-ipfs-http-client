@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """Exposes the full ``requests`` HTTP library API, while adding an extra
 ``family`` parameter to all HTTP request operations that may be used to restrict
 the address family used when resolving a domain-name to an IP address.
@@ -18,7 +17,7 @@ AF2NAME = {
 	int(socket.AF_INET):  "ip4",
 	int(socket.AF_INET6): "ip6",
 }
-NAME2AF = dict((name, af) for af, name in AF2NAME.items())
+NAME2AF = {name: af for af, name in AF2NAME.items()}
 
 
 # This function is copied from urllib3/util/connection.py (that in turn copied
@@ -57,7 +56,7 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 				sock.bind(source_address)
 			sock.connect(sa)
 			return sock
-		except socket.error as e:
+		except OSError as e:
 			err = e
 			if sock is not None:
 				sock.close()
@@ -66,7 +65,7 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 	if err is not None:
 		raise err
 
-	raise socket.error("getaddrinfo returns an empty list")
+	raise OSError("getaddrinfo returns an empty list")
 
 
 # Override the `urllib3` low-level Connection objects that do the actual work
@@ -100,7 +99,7 @@ class ConnectionOverrideMixin:
 			raise urllib3.exceptions.ConnectTimeoutError(
 				self, "Connection to %s timed out. (connect timeout=%s)" %
 				(self.host, self.timeout))
-		except socket.error as e:
+		except OSError as e:
 			raise urllib3.exceptions.NewConnectionError(
 				self, "Failed to establish a new connection: %s" % e)
 
@@ -110,13 +109,13 @@ class ConnectionOverrideMixin:
 class HTTPConnection(ConnectionOverrideMixin, urllib3.connection.HTTPConnection):
 	def __init__(self, *args, **kw):
 		self.family = _kw_scheme_to_family(kw, "http")
-		super(HTTPConnection, self).__init__(*args, **kw)
+		super().__init__(*args, **kw)
 
 
 class HTTPSConnection(ConnectionOverrideMixin, urllib3.connection.HTTPSConnection):
 	def __init__(self, *args, **kw):
 		self.family = _kw_scheme_to_family(kw, "https")
-		super(HTTPSConnection, self).__init__(*args, **kw)
+		super().__init__(*args, **kw)
 
 
 # Override the higher-level `urllib3` ConnectionPool objects that instantiate
@@ -134,7 +133,7 @@ class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):
 # to the individual ConnectionPool objects
 class PoolManager(urllib3.PoolManager):
 	def __init__(self, *args, **kwargs):
-		super(PoolManager, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 		
 		# Additionally to adding our variant of the usual HTTP and HTTPS
 		# pool classes, also add these for some variants of the default schemes
@@ -198,7 +197,7 @@ class HTTPAdapter(requests.adapters.HTTPAdapter):
 # when passing it down to the adapter
 class Session(requests.Session):
 	def __init__(self, *args, **kwargs):
-		super(Session, self).__init__(*args, **kwargs)
+		super().__init__(*args, **kwargs)
 
 		# Additionally to mounting our variant of the usual HTTP and HTTPS
 		# adapter, also mount it for some variants of the default schemes that
@@ -216,7 +215,7 @@ class Session(requests.Session):
 			url = urllib.parse.urlparse(url)
 			url = url._replace(scheme="{0}+{1}".format(url.scheme, AF2NAME[int(family)]))
 			url = url.geturl()
-		return super(Session, self).request(method, url, *args, **kwargs)
+		return super().request(method, url, *args, **kwargs)
 
 
 session = Session

@@ -1,6 +1,3 @@
-# _*_ coding: utf-8 -*-
-
-
 def test_add_list_rename_rm(client):
 	# Remove keys if they already exist
 	key_list = list(map(lambda k: k["Name"], client.key.list()["Keys"]))

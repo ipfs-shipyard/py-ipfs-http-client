@@ -1,4 +1,3 @@
-# _*_ coding: utf-8 -*-
 import os
 import shutil
 
@@ -295,11 +294,11 @@ TEST_MFS_FILES = {
 	"test_file1": {
 		"Name": conftest.TEST_DIR / "fake_dir" / "popoiopiu",
 		"Stat": {
-			u"Type": "file",
-			u"Hash": "QmUvobKqcCE56brA8pGTRRRsGy2SsDEKSxFLZkBQFv7Vvv",
-			u"Blocks": 1,
-			u"CumulativeSize": 73,
-			u"Size": 15
+			"Type": "file",
+			"Hash": "QmUvobKqcCE56brA8pGTRRRsGy2SsDEKSxFLZkBQFv7Vvv",
+			"Blocks": 1,
+			"CumulativeSize": 73,
+			"Size": 15
 		}
 	}
 }
@@ -349,7 +348,7 @@ def test_mfs_dir_make_fill_list_delete(client):
 		)
 
 	# Verify directory contents
-	contents = client.files.ls(TEST_MFS_DIRECTORY)[u"Entries"]
+	contents = client.files.ls(TEST_MFS_DIRECTORY)["Entries"]
 	filenames1 = list(map(lambda d: d["Name"], contents))
 	filenames2 = list(TEST_MFS_FILES.keys())
 	assert filenames1 == filenames2

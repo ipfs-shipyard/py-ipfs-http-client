@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """Defines encoding related classes.
 
 .. note::
@@ -6,7 +5,6 @@
 	The XML and ProtoBuf encoders are currently not functional.
 """
 
-from __future__ import absolute_import
 
 import abc
 import codecs
@@ -17,7 +15,7 @@ import six
 from . import exceptions
 
 
-class Encoding(object):
+class Encoding:
 	"""Abstract base for a data parser/encoder interface.
 	"""
 	__metaclass__ = abc.ABCMeta
@@ -163,7 +161,7 @@ class Json(Encoding):
 			else:
 				self._buffer.extend(lines)
 		except UnicodeDecodeError as error:
-			six.raise_from(exceptions.DecodingError('json', error), error)
+			raise exceptions.DecodingError('json', error) from error
 
 		# Process data buffer
 		index = 0
@@ -247,12 +245,12 @@ class Json(Encoding):
 				# Raise exception for remaining bytes in bytes decoder
 				self._decoder1.decode(b'', True)
 			except UnicodeDecodeError as error:
-				six.raise_from(exceptions.DecodingError('json', error), error)
+				raise exceptions.DecodingError('json', error) from error
 
 			# Late raise errors that looked like they could have been fixed if
 			# the caller had provided more data
 			if self._buffer:
-				six.raise_from(exceptions.DecodingError('json', self._lasterror), self._lasterror)
+				raise exceptions.DecodingError('json', self._lasterror) from self._lasterror
 		finally:
 			# Reset state
 			self._buffer    = []
@@ -282,7 +280,7 @@ class Json(Encoding):
 			                    separators=(',', ':'), ensure_ascii=False)
 			return result.encode("utf-8")
 		except (UnicodeEncodeError, TypeError) as error:
-			six.raise_from(exceptions.EncodingError('json', error), error)
+			raise exceptions.EncodingError('json', error) from error
 
 
 class Protobuf(Encoding):
@@ -325,4 +323,4 @@ def get_encoding(name):
 	try:
 		return __encodings[name.lower()]()
 	except KeyError:
-		six.raise_from(exceptions.EncoderMissingError(name), None)
+		raise exceptions.EncoderMissingError(name) from None

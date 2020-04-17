@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 """Test the generic data encoding and decoding module."""
 import json
 

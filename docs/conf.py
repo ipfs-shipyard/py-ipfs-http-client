@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # Python IPFS HTTP Client documentation build configuration file, created by
 # sphinx-quickstart on Wed Aug 17 20:41:53 2016.

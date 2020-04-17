@@ -1,7 +1,6 @@
 """A module to handle generic operations.
 """
 
-from __future__ import absolute_import
 
 import collections.abc
 import mimetypes
@@ -103,7 +102,7 @@ def clean_files(files):
 		yield clean_file(files)
 
 
-class return_field(object):
+class return_field:
 	"""Decorator that returns the given field of a json response.
 
 	Parameters

@@ -1,4 +1,3 @@
-# _*_ coding: utf-8 -*-
 try:
 	import cid
 except ImportError:

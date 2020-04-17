@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 """IPFS API Bindings for Python.
 
 Classes:
 
  * Client – a TCP client for interacting with an IPFS daemon
 """
-from __future__ import absolute_import
 
 import os
 import warnings

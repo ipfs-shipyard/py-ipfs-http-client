@@ -1,6 +1,3 @@
-# _*_ coding: utf-8 -*-
-
-
 def test_wantlist(client):
 	result = client.bitswap.wantlist(peer="QmdkJZUWnVkEc6yfptVu4LWY8nHkEnGwsxqQ233QSGj8UP")
 	assert type(result) is dict
