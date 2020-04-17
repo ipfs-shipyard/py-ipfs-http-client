@@ -2,7 +2,7 @@ from . import base
 
 
 class Section(base.SectionBase):
-	def gc(self, **kwargs):
+	def gc(self, *, return_result=True, **kwargs):
 		"""Removes stored objects that are not pinned from the repo.
 
 		.. code-block:: python
@@ -22,7 +22,6 @@ class Section(base.SectionBase):
 		Parameters
 		----------
 		return_result : bool
-			Defaults to True.
 			Passing False will return None and avoid downloading
 			the list of removed objects.
 
@@ -31,6 +30,10 @@ class Section(base.SectionBase):
 			dict
 				List of IPFS objects that have been removed
 		"""
+		kwargs["return_result"] = return_result
+		if "use_http_head_for_no_result" not in self._client.workarounds:
+			# go-ipfs 0.4.22- does not support the quiet option yet
+			kwargs.setdefault("opts", {})["quiet"] = not return_result
 		return self._client.request('/repo/gc', decoder='json', **kwargs)
 	
 	
