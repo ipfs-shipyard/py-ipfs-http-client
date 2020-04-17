@@ -43,8 +43,8 @@ class VersionMismatch(Error):
 		self.minimum = minimum
 		self.maximum = maximum
 
-		msg = "Unsupported daemon version '{}' (not in range: {} – {})".format(
-			current, minimum, maximum
+		msg = "Unsupported daemon version '{}' (not in range: {} ≤ … < {})".format(
+			".".join(map(str, current)), ".".join(map(str, minimum)), ".".join(map(str, maximum))
 		)
 		Error.__init__(self, msg)
 
