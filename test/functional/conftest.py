@@ -88,3 +88,10 @@ def cleanup_pins(client):
 	for multihash in client.pin.ls(type="recursive")["Keys"]:
 		if multihash not in pinned:
 			client.pin.rm(multihash)
+
+
+@pytest.fixture
+def daemon():
+	"""Result replaced by plugin in `run-tests.py` with the subprocess object of
+	the spawned daemon."""
+	return None
