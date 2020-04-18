@@ -114,9 +114,14 @@ for line in DAEMON.stdout:
 
 PYTEST_CODE = 1
 try:
-	# Make sure all required pytest plugins are loaded
+	# Make sure all required pytest plugins are loaded up-front
 	os.environ["PYTEST_PLUGINS"] = ",".join([
-		"pytest_cov", "pytest_localserver", "pytest_mock", "pytest_ordering"
+		"cid",
+		"dependency",
+		"localserver",
+		"pytest_cov",
+		"pytest_mock",
+		"pytest_ordering",
 	])
 	
 	with tempfile.NamedTemporaryFile("r+") as coveragerc:

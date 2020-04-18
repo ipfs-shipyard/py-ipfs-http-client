@@ -10,15 +10,11 @@ TEST1_SIZE     = 8
 
 TEST2_CONTENT = b"Hello World!"
 TEST2_CID_STR = "bafkreid7qoywk77r7rj3slobqfekdvs57qwuwh5d2z3sqsw52iabe3mqne"
-TEST2_CID_OBJ = cid.make_cid(TEST2_CID_STR) if cid else None
+TEST2_CID_OBJ = cid.make_cid(TEST2_CID_STR)
 TEST2_SIZE    = len(TEST2_CONTENT)
 
 
-# Uncomment this if you don't want to wait for the `test_start` test during development:
-#import pytest
-#pytest.skip("TEMP!", allow_module_level=True)
-
-
+@pytest.mark.dependency()
 def test_put(client):
 	expected_keys = {"Key", "Size"}
 	res = client.block.put(TEST1_FILEPATH)
@@ -26,18 +22,19 @@ def test_put(client):
 	assert res["Key"] == TEST1_CID_STR
 
 
-@pytest.mark.run(after="test_put")
+@pytest.mark.dependency(depends=["test_put"])
 def test_stat(client):
 	expected_keys = {"Key", "Size"}
 	res = client.block.stat(TEST1_CID_STR)
 	assert set(res.keys()).issuperset(expected_keys)
 
 
-@pytest.mark.run(after="test_put")
+@pytest.mark.dependency(depends=["test_put"])
 def test_get(client):
 	assert len(client.block.get(TEST1_CID_STR)) == TEST1_SIZE
 
 
+@pytest.mark.dependency()
 def test_put_str(client):
 	expected_keys = {"Key", "Size"}
 	res = client.block.put(io.BytesIO(TEST2_CONTENT), opts={"format": "raw"})
@@ -45,6 +42,6 @@ def test_put_str(client):
 	assert res["Key"] == TEST2_CID_STR
 
 
-@pytest.mark.run(after="test_put_str")
+@pytest.mark.dependency(depends=["test_put_str"])
 def test_stat_cid_obj(client):
 	assert len(client.block.get(TEST2_CID_OBJ)) == TEST2_SIZE
