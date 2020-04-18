@@ -1,0 +1,2 @@
+# Don't change the line-ending style of test files on Windows as this changes the test hashes
+/fake_dir/** text eol=lf

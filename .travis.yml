@@ -130,6 +130,9 @@ install:
          fi
          choco install python ${VERSION_FLAG}
          
+         # Fix up Windows line endings incorrectly applied to test files
+         find test/functional/fake_dir -type f -exec dos2unix \{\} \+
+         
          # Export sanely named python3 shell command
          python3() {
             py -3 -X utf8 "$@"
