@@ -10,6 +10,8 @@ import subprocess
 import sys
 import tempfile
 
+import pytest
+
 
 if not hasattr(contextlib, "suppress"):
 	"""
@@ -85,13 +87,16 @@ DAEMON = subprocess.Popen(
 	stderr=subprocess.STDOUT,
 	**extra_args
 )
-os.environ["PY_IPFS_HTTP_CLIENT_TEST_DAEMON_PID"] = str(DAEMON.pid)
 
-# Collect the exit code of `DAEMON` when `SIGCHLD` is received
-# (otherwise the shutdown test fails to recognize that the daemon process is dead)
-if os.name == "posix":
-	import signal
-	signal.signal(signal.SIGCHLD, lambda *a: DAEMON.poll())
+
+class DaemonProcessPlugin:
+	"""Tiny pytest plugin to inject daemon object reference as test “fixture” value."""
+	@pytest.hookimpl(hookwrapper=True)
+	def pytest_pyfunc_call(self, pyfuncitem):
+		if "daemon" in pyfuncitem.funcargs:
+			pyfuncitem.funcargs["daemon"] = DAEMON
+		yield
+
 
 # Wait for daemon to start up
 for line in DAEMON.stdout:
@@ -99,8 +104,8 @@ for line in DAEMON.stdout:
 	if line.strip() == "Daemon is ready":
 		break
 
-#XXX: This design will deadlock the test run if the daemon were to produce more output than fits
-#     into its output pipe before shutdown
+#XXX: This design could deadlock the test run if the daemon were to produce more
+#     output than fits into its output pipe before shutdown
 
 
 ##################
@@ -109,9 +114,6 @@ for line in DAEMON.stdout:
 
 PYTEST_CODE = 1
 try:
-	# Run tests in CI-mode (will stop the daemon at the end through the API)
-	os.environ["CI"] = "true"
-	
 	# Make sure all required pytest plugins are loaded
 	os.environ["PYTEST_PLUGINS"] = ",".join([
 		"pytest_cov", "pytest_localserver", "pytest_mock", "pytest_ordering"
@@ -163,17 +165,16 @@ try:
 			]
 		
 		# Launch py.test in-process
-		import pytest
 		PYTEST_CODE = pytest.main([
 			"--verbose",
-		] + coverage_args + sys.argv[1:])
+		] + coverage_args + sys.argv[1:], plugins=[DaemonProcessPlugin()])
 finally:
 	try:
 		# Move coverage file to test directory (so that the coverage files of different
 		# versions can be merged later on)
 		shutil.move(str(BASE_PATH / ".coverage"), str(TEST_PATH / "cov_raw"))
 	except FileNotFoundError:
-		pass  # Block crashed early or Windows (were coverage is broken)
+		pass  # Early crash in pytest or Windows – no coverage data generated
 	
 	# Make sure daemon was terminated during the tests
 	if DAEMON.poll() is None:  # "if DAEMON is running"
