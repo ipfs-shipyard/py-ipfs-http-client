@@ -217,14 +217,14 @@ def test_add_filepattern_subdir_wildcard(client, cleanup_pins):
 	assert conftest.sort_by_key(FAKE_DIR_FNPATTERN2_HASH) == conftest.sort_by_key(res)
 
 
+@pytest.mark.dependency()
 def test_add_recursive(client, cleanup_pins):
 	res = client.add(FAKE_DIR_PATH, recursive=True)
 	assert conftest.sort_by_key(FAKE_DIR_HASH) == conftest.sort_by_key(res)
 
 
+@pytest.mark.dependency(depends=["test_add_recursive"])
 def test_get_file(client, cleanup_pins):
-	client.add(FAKE_FILE1_PATH)
-	
 	test_hash = FAKE_DIR_HASH[1]["Hash"]
 	
 	try:
@@ -235,9 +235,8 @@ def test_get_file(client, cleanup_pins):
 		assert test_hash not in os.listdir(os.getcwd())
 
 
+@pytest.mark.dependency(depends=["test_add_recursive"])
 def test_get_dir(client, cleanup_pins):
-	client.add(FAKE_DIR_PATH, recursive=True)
-
 	test_hash = FAKE_DIR_HASH[0]["Hash"]
 	
 	try:
@@ -248,9 +247,8 @@ def test_get_dir(client, cleanup_pins):
 		assert test_hash not in os.listdir(os.getcwd())
 
 
+@pytest.mark.dependency(depends=["test_add_recursive"])
 def test_get_path(client, cleanup_pins):
-	client.add(FAKE_FILE1_PATH)
-	
 	test_hash = FAKE_DIR_HASH[0]["Hash"] + "/fsdfgh"
 	
 	try:
@@ -261,16 +259,14 @@ def test_get_path(client, cleanup_pins):
 		assert "fsdfgh" not in os.listdir(os.getcwd())
 
 
+@pytest.mark.dependency(depends=["test_add_recursive"])
 def test_cat_single_file_str(client, cleanup_pins):
-	client.add(FAKE_FILE1_PATH)
-	
 	content = client.cat("QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX")
 	assert content == b"dsadsad\n"
 
 
+@pytest.mark.dependency(depends=["test_add_recursive"])
 def test_cat_file_block(client, cleanup_pins):
-	client.add(FAKE_FILE1_PATH)
-
 	content = b"dsadsad\n"
 	for offset in range(len(content)):
 		for length in range(len(content)):

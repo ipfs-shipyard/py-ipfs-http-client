@@ -77,7 +77,8 @@ def test_refs_local_2(client):
 
 
 def test_refs(client, cleanup_pins):
-	client.add(conftest.TEST_DIR / "fake_dir", recursive=True)
+	res = client.add(conftest.TEST_DIR / "fake_dir", recursive=True)
+	assert res[-1]["Hash"] == "QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi"
 	
-	refs = client.unstable.refs("QmNx8xVu9mpdz9k6etbh2S8JwZygatsZVCH4XhgtfUYAJi")
+	refs = client.unstable.refs(res[-1]["Hash"])
 	assert conftest.sort_by_key(REFS_RESULT, "Ref") == conftest.sort_by_key(refs, "Ref")
