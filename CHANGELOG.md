@@ -1,3 +1,21 @@
+py-ipfs-http-client 0.5.0 (XX.05.2020)
+--------------------------------------
+
+**Breaking changes in this release**:
+
+ * The *recursive* parameter of `.add()` is no longer ignored and now enforces its default value of `False` (explicitely set it to `True` for the previous behaviour)
+ * The glob pattern strings that may be passed to the `.add()` pattern parameter now actually behave like recursive glob patterns (see [the Python documentation](https://docs.python.org/3/library/glob.html) for how exactly)
+
+Other changes:
+
+ * Added support for go-IPFS 0.5.x
+ * Adding directories with `.add()` has been greatly reworked:
+    * Its now possible to specify arbitrary rules on which objects to include a directory tree by passing a custom matcher object to the *pattern* parameter
+    * The new *period_special* parameter allows toggling whether glob patterns match dot-files implicietly and defaults to `True` (previously it was effectively `False`)
+    * The new *follow_symlinks* parameter similarily determines whether symbolic links will be followed when scanning directory trees and defaults to `False` (the previous default on Unix, albeit this likely wasn't intentional)
+    * `.add()` will now limit its scan to the directories required to match the given glob patterns (passing in regular expression objects will still scan the tree unconditionally however) – custom matchers have full control over which directories are visited
+ 
+
 py-ipfs-http-client 0.4.12 (21.05.2019)
 ---------------------------------------
 

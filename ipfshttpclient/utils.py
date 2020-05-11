@@ -1,24 +1,29 @@
 """A module to handle generic operations.
 """
-
-
 import collections.abc
 import mimetypes
 import os
+import pathlib
+import typing as ty
 from functools import wraps
-
 
 
 path_str_types = (str, bytes)
 path_obj_types = ()
 if hasattr(os, "PathLike"):  #PY36+
+	if ty.TYPE_CHECKING:
+		path_obj_t = os.PathLike[ty.AnyStr]
+	else:
+		path_obj_t = os.PathLike
+	
 	path_obj_types += (os.PathLike,)
-
-	def convert_path(path):
+	
+	def convert_path(path: "path_t") -> ty.AnyStr:
 		# Not needed since all system APIs also accept an `os.PathLike`
 		return path
 else:  #PY35
-	import pathlib
+	path_obj_t = pathlib.PurePath
+	
 	path_obj_types += (pathlib.PurePath,)
 	
 	# Independently maintained forward-port of `pathlib` for Py27 and others
@@ -28,11 +33,21 @@ else:  #PY35
 	except ImportError:
 		pass
 	
-	def convert_path(path):
+	def convert_path(path: "path_t") -> ty.AnyStr:
 		# `pathlib`'s PathLike objects need to be treated specially and
 		# converted to strings when interacting with system APIs
 		return str(path) if isinstance(path, path_obj_types) else path
+path_t = ty.Union[ty.AnyStr, path_obj_t]
 path_types = path_str_types + path_obj_types
+
+
+def maybe_fsencode(val: str, ref: ty.AnyStr) -> ty.AnyStr:
+	"""Encodes the string *val* using the system filesystem encoding if *ref* is
+	   of type :type:`bytes`"""
+	if isinstance(ref, bytes):
+		return os.fsencode(val)
+	else:
+		return val
 
 
 def guess_mimetype(filename):

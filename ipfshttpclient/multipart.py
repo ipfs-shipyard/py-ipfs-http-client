@@ -3,18 +3,22 @@
 
 import abc
 import inspect
+import io
 import os
-import re
+import stat
+import typing as ty
 import urllib.parse
 import uuid
 
+from . import filescanner
 from . import utils
 
 
-default_chunk_size = 4096
+match_spec_t = filescanner.match_spec_t
+default_chunk_size = io.DEFAULT_BUFFER_SIZE
 
 
-def content_disposition_headers(filename, disptype="form-data"):
+def content_disposition_headers(filename, disptype="form-data; name=\"file\""):
 	"""Returns a dict containing the MIME content-disposition header for a file.
 
 	.. code-block:: python
@@ -95,7 +99,7 @@ def multipart_content_type_headers(boundary, subtype='mixed'):
 
 
 
-class StreamBase:
+class StreamBase(metaclass=abc.ABCMeta):
 	"""Generator that encodes multipart/form-data.
 
 	An abstract buffered generator class which encodes
@@ -108,16 +112,18 @@ class StreamBase:
 	chunk_size : int
 		The maximum size that any single file chunk may have in bytes
 	"""
-
-	__metaclass__ = abc.ABCMeta
-
+	__slots__ = ("chunk_size", "name", "_boundary", "_headers")
+	
+	chunk_size: int
+	name: str
+	
 	def __init__(self, name, chunk_size=default_chunk_size):
 		self.chunk_size = chunk_size
 		self.name = name
 
 		self._boundary = uuid.uuid4().hex
 
-		self._headers = content_disposition_headers(name, disptype='form-data')
+		self._headers = content_disposition_headers(name)
 		self._headers.update(multipart_content_type_headers(self._boundary, subtype='form-data'))
 
 		super().__init__()
@@ -180,6 +186,8 @@ class StreamBase:
 
 
 class StreamFileMixin:
+	__slots__ = ()
+	
 	def _gen_file(self, filename, file_location=None, file=None, content_type=None):
 		"""Yields the entire contents of a file.
 
@@ -215,7 +223,7 @@ class StreamFileMixin:
 		"""
 		yield from self._gen_item_start()
 
-		headers = content_disposition_headers(filename.replace(os.sep, "/"), disptype="file")
+		headers = content_disposition_headers(filename.replace(os.sep, "/"))
 		headers.update(content_type_headers(filename, content_type))
 		if file_location and os.path.isabs(file_location):
 			headers.update({"Abspath": file_location})
@@ -280,76 +288,6 @@ class FilesStream(StreamBase, StreamFileMixin):
 		yield from self._gen_end()
 
 
-def glob_compile(pat):
-	"""Translate a shell glob PATTERN to a regular expression.
-
-	Source code taken from the `fnmatch.translate` function of the python 3.7
-	standard-library with the glob-style modification of making `*`
-	non-recursive and the adding `**` as recursive matching operator.
-	"""
-
-	i, n = 0, len(pat)
-	res = ''
-	while i < n:
-		c = pat[i]
-		i = i + 1
-		if c == '/' and len(pat) > (i + 2) and pat[i:(i + 3)] == '**/':
-			# Special-case for "any number of sub-directories" operator since
-			# may also expand to no entries:
-			#  Otherwise `a/**/b` would expand to `a[/].*[/]b` which wouldn't
-			#  match the immediate sub-directories of `a`, like `a/b`.
-			i = i + 3
-			res = res + '[/]([^/]*[/])*'
-		elif c == '*':
-			if len(pat) > i and pat[i] == '*':
-				i = i + 1
-				res = res + '.*'
-			else:
-				res = res + '[^/]*'
-		elif c == '?':
-			res = res + '[^/]'
-		elif c == '[':
-			j = i
-			if j < n and pat[j] == '!':
-				j = j + 1
-			if j < n and pat[j] == ']':
-				j = j + 1
-			while j < n and pat[j] != ']':
-				j = j + 1
-			if j >= n:
-				res = res + '\\['
-			else:
-				stuff = pat[i:j]
-				if '--' not in stuff:
-					stuff = stuff.replace('\\', r'\\')
-				else:
-					chunks = []
-					k = i + 2 if pat[i] == '!' else i + 1
-					while True:
-						k = pat.find('-', k, j)
-						if k < 0:
-							break
-						chunks.append(pat[i:k])
-						i = k + 1
-						k = k + 3
-					chunks.append(pat[i:j])
-					# Escape backslashes and hyphens for set difference (--).
-					# Hyphens that create ranges shouldn't be escaped.
-					stuff = '-'.join(s.replace('\\', r'\\').replace('-', r'\-')
-					                 for s in chunks)
-				# Escape set operations (&&, ~~ and ||).
-				stuff = re.sub(r'([&~|])', r'\\\1', stuff)
-				i = j + 1
-				if stuff[0] == '!':
-					stuff = '^' + stuff[1:]
-				elif stuff[0] in ('^', '['):
-					stuff = '\\' + stuff
-				res = '{}[{}]'.format(res, stuff)
-		else:
-			res = res + re.escape(c)
-	return re.compile(r'^' + res + r'\Z$', flags=re.M | re.S)
-
-
 class DirectoryStream(StreamBase, StreamFileMixin):
 	"""Generator that encodes a directory into HTTP multipart.
 
@@ -359,182 +297,106 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 
 	Parameters
 	----------
-	directory : Union[str, os.PathLike, int]
+	directory
 		The filepath or file descriptor of the directory to encode
-
-		File descriptors are only supported on Unix and Python 3.
-	dirname : Union[str, None]
-		The name of the base directroy to upload, use ``None`` for
-		the default of ``os.path.basename(directory) or '.'``
-	patterns : Union[str, re.compile, collections.abc.Iterable]
-		A single glob pattern or a list of several glob patterns and
-		compiled regular expressions used to determine which filepaths to match
-	chunk_size : int
+		
+		File descriptors are only supported on Unix.
+	dirpath
+		The path to the directory being uploaded, if this is absolute it will be
+		included in a header for each emitted file and enables use of the no-copy
+		filestore facilities
+		
+		If the *wrap_with_directory* attribute is ``True`` during upload the
+		string ``dirpath.name if dirpath else '_'`` will be visible as the name
+		of the uploaded directory within its wrapper.
+	chunk_size
 		The maximum size that any single file chunk may have in bytes
+	patterns
+		One or several glob patterns or compiled regular expression objects used
+		to determine which files to upload
+		
+		Only files or directories matched by any of these patterns will be
+		uploaded. If a directory is not matched directly but contains at least
+		one file or directory below it that is, it will be included in the upload
+		as well but will not include other items. If a directory matches any
+		of the given patterns and *recursive* is then it, as well as all other
+		files and directories below it, will be included as well.
+	period_special
+		Whether a leading period in file/directory names should be matchable by
+		``*``, ``?`` and ``[…]`` – traditionally they are not, but many modern
+		shells allow one to disable this behaviour
 	"""
-	def __init__(self, directory,
-	             recursive=False, patterns='**', dirname=None,
-	             chunk_size=default_chunk_size):
-		self.patterns = []
-		patterns = [patterns] if isinstance(patterns, str) else patterns
-		for pattern in patterns:
-			self.patterns.append(glob_compile(pattern) if isinstance(pattern, str) else pattern)
-
-		self.directory = utils.convert_path(directory)
-		if not isinstance(self.directory, int):
-			self.directory = os.path.normpath(self.directory)
-		self.recursive = recursive
-		self.dirname   = dirname
-
-		name = os.path.basename(self.directory) if not isinstance(self.directory, int) else ""
-		super().__init__(name, chunk_size=chunk_size)
-
-	def _body_directory(self, short_path, visited_directories):
-		# Do not continue if this directory has already been added
-		if short_path in visited_directories:
-			return
-
-		# Scan for first super-directory that has already been added
-		dir_base  = short_path
-		dir_parts = []
-		while dir_base:
-			dir_base, dir_name = os.path.split(dir_base)
-			dir_parts.append(dir_name)
-			if dir_base in visited_directories:
-				break
-
-		# Add missing intermediate directory nodes in the right order
-		while dir_parts:
-			dir_base = os.path.join(dir_base, dir_parts.pop())
-			
-			# Generate directory as special empty file
-			yield from self._gen_file(dir_base, content_type="application/x-directory")
-			
-			# Remember that this directory has already been sent
-			visited_directories.add(dir_base)
-
-	def _body_file(self, short_path, file_location, dir_fd=-1):
-		try:
-			if dir_fd >= 0:
-				f_path_or_desc = os.open(file_location, os.O_RDONLY | os.O_CLOEXEC, dir_fd=dir_fd)
-			else:
-				f_path_or_desc = file_location
-			# Stream file to client
-			with open(f_path_or_desc, "rb") as file:
-				yield from self._gen_file(short_path, file_location, file)
-		except OSError as e:
-			print(e)
-			# File might have disappeared between `os.walk()` and `open()`
-			pass
-
+	__slots__ = ("abspath", "follow_symlinks", "scanner")
+	
+	abspath: ty.Optional[ty.AnyStr]
+	follow_symlinks: bool
+	scanner: filescanner.walk[ty.AnyStr]
+	
+	def __init__(self, directory: ty.Union[utils.path_t, int], *,
+	             chunk_size: int = default_chunk_size,
+	             follow_symlinks: bool = False,
+	             patterns: match_spec_t[ty.AnyStr] = None,
+	             period_special: bool = True,
+	             recursive: bool = False):
+		self.follow_symlinks = follow_symlinks
+		
+		# Create file scanner from parameters
+		self.scanner = filescanner.walk(
+			directory, patterns, follow_symlinks=follow_symlinks,
+			period_special=period_special, recursive=recursive
+		)
+		
+		# Figure out the absolute path of the directory added
+		self.abspath = None
+		if not isinstance(directory, int):
+			self.abspath = os.path.abspath(utils.convert_path(directory))
+		
+		# Figure out basename of the containing directory
+		# (normpath is an acceptable approximation here)
+		basename: ty.Union[str, bytes] = "_"
+		if not isinstance(directory, int):
+			basename = os.fsdecode(os.path.basename(os.path.normpath(directory)))
+		super().__init__(os.fsdecode(basename), chunk_size=chunk_size)
+	
 	def _body(self):
 		"""Streams the contents of the selected directory as binary chunks."""
-		def match_short_path(short_path):
-			# Remove initial path component so that all files are based in
-			# the target directory itself (not one level above)
-			if os.path.sep in short_path:
-				path = short_path.split(os.path.sep, 1)[1]
-			else:
-				return False
-
-			# Convert all path seperators to POSIX style
-			path = path.replace(os.path.sep, '/')
-
-			# Do the matching and the simplified path
-			for pattern in self.patterns:
-				if pattern.match(path):
-					return True
-			return False
-
-		visited_directories = set()
-
-		# Normalize directory path without destroying symlinks
-		sep = os.path.sep
-		directory = self.directory
-		if not isinstance(self.directory, int):
-			directory = os.fspath(directory) if hasattr(os, "fspath") else directory
-			if isinstance(directory, bytes):
-				sep = os.fsencode(sep)
-			while sep * 2 in directory:
-				directory.replace(sep * 2, sep)
-			if directory.endswith(sep):
-				directory = directory[:-len(sep)]
-
-		# Determine base directory name to send to IPFS (required and also used
-		# as part of the wrap_with_directory feature)
-		if self.dirname:
-			dirname = self.dirname
-		elif not isinstance(directory, int):
-			dirname = os.path.basename(directory)
-			dirname = dirname if isinstance(dirname, str) else os.fsdecode(dirname)
-		else:
-			dirname = "_"
-		assert type(directory) == type(dirname) or isinstance(directory, int)
-
-		# Identify the unnecessary portion of the relative path
-		truncate = (directory if not isinstance(directory, int) else ".") + sep
-		# Traverse the filesystem downward from the target directory's uri
-		# Errors: `os.walk()` will simply return an empty generator if the
-		#         target directory does not exist.
-		wildcard_directories = set()
-
-		if not isinstance(self.directory, int):
-			walk_iter = os.walk(self.directory)
-		else:
-			walk_iter = os.fwalk(dir_fd=self.directory)
-		for result in walk_iter:
-			cur_dir, filenames = result[0], result[2]
-			dir_fd = -1 if not isinstance(self.directory, int) else result[3]
-
-			# find the path relative to the directory being added
-			if len(truncate) > 0:
-				_, _, short_path = cur_dir.partition(truncate)
-			else:
-				short_path = cur_dir
-				# remove leading / or \ if it is present
-				if short_path.startswith(os.path.sep):
-					short_path = short_path[len(os.path.sep):]
-			short_path = os.path.join(dirname, short_path) if short_path else dirname
-
-			wildcard_directory = False
-			if os.path.split(short_path)[0] in wildcard_directories:
-				# Parent directory has matched a pattern, all sub-nodes should
-				# be added too
-				wildcard_directories.add(short_path)
-				wildcard_directory = True
-			else:
-				# Check if directory path matches one of the patterns
-				if match_short_path(short_path):
-					# Directory matched pattern and it should therefor
-					# be added along with all of its contents
-					wildcard_directories.add(short_path)
-					wildcard_directory = True
-
-			# Always add directories within wildcard directories - even if they
-			# are empty
-			if wildcard_directory:
-				yield from self._body_directory(short_path, visited_directories)
-
-			# Iterate across the files in the current directory
-			for filename in filenames:
-				# Find the filename relative to the directory being added
-				short_file_path = os.path.join(short_path, filename)
-				if dir_fd < 0:
-					file_location = os.path.join(cur_dir, filename)
-				else:
-					file_location = filename
-
-				if wildcard_directory:
-					# Always add files in wildcard directories
-					yield from self._body_file(short_file_path, file_location, dir_fd=dir_fd)
-				else:
-					# Add file (and all missing intermediary directories)
-					# if it matches one of the patterns
-					if match_short_path(short_file_path):
-						yield from self._body_directory(short_path, visited_directories)
-						yield from self._body_file(short_file_path, file_location, dir_fd=dir_fd)
-		
-		yield from self._gen_end()
+		try:
+			for type, path, relpath, name, parentfd in self.scanner:
+				relpath_unicode = os.fsdecode(relpath).replace(os.path.sep, "/")
+				short_path = self.name + (("/" + relpath_unicode) if relpath_unicode != "." else "")
+				
+				if type is filescanner.FSNodeType.FILE:
+					try:
+						# Only regular files and directories can be uploaded
+						if parentfd is not None:
+							stat_data = os.stat(name, dir_fd=parentfd, follow_symlinks=self.follow_symlinks)
+						else:
+							stat_data = os.stat(path, follow_symlinks=self.follow_symlinks)
+						if not stat.S_ISREG(stat_data.st_mode):
+							continue
+						
+						absolute_path: ty.Optional[str] = None
+						if self.abspath is not None:
+							absolute_path = os.fsdecode(os.path.join(self.abspath, relpath))
+						
+						if parentfd is not None:
+							f_path_or_desc = os.open(name, os.O_RDONLY | os.O_CLOEXEC, dir_fd=parentfd)
+						else:
+							f_path_or_desc = path
+						# Stream file to client
+						with open(f_path_or_desc, "rb") as file:
+							yield from self._gen_file(short_path, absolute_path, file)
+					except OSError as e:
+						print(e)
+						# File might have disappeared between `os.walk()` and `open()`
+						pass
+				elif type is filescanner.FSNodeType.DIRECTORY:
+					# Generate directory as special empty file
+					yield from self._gen_file(short_path, content_type="application/x-directory")
+			
+			yield from self._gen_end()
+		finally:
+			self.scanner.close()
 
 
 class BytesFileStream(FilesStream):
@@ -548,7 +410,7 @@ class BytesFileStream(FilesStream):
 	chunk_size : int
 		The maximum size of a single data chunk
 	"""
-	def __init__(self, data, name="bytes", chunk_size=default_chunk_size):
+	def __init__(self, data, name="bytes", *, chunk_size=default_chunk_size):
 		super().__init__([], name=name, chunk_size=chunk_size)
 
 		self.data = data if inspect.isgenerator(data) else (data,)
@@ -561,7 +423,7 @@ class BytesFileStream(FilesStream):
 		yield from self._gen_end()
 
 
-def stream_files(files, chunk_size=default_chunk_size):
+def stream_files(files, *, chunk_size=default_chunk_size):
 	"""Gets a buffered generator for streaming files.
 
 	Returns a buffered generator which encodes a file or list of files as
@@ -577,52 +439,43 @@ def stream_files(files, chunk_size=default_chunk_size):
 	stream = FilesStream(files, chunk_size=chunk_size)
 	return stream.body(), stream.headers()
 
-
-def stream_directory(directory, recursive=False, patterns='**', chunk_size=default_chunk_size):
-	"""Gets a buffered generator for streaming directories.
-
+def stream_directory(directory: ty.Union[utils.path_t, int], *,
+                     chunk_size: int = default_chunk_size,
+                     follow_symlinks: bool = False,
+                     patterns: match_spec_t[ty.AnyStr] = None,
+                     period_special: bool = True,
+                     recursive: bool = False):
+	"""Returns buffered generator yielding the contents of a directory
+	
 	Returns a buffered generator which encodes a directory as
 	:mimetype:`multipart/form-data` with the corresponding headers.
-
-	Parameters
-	----------
-	directory : Union[str, bytes, os.PathLike, int]
-		The filepath of the directory to stream
-	recursive : bool
-		Stream all content within the directory recursively?
-	patterns : Union[str, re.compile, collections.abc.Iterable]
-		Single *glob* pattern or list of *glob* patterns and compiled
-		regular expressions to match the names of the filepaths to keep
-	chunk_size : int
-		Maximum size of each stream chunk
+	
+	For the meaning of these parameters see the description of
+	:class:`DirectoryStream`.
 	"""
-	def stream_directory_impl(directory, dirname=None):
-		stream = DirectoryStream(directory,
-		                         recursive=recursive, patterns=patterns,
-		                         dirname=dirname, chunk_size=chunk_size)
-		return stream.body(), stream.headers()
-
-	# Note that `os.fwalk` is never available on Windows
-	if hasattr(os, "fwalk") and not isinstance(directory, int):
-		def auto_close_iter_fd(fd, iter):
-			try:
-				yield from iter
-			finally:
-				os.close(fd)
-
-		directory_str = utils.convert_path(directory)
-		dirname = os.path.basename(os.path.normpath(directory_str))
-
-		fd = os.open(directory_str, os.O_CLOEXEC | os.O_DIRECTORY)
-		body, headers = stream_directory_impl(fd, dirname)
-		return auto_close_iter_fd(fd, body), headers
-	else:
-		return stream_directory_impl(directory)
+	stream = DirectoryStream(directory, chunk_size=chunk_size,
+	                         follow_symlinks=follow_symlinks,
+	                         period_special=period_special,
+	                         patterns=patterns, recursive=recursive)
+	
+	def gen_wrapper():
+		for chunk in stream.body():
+			print(chunk)
+			yield chunk
+	
+	return gen_wrapper(), stream.headers()
 
 
-def stream_filesystem_node(filepaths,
-                           recursive=False, patterns='**',
-                           chunk_size=default_chunk_size):
+_filepaths_t = ty.Union[utils.path_t, int, io.IOBase]
+filepaths_t = ty.Union[_filepaths_t, ty.Iterable[_filepaths_t]]
+
+
+def stream_filesystem_node(filepaths: filepaths_t, *,
+                           chunk_size: int = default_chunk_size,
+                           follow_symlinks: bool = False,
+                           patterns: match_spec_t[ty.AnyStr] = None,
+                           period_special: bool = True,
+                           recursive: bool = False):
 	"""Gets a buffered generator for streaming either files or directories.
 
 	Returns a buffered generator which encodes the file or directory at the
@@ -631,16 +484,24 @@ def stream_filesystem_node(filepaths,
 
 	Parameters
 	----------
-	filepaths : Union[str, bytes, os.PathLike, int, io.IOBase, collections.abc.Iterable]
+	filepaths
 		The filepath of a single directory or one or more files to stream
-	recursive : bool
-		Stream all content within the directory recursively?
-	patterns : Union[str, re.compile, collections.abc.Iterable]
+	chunk_size
+		Maximum size of each stream chunk
+	follow_symlinks
+		Follow symbolic links when recursively scanning directories? (directories only)
+	period_special
+		Treat files and directories with a leading period character (“dot-files”)
+		specially in glob patterns? (directories only)
+		
+		If this is set these files will only be matched by path labels whose initial
+		character is a period as well.
+	patterns
 		Single *glob* pattern or list of *glob* patterns and compiled
 		regular expressions to match the paths of files and directories
 		to be added to IPFS (directories only)
-	chunk_size : int
-		Maximum size of each stream chunk
+	recursive
+		Scan directories recursively for additional files? (directories only)
 	"""
 	is_dir = False
 	if isinstance(filepaths, utils.path_types):
@@ -649,12 +510,14 @@ def stream_filesystem_node(filepaths,
 		import stat
 		is_dir = stat.S_ISDIR(os.fstat(filepaths).st_mode)
 	if is_dir:
-		return stream_directory(filepaths, recursive, patterns, chunk_size) + (True,)
+		return stream_directory(filepaths, chunk_size=chunk_size,
+		                        period_special=period_special,
+		                        patterns=patterns, recursive=recursive) + (True,)
 	else:
-		return stream_files(filepaths, chunk_size) + (False,)
+		return stream_files(filepaths, chunk_size=chunk_size) + (False,)
 
 
-def stream_bytes(data, chunk_size=default_chunk_size):
+def stream_bytes(data, *, chunk_size=default_chunk_size):
 	"""Gets a buffered generator for streaming binary data.
 
 	Returns a buffered generator which encodes binary data as
@@ -675,7 +538,7 @@ def stream_bytes(data, chunk_size=default_chunk_size):
 	return stream.body(), stream.headers()
 
 
-def stream_text(text, chunk_size=default_chunk_size):
+def stream_text(text, *, chunk_size=default_chunk_size):
 	"""Gets a buffered generator for streaming text.
 
 	Returns a buffered generator which encodes a string as
@@ -700,4 +563,4 @@ def stream_text(text, chunk_size=default_chunk_size):
 	else:
 		data = text.encode("utf-8")
 
-	return stream_bytes(data, chunk_size)
+	return stream_bytes(data, chunk_size=chunk_size)

@@ -52,7 +52,7 @@ class Section(base.SectionBase):
 				
 				See :meth:`~ipfshttpclient.Client.block.stat`
 		"""
-		body, headers = multipart.stream_files(file, self.chunk_size)
+		body, headers = multipart.stream_files(file, chunk_size=self.chunk_size)
 		return self._client.request('/block/put', decoder='json', data=body,
 		                            headers=headers, **kwargs)
 	

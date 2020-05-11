@@ -132,7 +132,10 @@ try:
 			# configuration file)
 			exclusions = [
 				# Add the standard coverage exclusion statement
-				"pragma: no cover"
+				r"pragma:\s+no\s+cover",
+				
+				# Ignore typing-only branches
+				r"if\s+(?:[A-Za-z]+\s*[.]\s*)?TYPE_CHECKING\s*:",
 			]
 			if sys.version_info.major == 2:
 				exclusions.append(r"\#PY3")
@@ -140,10 +143,10 @@ try:
 				# Exclude the past
 				exclusions.append(r"\#PY2")
 				# Exclude code only used for compatiblity with a previous Python version
-				exclusions.append(r"\#PY3({0})[^\d+]".format(
+				exclusions.append(r"\#PY3({0})([^\d+]|$)".format(
 					"|".join(map(str, range(0, sys.version_info.minor)))
 				))
-				# Exclude code only used for in upcoming Python versions
+				# Exclude code only used in future Python versions
 				exclusions.append(r"\#PY3({0})\+".format(
 					"|".join(map(str, range(sys.version_info.minor + 1, 20)))
 				))

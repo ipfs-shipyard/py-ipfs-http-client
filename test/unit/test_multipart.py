@@ -20,6 +20,10 @@ import pytest
 
 import ipfshttpclient.multipart
 
+
+# !! ALL Expected output should match /ipns/docs.ipfs.io/reference/http/api/#request-body !! #
+
+
 class TestContentHelpers(unittest.TestCase):
 	"""Tests the functionality of the three content-oriented helper functions.
 
@@ -33,7 +37,7 @@ class TestContentHelpers(unittest.TestCase):
 
 	def test_content_disposition_headers(self):
 		"""Check that content_disposition defaults properly"""
-		expected = {'Content-Disposition': 'form-data; filename="example.txt"'}
+		expected = {'Content-Disposition': 'form-data; name="file"; filename="example.txt"'}
 		actual = ipfshttpclient.multipart.content_disposition_headers('example.txt')
 		assert expected == actual
 
@@ -117,7 +121,7 @@ class TestStreamBase(unittest.TestCase):
 	def test_init_defaults(self):
 		"""Test the __init__ function for default parameter values."""
 		name = "test_name"
-		expected_disposition = 'form-data; filename="test_name"'
+		expected_disposition = 'form-data; name="file"; filename="test_name"'
 		expected_type = r'multipart/form-data; boundary="\S*"'
 		expected_boundary_pattern = r'\S*'
 		generator = StreamBaseSub(name)
@@ -137,7 +141,7 @@ class TestStreamBase(unittest.TestCase):
 		name = "test_name"
 		generator = StreamBaseSub(name)
 
-		expected = b'Content-Disposition: form-data; filename="test_name"\r\n' \
+		expected = b'Content-Disposition: form-data; name="file"; filename="test_name"\r\n' \
 		         + b'Content-Type: multipart/form-data; ' \
 		         + b'boundary="' + generator._boundary.encode() + b'"\r\n\r\n'
 
@@ -199,7 +203,7 @@ class TestStreamFileMixin(unittest.TestCase):
 
 		expected = b'--' + generator._boundary.encode() + b'\r\n'
 		expected += b'Abspath: ' + name.encode("utf-8") + b'\r\n' if abspath else b''
-		expected += b'Content-Disposition: file; '\
+		expected += b'Content-Disposition: form-data; name="file"; '\
 		         + b'filename="' + urllib.parse.quote_plus(name).encode("utf-8") + b'"\r\n'\
 			 + b'Content-Type: text/plain\r\n'\
 			 + b'\r\n' \
@@ -225,7 +229,7 @@ class TestStreamFileMixin(unittest.TestCase):
 
 		expected = b'--' + generator._boundary.encode() + b'\r\n'
 		expected += b'Abspath: ' + file_location.encode("utf-8") + b'\r\n' if abspath else b''
-		expected += b'Content-Disposition: file; filename="' + name.encode("utf-8") + b'"\r\n'\
+		expected += b'Content-Disposition: form-data; name="file"; filename="' + name.encode("utf-8") + b'"\r\n'\
 			  + b'Content-Type: application/octet-stream\r\n'\
 			  + b'\r\n'
 
@@ -311,7 +315,7 @@ class TestFilesStream(unittest.TestCase):
 	def check_test_body(self, instance, abspath):
 		expected = rb"(--\S+\r\n"
 		expected += rb"Abspath: \S+\r\n" if abspath else rb""
-		expected += rb"Content-Disposition: file; filename=\"\S+\"\r\n"
+		expected += rb"Content-Disposition: form-data; name=\"file\"; filename=\"\S+\"\r\n"
 		expected += rb"Content-Type: application/\S+\r\n"
 		expected += rb"\r\n(.|\n)*\r\n)+--\S+--\r\n"
 		actual = b""
@@ -335,7 +339,7 @@ class TestDirectoryStream(unittest.TestCase):
 		path = os.path.join(os.path.dirname(os.path.dirname(__file__)),
 		                    "functional", "fake_dir")
 		instance = ipfshttpclient.multipart.DirectoryStream(path)
-		expected = b"^(--\\S+\r\nContent-Disposition: file; filename=\"\\S+\""\
+		expected = b"^(--\\S+\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\\S+\""\
 			+ b"\r\nContent-Type: application/\\S+\r\n\r\n(.|\n)*"\
 			+ b"\r\n)+--\\S+--\r\n$"
 		actual = b"".join(instance.body())
@@ -354,7 +358,7 @@ class TestBytesFileStream(unittest.TestCase):
 		# Get OS-agnostic path to test files
 		text = b"Here is some text for this test."
 		instance = ipfshttpclient.multipart.BytesFileStream(text)
-		expected = b"(--\\S+\r\nContent-Disposition: file; filename=\"\\S+\""\
+		expected = b"(--\\S+\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\\S+\""\
 			+ b"\r\nContent-Type: application/\\S+\r\n"\
 			+ b"\r\n(.|\n)*\r\n)+--\\S+--\r\n"
 		actual = b"".join(instance.body())

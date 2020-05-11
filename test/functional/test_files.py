@@ -5,6 +5,7 @@ import pytest
 import pytest_cid
 
 import ipfshttpclient.exceptions
+import ipfshttpclient.filescanner
 
 import conftest
 
@@ -38,6 +39,16 @@ FAKE_FILES_HASH = [
 ### test_add_multiple_from_dirname
 FAKE_DIR_TEST2_PATH = conftest.TEST_DIR / "fake_dir" / "test2"
 FAKE_DIR_TEST2_HASH = [
+	{"Hash": "QmWQz248tSZfbYYRciWsLfzmXFinJCqfKHoLY8H73xg5Hp",
+	 "Name": "test2",       "Size": "187"},
+	{"Hash": "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+	 "Name": "test2/high",  "Size": "4"},
+	{"Hash": "Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD",
+	 "Name": "test2/fssdf", "Size": "22"},
+	{"Hash": "QmNuvmuFeeWWpxjCQwLkHshr8iqhGLWXFzSGzafBeawTTZ",
+	 "Name": "test2/llllg", "Size": "17"}
+]
+FAKE_DIR_TEST2_RECURSIVE_HASH = [
 	{"Hash": "QmStL6TPbJfMHQhHjoVT93kCynVx3GwLf7xwgrtScqABhU",
 	 "Name": "test2",                 "Size": "297"},
 	{"Hash": "QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN",
@@ -54,8 +65,17 @@ FAKE_DIR_TEST2_HASH = [
 
 ### test_add_filepattern_from_dirname
 FAKE_DIR_FNPATTERN1 = "**/fss*"
-# The hash of the folder is not same as above because the content of the folder added is not same
+# The hash of the folder is not same as above because the content of the folder
+# added is not the same
 FAKE_DIR_FNPATTERN1_HASH = [
+	{"Hash": "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+	 "Name": "fake_dir",                       "Size": "4"}
+]
+FAKE_DIR_FNPATTERN1_FD_HASH = [
+	{"Hash": "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+	 "Name": "_",                       "Size": "4"}
+]
+FAKE_DIR_FNPATTERN1_RECURSIVE_HASH = [
 	{"Hash": "Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD",
 	 "Name": "fake_dir/test2/fssdf", "Size": "22"},
 	{"Hash": "QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe",
@@ -63,20 +83,44 @@ FAKE_DIR_FNPATTERN1_HASH = [
 	{"Hash": "QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm",
 	 "Name": "fake_dir",             "Size": "124"}
 ]
+FAKE_DIR_FNPATTERN1_RECURSIVE_FD_HASH = [
+	{"Hash": "Qmb1NPqPzdHCMvHRfCkk6TWLcnpGJ71KnafacCMm6TKLcD",
+	 "Name": "_/test2/fssdf", "Size": "22"},
+	{"Hash": "QmT5rV6EsKNSW619SntLrkCxbUXXQh4BrKm3JazF2zEgEe",
+	 "Name": "_/test2",       "Size": "73"},
+	{"Hash": "QmbPzQruAEFjUU3gQfupns6b8USr8VrD9H71GrqGDXQSxm",
+	 "Name": "_",             "Size": "124"}
+]
 
 ## test_add_filepattern_subdir_wildcard
-FAKE_DIR_FNPATTERN2 = "test2/**/high"
+# (With some added useless character to test that the file is working fine.)
+FAKE_DIR_FNPATTERN2 = "test2/./////./**/high//."
 FAKE_DIR_FNPATTERN2_HASH = [
-	{"Hash": "QmUXuNHpV6cdeTngSkEMbP2nQDPuyE2MFXNYtTXzZvLZHf",
-	 "Name": "fake_dir",                       "Size": "216"},
-	{"Hash": "QmZGuwqaXMmSwJcfTsvseHwy3mvDPD9zrs9WVowAZcQN4W",
-	 "Name": "fake_dir/test2",                 "Size": "164"},
-	{"Hash": "QmV3n14G8iQoNG8zpHCUZnmQpcQbhEfhQZ8NHvUEdoiXAN",
-	 "Name": "fake_dir/test2/high",            "Size": "114"},
-	{"Hash": "QmZazHsY4nbhRTHTEp5SUWd4At6aSXia1kxEuywHTicayE",
-	 "Name": "fake_dir/test2/high/five",       "Size": "64"},
-	{"Hash": "QmW8tRcpqy5siMNAU9Lx3GADAxQbVUrx8XJGFDjkd6vqLT",
-	 "Name": "fake_dir/test2/high/five/dummy", "Size": "13"}
+	{"Hash": "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+	 "Name": "fake_dir", "Size": "4"}
+]
+FAKE_DIR_FNPATTERN2_RECURSIVE_HASH = [
+	{"Hash": "QmSAkwKgghLYkYFxUbS6TiLrksdLkBGcZejpysZtqsq6f2",
+	 "Name": "fake_dir",            "Size": "105"},
+	{"Hash": "QmRgJUotwJTYQFzPeoRTp1RANuAfDGQHvqxbzesYKxPviE",
+	 "Name": "fake_dir/test2",      "Size": "54"},
+	{"Hash": "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+	 "Name": "fake_dir/test2/high", "Size": "4"}
+]
+
+## test_add_subdir_dotfiles
+FAKE_DIR_ALMOST_EMPTY_FNPATTERN1 = "*"
+FAKE_DIR_ALMOST_EMPTY_FNPATTERN2 = ".*"
+FAKE_DIR_ALMOST_EMPTY_PATH = str(conftest.TEST_DIR / "fake_dir_almost_empty") + os.path.sep
+FAKE_DIR_ALMOST_EMPTY_HASH = [
+	{"Hash": "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn",
+	 "Name": "fake_dir_almost_empty", "Size": "4"}
+]
+FAKE_DIR_ALMOST_EMPTY_COMPLETE_HASH = [
+	{"Hash": "QmSxX5Ztc1KXa6eFghtMzUFEPmnRKJCEtcPNLPKDgx9xba",
+	 "Name": "fake_dir_almost_empty",            "Size": "62"},
+	{"Hash": "QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH",
+	 "Name": "fake_dir_almost_empty/.gitignore", "Size": "6"},
 ]
 
 
@@ -204,23 +248,118 @@ def test_add_nocopy_with_relative_path(client):
 
 def test_add_multiple_from_dirname(client, cleanup_pins):
 	res = client.add(FAKE_DIR_TEST2_PATH)
-	assert conftest.sort_by_key(FAKE_DIR_TEST2_HASH) == conftest.sort_by_key(res)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_TEST2_HASH)
 
 
 def test_add_filepattern_from_dirname(client, cleanup_pins):
 	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1)
-	assert conftest.sort_by_key(FAKE_DIR_FNPATTERN1_HASH) == conftest.sort_by_key(res)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_HASH)
+
+
+@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+                    reason="Disabling os.fwalk does nothing if it isn't supported in the first place")
+def test_add_filepattern_from_dirname_nofwalk(client, cleanup_pins, monkeypatch):
+	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	
+	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_HASH)
+
+
+@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+                    reason="Passing directory as file descriptor requires os.fwalk")
+def test_add_filepattern_from_dirfd(client, cleanup_pins):
+	fd: int = os.open(FAKE_DIR_PATH, os.O_RDONLY | os.O_DIRECTORY)
+	try:
+		res = client.add(fd, pattern=FAKE_DIR_FNPATTERN1)
+	finally:
+		os.close(fd)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_FD_HASH)
+
+
+def test_add_filepattern_from_dirname_recursive(client, cleanup_pins):
+	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
+
+
+@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+                    reason="Disabling os.fwalk does nothing if it isn't supported in the first place")
+def test_add_filepattern_from_dirname_recursive_nofwalk(client, cleanup_pins, monkeypatch):
+	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	
+	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
+
+
+def test_add_filepattern_from_dirfd_recursive_nofwalk(client, cleanup_pins, monkeypatch):
+	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	
+	with pytest.raises(NotImplementedError):
+		fd: int = os.open(FAKE_DIR_PATH, os.O_RDONLY | os.O_DIRECTORY)
+		try:
+			res = client.add(fd, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
+		finally:
+			os.close(fd)
+
+
+@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+                    reason="Passing directory as file descriptor requires os.fwalk")
+def test_add_filepattern_from_dirfd_recursive(client, cleanup_pins):
+	fd: int = os.open(FAKE_DIR_PATH, os.O_RDONLY | os.O_DIRECTORY)
+	try:
+		res = client.add(fd, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
+	finally:
+		os.close(fd)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_FD_HASH)
+
+
+def test_add_filepattern_from_dirname_recursive_binary(client, cleanup_pins):
+	res = client.add(os.fsencode(FAKE_DIR_PATH), pattern=os.fsencode(FAKE_DIR_FNPATTERN1), recursive=True)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
+
+
+@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+                    reason="Disabling os.fwalk does nothing if it isn't supported in the first place")
+def test_add_filepattern_from_dirname_recursive_nofwalk_binary(client, cleanup_pins, monkeypatch):
+	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	
+	res = client.add(os.fsencode(FAKE_DIR_PATH), pattern=os.fsencode(FAKE_DIR_FNPATTERN1), recursive=True)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
 
 
 def test_add_filepattern_subdir_wildcard(client, cleanup_pins):
 	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN2)
-	assert conftest.sort_by_key(FAKE_DIR_FNPATTERN2_HASH) == conftest.sort_by_key(res)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN2_HASH)
+
+
+def test_add_filepattern_subdir_wildcard_recursive(client, cleanup_pins):
+	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN2, recursive=True)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN2_RECURSIVE_HASH)
+
+
+def test_add_subdir_dotfiles(client, cleanup_pins):
+	res = client.add(FAKE_DIR_ALMOST_EMPTY_PATH)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_ALMOST_EMPTY_COMPLETE_HASH)
+
+
+def test_add_subdir_dotfiles_starpattern(client, cleanup_pins):
+	res = client.add(FAKE_DIR_ALMOST_EMPTY_PATH, pattern=FAKE_DIR_ALMOST_EMPTY_FNPATTERN1)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_ALMOST_EMPTY_HASH)
+
+
+def test_add_subdir_dotfiles_starpattern_no_period_special(client, cleanup_pins):
+	res = client.add(FAKE_DIR_ALMOST_EMPTY_PATH, pattern=FAKE_DIR_ALMOST_EMPTY_FNPATTERN1, period_special=False)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_ALMOST_EMPTY_COMPLETE_HASH)
+
+
+def test_add_subdir_dotfiles_dotstarpattern(client, cleanup_pins):
+	res = client.add(FAKE_DIR_ALMOST_EMPTY_PATH, pattern=FAKE_DIR_ALMOST_EMPTY_FNPATTERN2)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_ALMOST_EMPTY_COMPLETE_HASH)
 
 
 @pytest.mark.dependency()
 def test_add_recursive(client, cleanup_pins):
 	res = client.add(FAKE_DIR_PATH, recursive=True)
-	assert conftest.sort_by_key(FAKE_DIR_HASH) == conftest.sort_by_key(res)
+	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_HASH)
 
 
 @pytest.mark.dependency(depends=["test_add_recursive"])

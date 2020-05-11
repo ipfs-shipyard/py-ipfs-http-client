@@ -225,7 +225,7 @@ class Client(files.Base, miscellaneous.Base):
 			str
 				Hash of the added IPFS object
 		"""
-		body, headers = multipart.stream_bytes(data, self.chunk_size)
+		body, headers = multipart.stream_bytes(data, chunk_size=self.chunk_size)
 		return self._client.request('/add', decoder='json',
 		                            data=body, headers=headers, **kwargs)
 
@@ -251,9 +251,9 @@ class Client(files.Base, miscellaneous.Base):
 			str
 				Hash of the added IPFS object
 		"""
-		body, headers = multipart.stream_text(string, self.chunk_size)
+		body, headers = multipart.stream_text(string, chunk_size=self.chunk_size)
 		return self._client.request('/add', decoder='json',
-									data=body, headers=headers, **kwargs)
+		                            data=body, headers=headers, **kwargs)
 
 	def add_json(self, json_obj, **kwargs):
 		"""Adds a json-serializable Python dict as a json file to IPFS.
