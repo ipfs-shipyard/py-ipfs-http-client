@@ -1,6 +1,10 @@
+import io
+import typing as ty
+
 from . import base
 
 from .. import multipart
+from .. import utils
 
 
 class Section(base.SectionBase):
@@ -219,7 +223,7 @@ class Section(base.SectionBase):
 		kwargs.setdefault("opts", {}).update(opts)
 
 		args = (path,)
-		body, headers = multipart.stream_files(file, self.chunk_size)
+		body, headers = multipart.stream_files(file, chunk_size=self.chunk_size)
 		return self._client.request('/files/write', args, data=body, headers=headers, **kwargs)
 
 
@@ -227,56 +231,106 @@ class Base(base.ClientBase):
 	files = base.SectionProperty(Section)
 	
 	
-	def add(self, file, *files, recursive=False, pattern="**", trickle=False,
-	        only_hash=False, wrap_with_directory=False, chunker=None,
-	        pin=True, raw_leaves=None, nocopy=False, **kwargs):
-		"""Add a file, or directory of files to IPFS.
-
+	def add(self, file: ty.Union[utils.path_t, int, io.IOBase], *files,
+	        recursive: bool = False, pattern: multipart.match_spec_t[ty.AnyStr] = None,
+	        trickle: bool = False, follow_symlinks: bool = False,
+	        period_special: bool = True, only_hash: bool = False,
+	        wrap_with_directory: bool = False, chunker: ty.Optional[str] = None,
+	        pin: bool = True, raw_leaves: bool = None, nocopy: bool = False,
+	        **kwargs):
+		"""Adds a file, several files or directory of files to IPFS
+		
+		Arguments marked as “directories only” will be ignored unless *file*
+		refers to a directory path or file descriptor. Passing a directory file
+		descriptor is currently restricted to Unix (due to Python standard
+		library limitations on Windows) and will prevent the *nocopy* feature
+		from working.
+		
 		.. code-block:: python
-
+		
 			>>> with io.open('nurseryrhyme.txt', 'w', encoding='utf-8') as f:
-			...	 numbytes = f.write('Mary had a little lamb')
+			... 	numbytes = f.write('Mary had a little lamb')
 			>>> client.add('nurseryrhyme.txt')
 			{'Hash': 'QmZfF6C9j4VtoCsTp4KSrhYH47QMd3DNXVZBKaxJdhaPab',
 			 'Name': 'nurseryrhyme.txt'}
-
-		Parameters
-		----------
-		file : Union[str, bytes, os.PathLike, int, io.IOBase]
+		
+		Directory uploads
+		-----------------
+		
+		By default only regular files and directories immediately below the given
+		directory path/FD are uploaded to the connected IPFS node; to upload an
+		entire directory tree instead, *recursive* can be set to ``True``.
+		Symbolic links and special files (pipes, sockets, devices nodes, …) cannot
+		be represented by the UnixFS data structure this call creates and hence
+		are ignored while scanning the target directory, to include the targets
+		of symbolic links in the upload set *follow_symlinks* to ``True``.
+		
+		The set of files and directories included in the upload may be restricted
+		by passing any combination of glob matching strings, compiled regular
+		expression objects and custom :class:`~ipfshttpclient.filescanner.Matcher`
+		objects. A file or directory will be included if it matches of the
+		patterns provided. For regular expressions please note that as predicting
+		which directories are relevant to the given pattern is impossible to do
+		reliably if *recursive* is set to ``True`` the entire directory hierarchy
+		will always be scanned and compared to the given expression even if only
+		very few files are actually matched by the expression. To avoid this, pass
+		a custom matching class or use glob-patterns instead (which will only
+		cause a scan of the directories required to match their value).
+		
+		Note that unlike the ``ipfs add`` CLI interface this implementation will
+		be default include dot-files (“files that are hidden”) – any file or
+		directory whose name starts with a period/dot character – in the upload.
+		For behaviour that is similar to the CLI command set *pattern* to
+		``"**"`` – this enables the default glob behaviour of not matching
+		dot-files unless *period_special* is set to ``False`` or the pattern
+		actually starts with a period.
+		
+		Arguments
+		---------
+		file
 			A filepath, path-object, file descriptor or open file object the
 			file or directory to add
-		recursive : bool
-			If ``file`` is some kind of directory, controls whether files in
-			subdirectories should also be added or not
-		pattern : Union[str, list]
-			Single `*glob* <https://docs.python.org/3/library/glob.html>`_
-			pattern or list of *glob* patterns and compiled regular expressions
-			to match the names of the filepaths to keep
-		trickle : bool
+		recursive
+			Upload files in subdirectories, if *file* refers to a directory?
+		pattern
+			A `*glob* <https://docs.python.org/3/library/glob.html>`_ pattern,
+			compiled regular expression object or arbitrary matcher used to limit
+			the files and directories included as part of adding a directory
+			(directories only)
+		trickle
 			Use trickle-dag format (optimized for streaming) when generating
 			the dag; see `the FAQ <https://github.com/ipfs/faq/issues/218>` for
 			more information
-		only_hash : bool
+		follow_symlinks
+			Follow symbolic links when recursively scanning directories? (directories only)
+		period_special
+			Treat files and directories with a leading period character (“dot-files”)
+			specially in glob patterns? (directories only)
+			
+			If this is set these files will only be matched by path labels whose
+			initial character is a period, but not by those starting with ``?``,
+			``*`` or ``[``.
+		only_hash
 			Only chunk and hash, but do not write to disk
-		wrap_with_directory : bool
+		wrap_with_directory
 			Wrap files with a directory object to preserve their filename
-		chunker : str
+		chunker
 			The chunking algorithm to use
-		pin : bool
+		pin
 			Pin this object when adding
-		raw_leaves : bool
+		raw_leaves
 			Use raw blocks for leaf nodes. (experimental). (Default: ``True``
-			when ``nocopy`` is True, or ``False`` otherwise)
-		nocopy : bool
+			when *nocopy* is True, or ``False`` otherwise)
+		nocopy
 			Add the file using filestore. Implies raw-leaves. (experimental).
-
+		
 		Returns
 		-------
 			Union[dict, list]
 				File name and hash of the added file node, will return a list
 				of one or more items unless only a single file was given
 		"""
-		opts = {
+		opts: ty.Dict[str, ty.Union[str, bool]] = {
 			"trickle": trickle,
 			"only-hash": only_hash,
 			"wrap-with-directory": wrap_with_directory,
@@ -284,16 +338,22 @@ class Base(base.ClientBase):
 			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
 			"nocopy": nocopy
 		}
-		if "chunker" in kwargs:
-			opts["chunker"] = kwargs.pop("chunker")
+		if chunker is not None:
+			opts["chunker"] = chunker
 		kwargs.setdefault("opts", {}).update(opts)
+		
+		# There may be other cases where nocopy will silently fail to work, but
+		# this is by far the most obvious one
+		if isinstance(file, int) and nocopy:
+			raise ValueError("Passing file descriptors is incompatible with *nocopy*")
 		
 		assert not isinstance(file, (tuple, list)), \
 		       "Use `client.add(name1, name2, …)` to add several items"
 		multiple = (len(files) > 0)
 		to_send  = ((file,) + files) if multiple else file
 		body, headers, is_dir = multipart.stream_filesystem_node(
-			to_send, recursive, pattern, self.chunk_size
+			to_send, chunk_size=self.chunk_size, follow_symlinks=follow_symlinks,
+			period_special=period_special, patterns=pattern, recursive=recursive
 		)
 		
 		resp = self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)

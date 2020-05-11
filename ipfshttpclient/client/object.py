@@ -40,7 +40,7 @@ class PatchSection(base.SectionBase):
 		"""
 		kwargs.setdefault("opts", {})["create"] = create
 
-		args = ((root, name, ref),)
+		args = (root, name, ref)
 		return self._client.request('/object/patch/add-link', args, decoder='json', **kwargs)
 	
 	
@@ -72,7 +72,7 @@ class PatchSection(base.SectionBase):
 		+------+----------------------------------+
 		"""
 		args = (str(cid),)
-		body, headers = multipart.stream_files(new_data, self.chunk_size)
+		body, headers = multipart.stream_files(new_data, chunk_size=self.chunk_size)
 		return self._client.request('/object/patch/append-data', args, decoder='json',
 		                            data=body, headers=headers, **kwargs)
 	
@@ -106,7 +106,7 @@ class PatchSection(base.SectionBase):
 		| Hash | Hash of the newly derived object |
 		+------+----------------------------------+
 		"""
-		args = ((root, link),)
+		args = (root, link)
 		return self._client.request('/object/patch/rm-link', args, decoder='json', **kwargs)
 	
 	
@@ -141,7 +141,7 @@ class PatchSection(base.SectionBase):
 		+------+----------------------------------+
 		"""
 		args = (root,)
-		body, headers = multipart.stream_files(data, self.chunk_size)
+		body, headers = multipart.stream_files(data, chunk_size=self.chunk_size)
 		return self._client.request('/object/patch/set-data', args, decoder='json', data=body,
 		                            headers=headers, **kwargs)
 
@@ -319,7 +319,7 @@ class Section(base.SectionBase):
 				See the :meth:`~ipfshttpclient.Client.object.links` method for
 				details.
 		"""
-		body, headers = multipart.stream_files(file, self.chunk_size)
+		body, headers = multipart.stream_files(file, chunk_size=self.chunk_size)
 		return self._client.request('/object/put', decoder='json', data=body,
 		                            headers=headers, **kwargs)
 	
