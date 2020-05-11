@@ -17,7 +17,7 @@ See the [relevant section of the README](#important-changes-from-ipfsapi-04x) fo
 
 **Note:** This library occasionally has to change to stay compatible with the IPFS HTTP API.
 Currently, this library is tested against [go-ipfs v0.5.0-rc2](https://github.com/ipfs/go-ipfs/releases/tag/v0.5.0-rc2).
-We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.21 therefor
+We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.21 therefore
 being to oldest supported version at this time (version 0.4.20 was never supported due to major
 issues in the daemon itself).
 
