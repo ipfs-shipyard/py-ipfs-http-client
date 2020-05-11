@@ -330,7 +330,7 @@ class Base(base.ClientBase):
 				File name and hash of the added file node, will return a list
 				of one or more items unless only a single file was given
 		"""
-		opts: ty.Dict[str, ty.Union[str, bool]] = {
+		opts = {  # type: ty.Dict[str, ty.Union[str, bool]]
 			"trickle": trickle,
 			"only-hash": only_hash,
 			"wrap-with-directory": wrap_with_directory,

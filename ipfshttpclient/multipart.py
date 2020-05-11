@@ -114,8 +114,8 @@ class StreamBase(metaclass=abc.ABCMeta):
 	"""
 	__slots__ = ("chunk_size", "name", "_boundary", "_headers")
 	
-	chunk_size: int
-	name: str
+	#chunk_size: int
+	#name: str
 	
 	def __init__(self, name, chunk_size=default_chunk_size):
 		self.chunk_size = chunk_size
@@ -328,9 +328,9 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 	"""
 	__slots__ = ("abspath", "follow_symlinks", "scanner")
 	
-	abspath: ty.Optional[ty.AnyStr]
-	follow_symlinks: bool
-	scanner: filescanner.walk[ty.AnyStr]
+	#abspath: ty.Optional[ty.AnyStr]
+	#follow_symlinks: bool
+	#scanner: filescanner.walk[ty.AnyStr]
 	
 	def __init__(self, directory: ty.Union[utils.path_t, int], *,
 	             chunk_size: int = default_chunk_size,
@@ -339,6 +339,8 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 	             period_special: bool = True,
 	             recursive: bool = False):
 		self.follow_symlinks = follow_symlinks
+		
+		directory = utils.convert_path(directory) if not isinstance(directory, int) else directory
 		
 		# Create file scanner from parameters
 		self.scanner = filescanner.walk(
@@ -353,7 +355,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 		
 		# Figure out basename of the containing directory
 		# (normpath is an acceptable approximation here)
-		basename: ty.Union[str, bytes] = "_"
+		basename = "_"  # type: ty.Union[str, bytes]
 		if not isinstance(directory, int):
 			basename = os.fsdecode(os.path.basename(os.path.normpath(directory)))
 		super().__init__(os.fsdecode(basename), chunk_size=chunk_size)
@@ -375,7 +377,7 @@ class DirectoryStream(StreamBase, StreamFileMixin):
 						if not stat.S_ISREG(stat_data.st_mode):
 							continue
 						
-						absolute_path: ty.Optional[str] = None
+						absolute_path = None  # type: ty.Optional[str]
 						if self.abspath is not None:
 							absolute_path = os.fsdecode(os.path.join(self.abspath, relpath))
 						
@@ -458,12 +460,7 @@ def stream_directory(directory: ty.Union[utils.path_t, int], *,
 	                         period_special=period_special,
 	                         patterns=patterns, recursive=recursive)
 	
-	def gen_wrapper():
-		for chunk in stream.body():
-			print(chunk)
-			yield chunk
-	
-	return gen_wrapper(), stream.headers()
+	return stream.body(), stream.headers()
 
 
 _filepaths_t = ty.Union[utils.path_t, int, io.IOBase]
