@@ -10,7 +10,7 @@ import typing as ty
 from . import utils
 
 
-if sys.version_info >= (3,7):  #PY37+
+if sys.version_info >= (3, 7):  #PY37+
 	if ty.TYPE_CHECKING:
 		re_pattern_t = re.Pattern[ty.AnyStr]
 	else:
@@ -28,10 +28,14 @@ if hasattr(enum, "auto"):  #PY36+
 	enum_auto = enum.auto
 else:  #PY35
 	_counter = 0
+	
 	def enum_auto() -> int:
 		global _counter
 		_counter += 1
 		return _counter
+
+
+O_DIRECTORY = getattr(os, "O_DIRECTORY", 0)  # type: int
 
 
 HAVE_FWALK       = hasattr(os, "fwalk")  # type: bool
@@ -56,7 +60,7 @@ class Matcher(ty.Generic[ty.AnyStr], metaclass=abc.ABCMeta):
 	
 	@abc.abstractmethod
 	def should_report(self, path: ty.AnyStr, *, is_dir: bool) -> bool:
-		"""Decides whether the file scanner should store the given file or directory
+		r"""Decides whether the file scanner should store the given file or directory
 		
 		Note that in this case “file” may refer to anything that is not a
 		directory and not just regular files. If the settings of the file scanner
@@ -93,6 +97,7 @@ class DummyMatcher(Matcher[ty.AnyStr]):
 	
 	def should_report(self, path: ty.AnyStr, *, is_dir: bool) -> ty_Literal_True:
 		return True
+
 
 DUMMY_MATCHER = DummyMatcher()  # type: DummyMatcher
 
@@ -334,7 +339,10 @@ class NoRecusionAdapterMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 
 
 _match_spec_t = ty.Union[ty.AnyStr, re_pattern_t, Matcher[ty.AnyStr]]
-match_spec_t = ty.Optional[ty.Union[ty.Iterable[_match_spec_t[ty.AnyStr]], _match_spec_t[ty.AnyStr]]]
+match_spec_t = ty.Optional[ty.Union[
+	ty.Iterable[_match_spec_t[ty.AnyStr]],
+	_match_spec_t[ty.AnyStr]
+]]
 
 
 def matcher_from_spec(spec: match_spec_t[ty.AnyStr], *,
@@ -342,7 +350,9 @@ def matcher_from_spec(spec: match_spec_t[ty.AnyStr], *,
                       recursive: bool = True) -> Matcher[ty.AnyStr]:
 	"""Processes the given simplified matching spec, creating an equivalent :type:`Matcher` object"""
 	if not recursive:
-		return NoRecusionAdapterMatcher(matcher_from_spec(spec, recursive=True, period_special=period_special))
+		return NoRecusionAdapterMatcher(
+			matcher_from_spec(spec, recursive=True, period_special=period_special)
+		)
 	
 	if spec is None:
 		return DUMMY_MATCHER
@@ -351,7 +361,9 @@ def matcher_from_spec(spec: match_spec_t[ty.AnyStr], *,
 	elif isinstance(spec, re_pattern_t):
 		return ReMatcher(spec)
 	elif isinstance(spec, collections.abc.Iterable) and not isinstance(spec, Matcher):
-		return MetaMatcher([matcher_from_spec(s, recursive=recursive, period_special=period_special) for s in spec])
+		return MetaMatcher(
+			[matcher_from_spec(s, recursive=recursive, period_special=period_special) for s in spec]
+		)
 	else:
 		return spec
 
@@ -383,13 +395,13 @@ class walk(ty.Iterator[FSNodeEntry], ty.Generic[ty.AnyStr]):
 	#_close_fd: ty.Optional[int]
 	
 	def __init__(
-		self,
-		directory: ty.Union[utils.path_t, int],
-		match_spec: match_spec_t[ty.AnyStr] = None, *,
-		follow_symlinks: bool = False,
-		intermediate_dirs: bool = True,
-		period_special: bool = True,
-		recursive: bool = True
+			self,
+			directory: ty.Union[utils.path_t, int],
+			match_spec: match_spec_t[ty.AnyStr] = None, *,
+			follow_symlinks: bool = False,
+			intermediate_dirs: bool = True,
+			period_special: bool = True,
+			recursive: bool = True
 	):
 		"""
 		Arguments
@@ -438,7 +450,7 @@ class walk(ty.Iterator[FSNodeEntry], ty.Generic[ty.AnyStr]):
 			#
 			# Note: `os.fwalk` support for binary paths was only added in 3.7+.
 			if HAVE_FWALK and (not isinstance(directory, bytes) or HAVE_FWALK_BYTES):
-				self._close_fd = directory = os.open(directory, os.O_RDONLY|os.O_DIRECTORY)
+				self._close_fd = directory = os.open(directory, os.O_RDONLY | O_DIRECTORY)
 		elif not HAVE_FWALK:
 			raise NotImplementedError("Passing a file descriptor as directory is "
 			                          "not supported on this platform")
@@ -486,12 +498,12 @@ class walk(ty.Iterator[FSNodeEntry], ty.Generic[ty.AnyStr]):
 			yield (filename, False)
 	
 	def _walk(
-		self,
-		directory: ty.Union[ty.AnyStr, int],
-		directory_str: ty.Optional[ty.AnyStr],
-		matcher: Matcher[ty.AnyStr],
-		follow_symlinks: bool,
-		intermediate_dirs: bool
+			self,
+			directory: ty.Union[ty.AnyStr, int],
+			directory_str: ty.Optional[ty.AnyStr],
+			matcher: Matcher[ty.AnyStr],
+			follow_symlinks: bool,
+			intermediate_dirs: bool
 	) -> ty.Generator[FSNodeEntry, ty.Any, None]:
 		sep = (utils.maybe_fsencode(os.path.sep, directory_str)  # type: ty.AnyStr
 		       if directory_str is not None else os.path.sep)

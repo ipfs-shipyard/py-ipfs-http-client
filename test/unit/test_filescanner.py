@@ -172,14 +172,14 @@ def test_walk_instaclose(mocker):
 ])
 def test_walk(monkeypatch, path: str, pattern: None, kwargs: ty.Dict[str, bool], expected: ty.List[filescanner.FSNodeEntry]):
 	result = [(e.type, e.relpath, e.name) for e in filescanner.walk(path, pattern, **kwargs)]
-	assert result == expected
+	assert sorted(result, key=lambda r: r[1]) == expected
 	
 	# Check again with plain `os.walk` if the current platform supports `os.fwalk`
 	if filescanner.HAVE_FWALK:
 		monkeypatch.setattr(filescanner, "HAVE_FWALK", False)
 		
 		result = [(e.type, e.relpath, e.name) for e in filescanner.walk(path, pattern, **kwargs)]
-		assert result == expected
+		assert sorted(result, key=lambda r: r[1]) == expected
 
 
 def test_supports_fd():
