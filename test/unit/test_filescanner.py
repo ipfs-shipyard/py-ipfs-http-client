@@ -8,9 +8,10 @@ import pytest
 from ipfshttpclient import filescanner
 
 
-TEST_FILE_DIR: str = os.path.join(os.path.dirname(__file__), "..", "functional")
+TEST_FILE_DIR = os.path.join(os.path.dirname(__file__), "..", "functional")  # type: str
 
 
+@pytest.mark.skipif(sys.version_info < (3, 6), reason="fnmatch.translate output changed in Python 3.6+")
 @pytest.mark.parametrize("pattern,expected,kwargs", [
 	("literal",                  [r"(?![.])(?s:literal)\Z"], {}),
 	(b"literal",                 [br"(?![.])(?s:literal)\Z"], {}),
@@ -132,8 +133,8 @@ def test_glob_matching(
 	# Hopefully useless sanity check
 	assert os.path.sep == "/" or os.path.altsep == "/"
 	
-	slash: ty.AnyStr = "/"         if isinstance(path, str) else b"/"
-	sep: ty.AnyStr   = os.path.sep if isinstance(path, str) else os.fsencode(os.path.sep)
+	slash = "/"         if isinstance(path, str) else b"/"  # type: ty.AnyStr
+	sep   = os.path.sep if isinstance(path, str) else os.fsencode(os.path.sep)  # type: ty.AnyStr
 	
 	path = path.replace(slash, sep)
 	
