@@ -441,6 +441,7 @@ def stream_files(files, *, chunk_size=default_chunk_size):
 	stream = FilesStream(files, chunk_size=chunk_size)
 	return stream.body(), stream.headers()
 
+
 def stream_directory(directory: ty.Union[utils.path_t, int], *,
                      chunk_size: int = default_chunk_size,
                      follow_symlinks: bool = False,
