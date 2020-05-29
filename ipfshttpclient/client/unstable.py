@@ -2,7 +2,7 @@ from . import base
 
 
 class LogSection(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def level(self, subsystem, level, **kwargs):
 		r"""Changes the logging output of a running daemon.
 		
@@ -40,7 +40,7 @@ class LogSection(base.SectionBase):
 		                            decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def ls(self, **kwargs):
 		"""Lists the logging subsystems of a running daemon.
 		
@@ -79,6 +79,7 @@ class LogSection(base.SectionBase):
 		return self._client.request('/log/ls', decoder='json', **kwargs)
 	
 	
+	@base.returns_multiple_items(base.ResponseBase, stream=True)
 	def tail(self, **kwargs):
 		r"""Reads log outputs as they are written.
 		
@@ -122,6 +123,7 @@ class LogSection(base.SectionBase):
 
 
 class RefsSection(base.SectionBase):
+	@base.returns_multiple_items(base.ResponseBase)
 	def __call__(self, cid, **kwargs):
 		"""Returns a list of hashes of objects referenced by the given hash.
 		
@@ -148,6 +150,7 @@ class RefsSection(base.SectionBase):
 		return self._client.request('/refs', args, decoder='json', **kwargs)
 
 
+	@base.returns_multiple_items(base.ResponseBase)
 	def local(self, **kwargs):
 		"""Displays the hashes of all local objects.
 		

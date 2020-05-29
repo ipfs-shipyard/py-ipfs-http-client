@@ -204,7 +204,7 @@ class Client(files.Base, miscellaneous.Base):
 	###########
 
 	@utils.return_field('Hash')
-	@base.returns_single_item
+	@base.returns_single_item(dict)
 	def add_bytes(self, data, **kwargs):
 		"""Adds a set of bytes as a file to IPFS.
 
@@ -230,7 +230,7 @@ class Client(files.Base, miscellaneous.Base):
 		                            data=body, headers=headers, **kwargs)
 
 	@utils.return_field('Hash')
-	@base.returns_single_item
+	@base.returns_single_item(dict)
 	def add_str(self, string, **kwargs):
 		"""Adds a Python string as a file to IPFS.
 
@@ -276,7 +276,7 @@ class Client(files.Base, miscellaneous.Base):
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item()
 	def get_json(self, cid, **kwargs):
 		"""Loads a json object from IPFS.
 

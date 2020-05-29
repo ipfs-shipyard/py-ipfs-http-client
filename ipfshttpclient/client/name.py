@@ -2,7 +2,7 @@ from . import base
 
 
 class Section(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def publish(self, ipfs_path, resolve=True, lifetime="24h", ttl=None, key=None,
 	            allow_offline=False, **kwargs):
 		"""Publishes an object to IPNS.
@@ -68,7 +68,7 @@ class Section(base.SectionBase):
 		return self._client.request('/name/publish', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def resolve(self, name=None, recursive=False, nocache=False,
 	            dht_record_count=None, dht_timeout=None, **kwargs):
 		"""Gets the value currently published at an IPNS name.

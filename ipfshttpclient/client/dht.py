@@ -4,7 +4,7 @@ from .. import exceptions
 
 
 class Section(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def findpeer(self, peer_id, *peer_ids, **kwargs):
 		"""Queries the DHT for all of the associated multiaddresses.
 
@@ -42,6 +42,7 @@ class Section(base.SectionBase):
 		return self._client.request('/dht/findpeer', args, decoder='json', **kwargs)
 
 
+	@base.returns_multiple_items(base.ResponseBase)
 	def findprovs(self, cid, *cids, **kwargs):
 		"""Finds peers in the DHT that can provide a specific value.
 
@@ -82,7 +83,7 @@ class Section(base.SectionBase):
 		return self._client.request('/dht/findprovs', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def get(self, key, *keys, **kwargs):
 		"""Queries the DHT for its best value related to given key.
 
@@ -117,6 +118,7 @@ class Section(base.SectionBase):
 	#TODO: Implement `provide(cid)`
 
 
+	@base.returns_multiple_items(base.ResponseBase)
 	def put(self, key, value, **kwargs):
 		"""Writes a key/value pair to the DHT.
 
@@ -163,6 +165,7 @@ class Section(base.SectionBase):
 		return self._client.request('/dht/put', args, decoder='json', **kwargs)
 
 
+	@base.returns_multiple_items(base.ResponseBase)
 	def query(self, peer_id, *peer_ids, **kwargs):
 		"""Finds the closest Peer IDs to a given Peer ID by querying the DHT.
 

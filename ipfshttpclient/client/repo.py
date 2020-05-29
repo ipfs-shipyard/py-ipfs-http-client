@@ -2,6 +2,7 @@ from . import base
 
 
 class Section(base.SectionBase):
+	@base.returns_multiple_items(base.ResponseBase)
 	def gc(self, *, return_result=True, **kwargs):
 		"""Removes stored objects that are not pinned from the repo.
 
@@ -37,7 +38,7 @@ class Section(base.SectionBase):
 		return self._client.request('/repo/gc', decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def stat(self, **kwargs):
 		"""Displays the repo's status.
 
