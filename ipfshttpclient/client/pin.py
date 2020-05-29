@@ -2,7 +2,7 @@ from . import base
 
 
 class Section(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def add(self, path, *paths, recursive=True, **kwargs):
 		"""Pins objects to local storage.
 
@@ -34,7 +34,7 @@ class Section(base.SectionBase):
 		return self._client.request('/pin/add', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def ls(self, *cids, type="all", **kwargs):
 		"""Lists objects pinned to local storage.
 
@@ -96,7 +96,7 @@ class Section(base.SectionBase):
 		return self._client.request('/pin/ls', cids, decoder='json', **kwargs)
 
 
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def rm(self, path, *paths, recursive=True, **kwargs):
 		"""Removes a pinned object from local storage.
 
@@ -129,7 +129,7 @@ class Section(base.SectionBase):
 		return self._client.request('/pin/rm', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def update(self, from_path, to_path, *, unpin=True, **kwargs):
 		"""Replaces one pin with another.
 
@@ -169,6 +169,7 @@ class Section(base.SectionBase):
 		return self._client.request('/pin/update', args, decoder='json', **kwargs)
 
 
+	@base.returns_multiple_items(base.ResponseBase, stream=True)
 	def verify(self, path, *paths, verbose=False, **kwargs):
 		"""Verify that recursive pins are complete.
 

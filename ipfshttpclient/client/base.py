@@ -1,38 +1,166 @@
+import collections.abc
 import functools
+import typing as ty
 
 from . import DEFAULT_ADDR, DEFAULT_BASE
 
 from .. import multipart, http
 
 
-def returns_single_item(func):
-	@functools.wraps(func)
-	def wrapper(*args, **kwargs):
-		result = func(*args, **kwargs)
-		if isinstance(result, list):
-			if len(result) != 1:
-				print(result)
-			assert len(result) == 1, ("Called IPFS HTTP-Client function should "
-			                          "only ever return one item")
-			return result[0]
-		assert kwargs.get("stream", False), ("Called IPFS HTTP-Client function "
-		                                     "should only ever return a list, "
-		                                     "when not streaming a response")
-		return result
-	return wrapper
+json_value_t = ty.Union[bool, float, int, str,
+                        ty.List["json_value_t"],
+                        ty.Dict[str, "json_value_t"]]
+
+
+class ResponseBase(collections.abc.Mapping):
+	"""Base class for wrapping IPFS node API responses
+	
+	Original JSON properties are exposed using dict item syntax ``response[key]``.
+	To access the raw parsed JSON object use the :meth:`as_json` method.
+	"""
+	__slots__ = ("_raw",)
+	#_raw: ty.Dict[str, json_value_t]
+	
+	_repr_attr_display = list()  # type: ty.Sequence[str]
+	_repr_json_hidden  = set()  # type: ty.Container[str]
+	
+	def __init__(self, response: ty.Dict[str, json_value_t]):
+		self._raw = dict(response)
+	
+	def __getitem__(self, name: str) -> ty.Union[bool, float, int, str, "ResponseBase"]:
+		return self._wrap_result(self._raw[name])
+	
+	@classmethod
+	def _wrap_result(cls, value: json_value_t) \
+	    -> ty.Union[bool, float, int, str, "ResponseBase"]:
+		if isinstance(value, dict):
+			value = ResponseBase(value)
+		elif isinstance(value, list):
+			value = [cls._wrap_result(v) for v in value]
+		return value
+	
+	def __iter__(self) -> ty.Iterator[str]:
+		return iter(self._raw)
+	
+	def __len__(self) -> int:
+		return len(self._raw)
+	
+	def __repr__(self) -> str:
+		attr_str_parts = []  # type: ty.List[str]
+		for name in type(self)._repr_attr_display:
+			attr_str_parts.append("{0}={1!r}".format(name, getattr(self, name)))
+		
+		json_hidden = type(self)._repr_json_hidden
+		attr_json_parts = []  # type: ty.List[str]
+		for name, value in filter(lambda i: i[0] not in json_hidden, self._raw.items()):
+			attr_json_parts.append("{0!r}: {1!r}".format(name, value))
+		
+		#arg_str: str
+		if attr_str_parts and attr_json_parts:
+			arg_str = "{0}, **{{{1}}}".format(", ".join(attr_str_parts), ", ".join(attr_json_parts))
+		elif attr_str_parts:
+			arg_str = ", ".join(attr_str_parts)
+		else:
+			arg_str = "{{{0}}}".format(", ".join(attr_json_parts))
+		
+		return "<{0.__module__}.{0.__qualname__}: {1}>".format(type(self), arg_str)
+	
+	def as_json(self) -> ty.Dict[str, json_value_t]:
+		"""Returns the original parsed JSON object as returned by the remote IPFS node
+		
+		In general, try to avoid modifying the returned dictionary if plan on
+		subsequently using this response object.
+		"""
+		return self._raw
+
+
+T = ty.TypeVar("T")
+R = ty.TypeVar("R")
+
+wrap_cb_t = ty.Callable[[T], R]
+
+
+def ident(value: T) -> T:
+	return value
+
+
+class ResponseWrapIterator(ty.Generic[T, R]):
+	__slots__ = ("_inner", "_item_wrap_cb")
+	#_inner: http.StreamDecodeIterator
+	#_item_wrap_cb: wrap_cb_t
+	
+	def __init__(self, inner: http.StreamDecodeIterator, item_wrap_cb: wrap_cb_t):
+		self._inner = inner
+		self._item_wrap_cb = item_wrap_cb
+	
+	def __iter__(self) -> "ResponseWrapIterator[T, R]":
+		return self
+	
+	def __next__(self) -> R:
+		return self._item_wrap_cb(next(self._inner))
+	
+	def __enter__(self) -> "ResponseWrapIterator[T, R]":
+		self._inner.__enter__()
+		return self
+	
+	def __exit__(self, *args) -> None:
+		self._inner.__exit__(*args)
+	
+	def close(self) -> None:
+		self._inner.close()
+
+
+def returns_multiple_items(item_wrap_cb: wrap_cb_t = ident, *, stream: bool = False):
+	def wrapper1(func: ty.Callable[..., T]):
+		@functools.wraps(func)
+		def wrapper2(*args: ty.Any, **kwargs: ty.Any) -> R:
+			result = func(*args, **kwargs)  # type: T
+			if isinstance(result, list):
+				return [item_wrap_cb(r) for r in result]
+			if result is None:
+				assert not kwargs.get("return_result", True)
+				return None
+			assert kwargs.get("stream", False) or stream, (
+				"Called IPFS HTTP-Client function should only ever return a list, "
+				"when not streaming a response"
+			)
+			return ResponseWrapIterator(result, item_wrap_cb)
+		return wrapper2
+	return wrapper1
+
+
+def returns_single_item(item_wrap_cb: wrap_cb_t = ident, *, stream: bool = False):
+	def wrapper1(func: ty.Callable[..., T]):
+		@functools.wraps(func)
+		def wrapper2(*args: ty.Any, **kwargs: ty.Any) -> R:
+			result = func(*args, **kwargs)  # type: T
+			if isinstance(result, list):
+				assert len(result) == 1, ("Called IPFS HTTP-Client function should "
+				                          "only ever return one item")
+				return item_wrap_cb(result[0])
+			if result is None:
+				assert not kwargs.get("return_result", True)
+				return None
+			assert kwargs.get("stream", False) or stream, (
+				"Called IPFS HTTP-Client function should only ever return a list "
+				"with a single item, when not streaming a response"
+			)
+			return ResponseWrapIterator(result, item_wrap_cb)
+		return wrapper2
+	return wrapper1
 
 
 def returns_no_item(func):
 	@functools.wraps(func)
 	def wrapper(*args, **kwargs):
 		result = func(*args, **kwargs)
-		if isinstance(result, (list, bytes)):
-			assert len(result) == 0, ("Called IPFS HTTP-Client function should "
-			                          "never return an item")
+		if isinstance(result, (list, bytes, object)):
+			assert not result, ("Called IPFS HTTP-Client function should never "
+			                    "return a non-empty item")
 			return
 		assert kwargs.get("stream", False), ("Called IPFS HTTP-Client function "
-		                                     "should only ever return a list "
-		                                     "or bytes, when not streaming a "
+		                                     "should only ever return an empty "
+		                                     "object, when not  streaming a "
 		                                     "response")
 		return result
 	return wrapper
