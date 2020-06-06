@@ -102,3 +102,30 @@ def test_patch_set_data(client):
 		conftest.TEST_DIR / "fake_dir" / "popoiopiu"
 	)
 	assert result == {"Hash": "QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G"}
+
+
+def test_diff_same(client):
+	"""Warning, this test depends on the contents of
+		test/functional/fake_dir/popoiopiu
+	"""
+	result = client.object.diff(
+		"QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n",
+		"QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n"
+	)
+	assert result == {'Changes': []}
+
+
+def test_diff_different_files(client):
+	"""Warning, this test depends on the contents of
+		test/functional/fake_dir/fsdfgh
+		test/functional/fake_dir/popoiopiu
+	"""
+	result = client.object.diff(
+		"QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n",
+		"QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G"
+	)
+	assert result == {'Changes': [{
+		'Type': 2,
+		'Path': '',
+		'Before': {'/': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'},
+		'After': {'/': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'}}]}
