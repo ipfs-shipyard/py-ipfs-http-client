@@ -368,9 +368,9 @@ class Section(base.SectionBase):
 		Parameters
 		----------
 		a : Union[str, cid.CIDv0, cid.CIDv1]
-			Key of the object to retrieve, in CID format
+			Key of object a for comparison
 		b : Union[str, cid.CIDv0, cid.CIDv1]
-			Key of the object to retrieve, in CID format
+			Key of object b for comparison
 
 		Returns
 		-------
