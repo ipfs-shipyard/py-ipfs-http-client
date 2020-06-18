@@ -3,7 +3,7 @@ requires = ["flit-core >=2,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.metadata]
-module = "ipfshttpclient"
+module = "ipfshttpclient4ipwb"
 
 author       = "py-ipfs-http-client team"
 author-email = ""
