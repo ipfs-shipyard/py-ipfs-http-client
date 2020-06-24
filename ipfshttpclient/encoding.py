@@ -1,81 +1,54 @@
-"""Defines encoding related classes.
-
-.. note::
-
-	The XML and ProtoBuf encoders are currently not functional.
-"""
-
-
+"""Classes for encoding and decoding datastreams into object values"""
 import abc
 import codecs
+import typing as ty
 import json
 
 from . import exceptions
 
 
-class Encoding:
-	"""Abstract base for a data parser/encoder interface.
-	"""
-	__metaclass__ = abc.ABCMeta
+T_co = ty.TypeVar("T_co", covariant=True)
 
-	is_stream = False
 
+def empty_gen() -> ty.Generator[T_co, None, None]:
+	"""A generator that yields nothing"""
+	if False:  # pragma: no branch
+		yield ty.cast(T_co, None)
+
+
+class Encoding(ty.Generic[T_co], metaclass=abc.ABCMeta):
+	"""Abstract base for a data parser/encoder interface"""
+	#name: str
+	is_stream = False  # type: bool
+	
 	@abc.abstractmethod
-	def parse_partial(self, raw):
+	def parse_partial(self, raw: bytes) -> ty.Generator[T_co, ty.Any, ty.Any]:
 		"""Parses the given data and yields all complete data sets that can
 		be built from this.
-
+		
 		Raises
 		------
 		~ipfshttpclient.exceptions.DecodingError
-
+		
 		Parameters
 		----------
-		raw : bytes
+		raw
 			Data to be parsed
-
-		Returns
-		-------
-			generator
 		"""
-
-	def parse_finalize(self):
+	
+	def parse_finalize(self) -> ty.Generator[T_co, ty.Any, ty.Any]:
 		"""Finalizes parsing based on remaining buffered data and yields the
-		remaining data sets.
-
+		remaining data sets
+		
 		Raises
 		------
 		   ~ipfshttpclient.exceptions.DecodingError
-
-		Returns
-		-------
-			generator
 		"""
-		return ()
-
-	def parse(self, raw):
-		"""Returns a Python object decoded from the bytes of this encoding.
-
-		Raises
-		------
-		~ipfshttpclient.exceptions.DecodingError
-
-		Parameters
-		----------
-		raw : bytes
-			Data to be parsed
-
-		Returns
-		-------
-			object
-		"""
-		results = list(self.parse_partial(raw))
-		results.extend(self.parse_finalize())
-		return results[0] if len(results) == 1 else results
-
+		return empty_gen()
+	
 	@abc.abstractmethod
-	def encode(self, obj):
-		"""Serialize a raw object into corresponding encoding.
+	def encode(self, obj: T_co) -> bytes:
+		"""Serializes the given Python object to a bytes string
 
 		Raises
 		------
@@ -83,73 +56,59 @@ class Encoding:
 
 		Parameters
 		----------
-		obj : object
+		obj
 			Object to be encoded
 		"""
 
 
-class Dummy(Encoding):
-	"""Dummy parser/encoder that does nothing.
-	"""
+class Dummy(Encoding[bytes]):
+	"""Dummy parser/encoder that does nothing"""
 	name = "none"
 	is_stream = True
-
-	def parse_partial(self, raw):
-		"""Yields the data passed into this method.
-
+	
+	def parse_partial(self, raw: bytes) -> bytes:
+		"""Yields the data passed into this method
+		
 		Parameters
 		----------
-		raw : bytes
+		raw
 			Any kind of data
-
-		Returns
-		-------
-			generator
 		"""
 		yield raw
-
-	def encode(self, obj):
+	
+	def encode(self, obj: bytes) -> bytes:
 		"""Returns the bytes representation of the data passed into this
-		function.
-
+		function
+		
 		Parameters
 		----------
-		obj : object
+		obj
 			Any Python object
-
-		Returns
-		-------
-			bytes
 		"""
-		return str(obj).encode()
+		return obj
 
 
-class Json(Encoding):
-	"""JSON parser/encoder that handles concatenated JSON.
-	"""
+class Json(Encoding[object]):
+	"""JSON parser/encoder that handles concatenated JSON"""
 	name = 'json'
-
+	
 	def __init__(self):
-		self._buffer    = []
+		self._buffer    = []  # type: ty.List[str]
 		self._decoder1  = codecs.getincrementaldecoder('utf-8')()
 		self._decoder2  = json.JSONDecoder()
-		self._lasterror = None
-
-	def parse_partial(self, data):
+		self._lasterror = None  # type: ty.Optional[ValueError]
+	
+	def parse_partial(self, data: bytes) -> ty.Generator[object, ty.Any, ty.Any]:
 		"""Incrementally decodes JSON data sets into Python objects.
-
+		
 		Raises
 		------
 		~ipfshttpclient.exceptions.DecodingError
-
-		Returns
-		-------
-			generator
 		"""
 		try:
 			# Python requires all JSON data to text strings
 			lines = self._decoder1.decode(data, False).split("\n")
-
+			
 			# Add first input line to last buffer line, if applicable, to
 			# handle cases where the JSON string has been chopped in half
 			# at the network level due to streaming
@@ -160,7 +119,7 @@ class Json(Encoding):
 				self._buffer.extend(lines)
 		except UnicodeDecodeError as error:
 			raise exceptions.DecodingError('json', error) from error
-
+		
 		# Process data buffer
 		index = 0
 		try:
@@ -175,17 +134,21 @@ class Json(Encoding):
 					#PERF: `.lstrip()` does not reallocate if the string does
 					#      not actually start with whitespace.
 					self._buffer[index] = self._buffer[index].lstrip()
-
+					
 					# Handle case where the remainder of the line contained
 					# only whitespace
 					if not self._buffer[index]:
 						self._buffer[index] = None
 						continue
-
+					
 					# Try decoding the partial data buffer and return results
 					# from this
+					#
+					# Use `pragma: no branch` as the final loop iteration will always
+					# raise if parsing didn't work out, rather then falling through
+					# to the `yield obj` line.
 					data = self._buffer[index]
-					for index2 in range(index, len(self._buffer)):
+					for index2 in range(index, len(self._buffer)):  # pragma: no branch
 						# If decoding doesn't succeed with the currently
 						# selected buffer (very unlikely with our current
 						# class of input data) then retry with appending
@@ -194,7 +157,7 @@ class Json(Encoding):
 						# arbitrary new-lines: "{1:\n2,\n3:4}"
 						if index2 > index:
 							data += "\n" + self._buffer[index2]
-
+						
 						try:
 							(obj, offset) = self._decoder2.raw_decode(data)
 						except ValueError:
@@ -205,7 +168,7 @@ class Json(Encoding):
 						else:
 							index = index2
 							break
-
+					
 					# Decoding succeeded – yield result and shorten buffer
 					yield obj
 					if offset < len(self._buffer[index]):
@@ -225,18 +188,14 @@ class Json(Encoding):
 		finally:
 			# Remove all processed buffers
 			del self._buffer[0:index]
-
-	def parse_finalize(self):
+	
+	def parse_finalize(self) -> ty.Generator[object, ty.Any, ty.Any]:
 		"""Raises errors for incomplete buffered data that could not be parsed
 		because the end of the input data has been reached.
-
+		
 		Raises
 		------
 		~ipfshttpclient.exceptions.DecodingError
-
-		Returns
-		-------
-			tuple : Always empty
 		"""
 		try:
 			try:
@@ -254,24 +213,20 @@ class Json(Encoding):
 			self._buffer    = []
 			self._lasterror = None
 			self._decoder1.reset()
-
-		return ()
-
-	def encode(self, obj):
-		"""Returns ``obj`` serialized as JSON formatted bytes.
-
+		
+		return empty_gen()
+	
+	def encode(self, obj: object) -> bytes:
+		"""Returns ``obj`` serialized as JSON formatted bytes
+		
 		Raises
 		------
 		~ipfshttpclient.exceptions.EncodingError
-
+		
 		Parameters
 		----------
-		obj : Union[str, list, dict, int]
+		obj
 			JSON serializable Python object
-
-		Returns
-		-------
-			bytes
 		"""
 		try:
 			result = json.dumps(obj, sort_keys=True, indent=None,
@@ -281,42 +236,38 @@ class Json(Encoding):
 			raise exceptions.EncodingError('json', error) from error
 
 
-class Protobuf(Encoding):
-	"""Protobuf parser/encoder that handles protobuf."""
-	name = 'protobuf'
-
-
-class Xml(Encoding):
-	"""XML parser/encoder that handles XML."""
-	name = 'xml'
-
-
 # encodings supported by the IPFS api (default is JSON)
 __encodings = {
 	Dummy.name: Dummy,
 	Json.name: Json,
-	Protobuf.name: Protobuf,
-	Xml.name: Xml
 }
 
 
-def get_encoding(name):
+if ty.TYPE_CHECKING:
+	@ty.overload
+	def get_encoding(name: ty.Literal["none"]) -> Dummy:
+		...
+	
+	@ty.overload
+	def get_encoding(name: ty.Literal["json"]) -> Json:
+		...
+
+
+def get_encoding(name: str) -> Encoding[ty.Any]:
 	"""
 	Returns an Encoder object for the named encoding
-
+	
 	Raises
 	------
 	~ipfshttpclient.exceptions.EncoderMissingError
-
+	
 	Parameters
 	----------
 	name : str
 		Encoding name. Supported options:
-
+		
 		 * ``"none"``
 		 * ``"json"``
-		 * ``"protobuf"``
-		 * ``"xml"``
 	"""
 	try:
 		return __encodings[name.lower()]()
