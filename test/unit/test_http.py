@@ -103,6 +103,15 @@ def test_stream(http_client, http_server):
 	
 	res = http_client.request("/okay", stream=True)
 	assert next(res) == b"okay"
+	
+	# Check iterator fuse
+	with pytest.raises(StopIteration):
+		next(res)
+	with pytest.raises(StopIteration):
+		next(res)
+	with pytest.raises(StopIteration):
+		next(res)
+
 
 def test_cat(http_client, http_server):
 	"""Tests that paths ending in /cat are not parsed."""
@@ -216,7 +225,7 @@ def test_basic_auth(http_client, http_server):
 	http_server.serve_content("okay", 200)
 	del http_server.requests[:]
 	
-	http_client.request("/okay", username="hallo", password="welt")
+	http_client.request("/okay", auth=("hallo", "welt"))
 	
 	request_auth = http_server.requests[0].authorization
 	assert request_auth.username == "hallo" and request_auth.password == "welt"

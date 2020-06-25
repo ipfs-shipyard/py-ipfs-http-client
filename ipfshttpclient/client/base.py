@@ -209,7 +209,7 @@ class ClientBase:
 	"""
 	Parameters
 	----------
-	addr : Union[bytes, str, multiaddr.Multiaddr]
+	addr
 		The `Multiaddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
 		API daemon location, as used in the *API* key of `go-ipfs Addresses
 		section
@@ -222,32 +222,64 @@ class ClientBase:
 		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
 		
 		Additional forms (proxying) may be supported in the future.
-	base : str
+	base
 		The HTTP URL path prefix (or “base”) at which the API is exposed on the
 		API daemon
-	username : str
-		HTTP basic authentication username to send to the API daemon
-	password : str
-		HTTP basic authentication password to send to the API daemon
-	chunk_size : int
-		The size of the chunks to break uploaded files and text content into
-	session : bool
+	chunk_size
+		The size of data chunks passed to the operating system when uploading
+		files or text/binary content
+	offline
+		Ask daemon to operate in “offline mode” – that is, it should not consult
+		the network when unable to find resources locally, but fail instead
+	session
 		Create this :class:`~ipfshttpclient.Client` instance with a session
 		already open? (Useful for long-running client objects.)
+	auth
+		HTTP basic authentication `(username, password)` tuple to send along with
+		each request to the API daemon
+	cookies
+		HTTP cookies to send along with each request to the API daemon
+	headers
+		Custom HTTP headers to send along with each request to the API daemon
+	timeout
+		Connection timeout (in seconds) when connecting to the API daemon
+		
+		If a tuple is passed its contents will be interpreted as the values for
+		the connecting and receiving phases respectively, otherwise the value will
+		apply to both phases.
+		
+		The default value is implementation-defined. A value of `math.inf`
+		disables the respective timeout.
 	"""
-
-	_clientfactory = http.HTTPClient
-
-	def __init__(self, addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
-	             username=None, password=None,
-	             chunk_size=multipart.default_chunk_size,
-	             session=False, **defaults):
+	
+	def __init__(
+			self,
+			addr: http.addr_t = DEFAULT_ADDR,
+			base: str = DEFAULT_BASE, *,
+			
+			chunk_size: int = multipart.default_chunk_size,
+			offline: bool = False,
+			session: bool = False,
+			
+			auth: http.auth_t = None,
+			cookies: http.cookies_t = None,
+			headers: http.headers_t = {},
+			timeout: http.timeout_t = 120,
+			
+			# Backward-compat
+			username: ty.Optional[str] = None,
+			password: ty.Optional[str] = None
+	):
 		"""Connects to the API port of an IPFS node."""
 		
 		self.chunk_size = chunk_size
 		
-		self._client = self._clientfactory(
-			addr, base, username=username, password=password, **defaults
+		if auth is None and (username or password):
+			auth = (username, password)
+		
+		self._client = http.HTTPClient(
+			addr, base, offline=offline,
+			auth=auth, cookies=cookies, headers=headers, timeout=timeout,
 		)
 		if session:
 			self._client.open_session()
