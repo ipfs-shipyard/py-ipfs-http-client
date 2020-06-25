@@ -8,6 +8,7 @@ py-ipfs-http-client 0.5.0 (XX.05.2020)
  * Most functions previously returning a dict with the raw JSON response, now return a custom mapping type instead
     * This mapping type supports the original getitem syntax (`result["ItemName"]`) unchanged, but if you need an actual dictionary object you need to call `.as_json()` on it
     * In the future response-specific subtypes with Pythonic accessors and object specific methods will hopefully be added
+ * HTTP basic authentication data to send to the API daemon must now be set as an `auth=(username, password)` tuple rather than using separate `username=` and `password=` parameters
 
 Other changes:
 

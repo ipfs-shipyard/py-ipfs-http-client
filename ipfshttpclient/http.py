@@ -7,9 +7,11 @@ by an asynchronous version.
 import abc
 import functools
 import http.client
-import tarfile
+import math
 import os
 import socket
+import tarfile
+import typing as ty
 import urllib.parse
 
 import multiaddr
@@ -24,6 +26,23 @@ if PATCH_REQUESTS:
 	from . import requests_wrapper as requests
 else:  # pragma: no cover (always enabled in production)
 	import requests
+
+T_co = ty.TypeVar("T_co", covariant=True)
+
+addr_t = ty.Union[multiaddr.Multiaddr, bytes, str]
+auth_t = ty.Optional[ty.Tuple[ty.Union[str, bytes], ty.Union[str, bytes]]]
+cookies_t = ty.Optional[ty.Union[
+	"http.cookiejar.CookieJar",
+	ty.Dict[str, str]
+]]
+headers_t = ty.Dict[str, str]
+params_t = ty.Optional[ty.Sequence[ty.Tuple[str, str]]]
+reqdata_sync_t = ty.Optional[ty.Iterator[bytes]]
+timeout_t = ty.Optional[ty.Union[
+	float,
+	ty.Tuple[float, float],
+]]
+workarounds_t = ty.Optional[ty.Set[str]]
 
 
 def pass_defaults(func):
@@ -49,26 +68,28 @@ def _notify_stream_iter_closed():
 	pass  # Mocked by unit tests to determine check for proper closing
 
 
-class StreamDecodeIterator:
+class StreamDecodeIterator(ty.Generic[T_co]):
 	"""
 	Wrapper around `Iterable` that allows the iterable to be used in a
 	context manager (`with`-statement) allowing for easy cleanup.
 	"""
-	def __init__(self, response, parser):
-		self._response = response
-		self._parser   = parser
-		self._response_iter = response.iter_content(chunk_size=None)
-		self._parser_iter   = None
+	def __init__(self, response: requests.Response, parser: encoding.Encoding[T_co]):
+		response_iter = response.iter_content(chunk_size=None)
+		
+		self._response = response  # type: ty.Optional[requests.Response]
+		self._parser   = parser  # type: ty.Optional[encoding.Encoding[T_co]]
+		self._response_iter = response_iter  # type: ty.Optional[ty.Generator[bytes, ty.Any, ty.Any]]
+		self._parser_iter   = None  # type: ty.Optional[ty.Generator[bytes, ty.Any, ty.Any]]
 
-	def __iter__(self):
+	def __iter__(self) -> "StreamDecodeIterator[T_co]":
 		return self
 
-	def __next__(self):
+	def __next__(self) -> T_co:
 		while True:
 			# Try reading for current parser iterator
 			if self._parser_iter is not None:
 				try:
-					result = next(self._parser_iter)
+					result = next(self._parser_iter)  # type: T_co
 					
 					# Detect late error messages that occured after some data
 					# has already been sent
@@ -85,8 +106,12 @@ class StreamDecodeIterator:
 					if self._response_iter is None:
 						raise
 
+			# Iterator fuse to prevent crash after EOS/.close()
+			if self._response_iter is None:
+				raise StopIteration()
+
 			try:
-				data = next(self._response_iter)
+				data = next(self._response_iter)  # type: bytes
 
 				# Create new parser iterator using the newly recieved data
 				self._parser_iter = iter(self._parser.parse_partial(data))
@@ -96,13 +121,13 @@ class StreamDecodeIterator:
 				self._response_iter = None
 				self._parser_iter   = iter(self._parser.parse_finalize())
 	
-	def __enter__(self):
+	def __enter__(self) -> "StreamDecodeIterator[T_co]":
 		return self
 	
-	def __exit__(self, *a):
+	def __exit__(self, *a) -> None:
 		self.close()
 	
-	def close(self):
+	def close(self) -> None:
 		# Clean up any open iterators first
 		if self._response_iter is not None:
 			self._response_iter.close()
@@ -120,7 +145,21 @@ class StreamDecodeIterator:
 		_notify_stream_iter_closed()
 
 
-def stream_decode_full(response, parser):
+
+if ty.TYPE_CHECKING:
+	@ty.overload
+	def stream_decode_full(
+			response: Closable,
+			response_iter: ty.Generator[bytes, ty.Any, ty.Any],
+			parser: encoding.Dummy
+	) -> bytes:
+		...
+
+
+def stream_decode_full(
+		response: requests.Response,
+		parser: encoding.Encoding[T_co]
+) -> ty.List[T_co]:
 	with StreamDecodeIterator(response, parser) as response_iter:
 		# Collect all responses
 		result = list(response_iter)
@@ -273,22 +312,34 @@ class HTTPClient:
 				raise exceptions.ErrorResponse(msg, error) from error
 			else:
 				raise exceptions.StatusError(error) from error
-
-	def _request(self, url, params, stream=False, files=None,
-	             headers={}, username=None, password=None, data=None,
-	             timeout=120, return_result=True):
-		auth = None
-		if username or password:
-			auth = (username, password)
-		
+	
+	def _request(
+			self, url: str, params: ty.Sequence[ty.Tuple[str, str]],
+			stream: bool = False,
+			return_result: bool = True,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = {},
+			timeout: timeout_t = 120,
+	) -> requests.Response:
 		# HTTP method must always be "POST"
 		method = "POST"
 		if "use_http_head_for_no_result" in self.workarounds and not return_result:
 			method = "HEAD"
 		
+		if timeout is not None:
+			if isinstance(timeout, tuple) and len(timeout) == 2:
+				timeout = (
+					timeout[0] if timeout[0] < math.inf else None,
+					timeout[1] if timeout[1] < math.inf else None,
+				)
+			else:
+				timeout = timeout if timeout < math.inf else None
+		
 		# Do HTTP request (synchronously)
 		res = self._do_request(method, url, params=params, stream=stream,
-		                       files=files, headers=headers, auth=auth,
+		                       headers=headers, auth=auth, cookies=cookies,
 		                       data=data, timeout=timeout)
 		
 		# Raise exception for response status
@@ -296,12 +347,99 @@ class HTTPClient:
 		self._do_raise_for_status(res)
 		
 		return res
-
+	
+	#XXX: There must be a way to make the following shorter…
+	if ty.TYPE_CHECKING:
+		from typing_extensions import Literal as ty_Literal
+		
+		@ty.overload
+		def request(
+				self, path: str,
+				args: ty.Sequence[str] = [], *,
+				opts: ty.Mapping[str, str] = {},
+				decoder: str = "none",
+				stream: bool = False,
+				offline: bool = False,
+				return_result: ty_Literal[False],
+				auth: auth_t = None,
+				cookies: cookies_t = None,
+				data: reqdata_sync_t = None,
+				headers: headers_t = {},
+				timeout: timeout_t = None
+		) -> None:
+			...
+		
+		@ty.overload
+		def request(
+				self, path: str,
+				args: ty.Sequence[str] = [], *,
+				opts: ty.Mapping[str, str] = {},
+				decoder: ty_Literal["none"] = "none",
+				stream: ty_Literal[False] = False,
+				offline: bool = False,
+				return_result: ty_Literal[True] = True,
+				auth: auth_t = None,
+				cookies: cookies_t = None,
+				data: reqdata_sync_t = None,
+				headers: headers_t = {},
+				timeout: timeout_t = None
+		) -> bytes:
+			...
+		
+		@ty.overload
+		def request(
+				self, path: str,
+				args: ty.Sequence[str] = [], *,
+				opts: ty.Mapping[str, str] = {},
+				decoder: ty_Literal["none"] = "none",
+				stream: ty_Literal[True],
+				offline: bool = False,
+				return_result: ty_Literal[True] = True,
+				auth: auth_t = None,
+				cookies: cookies_t = None,
+				data: reqdata_sync_t = None,
+				headers: headers_t = {},
+				timeout: timeout_t = None
+		) -> StreamDecodeIterator[bytes]:
+			...
+		
+		@ty.overload
+		def request(
+				self, path: str,
+				args: ty.Sequence[str] = [], *,
+				opts: ty.Mapping[str, str] = {},
+				decoder: ty_Literal["json"],
+				stream: ty_Literal[False] = False,
+				offline: bool = False,
+				return_result: ty_Literal[True] = True,
+				auth: auth_t = None,
+				cookies: cookies_t = None,
+				data: reqdata_sync_t = None,
+				headers: headers_t = {},
+				timeout: timeout_t = None
+		) -> ty.List[object]:
+			...
+	
 	@pass_defaults
-	def request(self, path,
-	            args=[], files=[], opts={}, stream=False, data=None,
-	            decoder=None, headers={}, username=None, password=None,
-	            timeout=120, offline=False, return_result=True):
+	def request(
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			opts: ty.Mapping[str, str] = {},
+			decoder: str = "none",
+			stream: bool = False,
+			offline: bool = False,
+			return_result: bool = True,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = {},
+			timeout: timeout_t = None
+	) -> ty.Optional[ty.Union[  # noqa: ET122 (false positive)
+		StreamDecodeIterator[bytes],
+		StreamDecodeIterator[object],
+		bytes,
+		ty.List[object],
+	]]:
 		"""Makes an HTTP request to the IPFS daemon.
 
 		This function returns the contents of the HTTP response from the IPFS
@@ -317,33 +455,36 @@ class HTTPClient:
 
 		Parameters
 		----------
-		path : str
-			The REST command path to send
-		args : list
-			Positional parameters to be sent along with the HTTP request
-		files : Union[str, io.RawIOBase, collections.abc.Iterable]
-			The file object(s) or path(s) to stream to the daemon
-		opts : dict
-			Query string paramters to be sent along with the HTTP request
-		decoder : str
+		path
+			The command path relative to the given base
+		decoder
 			The encoder to use to parse the HTTP response
-		headers : Union[Dict[str, str], Sequence[Tuple[str, str]]]
+		stream
+			Whether to return an iterable yielding the received items incrementally
+			instead of receiving and decoding all items up-front before returning
+			them
+		args
+			Positional parameters to be sent along with the HTTP request
+		opts
+			Query string paramters to be sent along with the HTTP request
+		offline
+			Whether to request to daemon to handle this request in “offline-mode”
+		return_result
+			Whether to decode the values received from the daemon
+		auth
+			Authentication data to send along with this request as
+			``(username, password)`` tuple
+		cookies
+			HTTP cookies to send along with each request to the API daemon
+		data
+			Iterable yielding data to stream from the client to the daemon
+		headers
 			Custom HTTP headers to pass send along with the request
-		username : str
-			HTTP basic authentication username to send
-		password : str
-			HTTP basic authentication password to send
-		timeout : float
+		timeout
 			How many seconds to wait for the server to send data
 			before giving up
 			
-			Defaults to 120
-		offline : bool
-			Execute request in offline mode, i.e. locally without accessing
-			the network.
-		return_result : bool
-			Defaults to True. If the return is not relevant, such as in gc(),
-			passing False will return None and avoid downloading results.
+			Set this to :py:`math.inf` to disable timeouts entirely.
 		"""
 		url = self.base + path
 
@@ -364,8 +505,8 @@ class HTTPClient:
 
 		parser = encoding.get_encoding(decoder if decoder else "none")
 		
-		res = self._request(url, params, stream, files, headers,
-		                    username, password, data, timeout, return_result)
+		res = self._request(url, params, stream, return_result,
+		                    auth, cookies, data, headers, timeout)
 		
 		if not return_result:
 			return None
@@ -377,9 +518,18 @@ class HTTPClient:
 			return stream_decode_full(res, parser)
 
 	@pass_defaults
-	def download(self, path, args=[], filepath=None, opts={},
-	             compress=True, headers={}, username=None,
-	             password=None, timeout=120, offline=False):
+	def download(
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			filepath: ty.Optional[str] = None,
+			opts: ty.Mapping[str, str] = {},
+			compress: bool = False,
+			offline: bool = False,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			headers: headers_t = {},
+			timeout: timeout_t = 120
+	) -> None:
 		"""Makes a request to the IPFS daemon to download a file.
 
 		Downloads a file or files from IPFS into the current working
@@ -395,33 +545,39 @@ class HTTPClient:
 
 		Parameters
 		----------
-		path : str
-			The REST command path to send
-		filepath : str
-			The local path where IPFS will store downloaded files
-
-			Defaults to the current working directory.
-		args : list
+		path
+			The command path relative to the given base
+		args
 			Positional parameters to be sent along with the HTTP request
-		opts : dict
+		filepath
+			The local path where IPFS will store downloaded files
+			
+			Defaults to the current working directory.
+		opts
 			Query string paramters to be sent along with the HTTP request
-		compress : bool
+		compress
 			Whether the downloaded file should be GZip compressed by the
 			daemon before being sent to the client
-		headers : Union[Dict[str, str], Sequence[Tuple[str, str]]]
+			
+			This may greatly speed up things if data is sent across slower networks
+			like the internet but is a major bottleneck when communicating with the
+			daemon on ``localhost``.
+		offline
+			Whether to request to daemon to handle this request in “offline-mode”
+		return_result
+			Whether to decode the values received from the daemon
+		auth
+			Authentication data to send along with this request as
+			``(username, password)`` tuple
+		cookies
+			HTTP cookies to send along with each request to the API daemon
+		headers
 			Custom HTTP headers to pass send along with the request
-		username : str
-			HTTP basic authentication username to send
-		password : str
-			HTTP basic authentication password to send
-		timeout : float
+		timeout
 			How many seconds to wait for the server to send data
 			before giving up
 			
-			Defaults to 120
-		offline : bool
-			Execute request in offline mode, i.e. locally without accessing
-			the network.
+			Set this to :py:`math.inf` to disable timeouts entirely.
 		"""
 		url = self.base + path
 		wd = filepath or '.'
@@ -440,7 +596,7 @@ class HTTPClient:
 			params.append(('arg', arg))
 		
 		res = self._request(url, params, stream=True, headers=headers,
-		                    username=username, password=password, timeout=timeout)
+		                    auth=auth, cookies=cookies, timeout=timeout)
 		
 		# try to stream download as a tar file stream
 		mode = 'r|gz' if compress else 'r|'

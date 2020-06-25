@@ -6,6 +6,7 @@ Classes:
 """
 
 import os
+import typing as ty
 import warnings
 
 import multiaddr
@@ -35,7 +36,7 @@ from . import repo
 from . import swarm
 from . import unstable
 
-from .. import encoding, exceptions, multipart, utils
+from .. import encoding, exceptions, http, multipart, utils
 
 
 def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, blacklist=VERSION_BLACKLIST):
@@ -69,12 +70,27 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 			raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
-def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
-            chunk_size=multipart.default_chunk_size,
-            session=False, **defaults):
+def connect(
+		addr: http.addr_t = DEFAULT_ADDR,
+		base: str = DEFAULT_BASE, *,
+		
+		chunk_size: int = multipart.default_chunk_size,
+		offline: bool = False,
+		session: bool = False,
+		
+		auth: http.auth_t = None,
+		cookies: http.cookies_t = None,
+		headers: http.headers_t = {},
+		timeout: http.timeout_t = 120,
+		
+		# Backward-compat
+		username: ty.Optional[str] = None,
+		password: ty.Optional[str] = None
+):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
-	daemon to validate that its version is supported.
-
+	daemon to validate that its version is supported as well as applying any
+	known workarounds for the given daemon version
+	
 	Raises
 	------
 	~ipfshttpclient.exceptions.VersionMismatch
@@ -88,7 +104,12 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
 	:class:`~ipfshttpclient.Client` class.
 	"""
 	# Create client instance
-	client = Client(addr, base, chunk_size=chunk_size, session=session, **defaults)
+	client = Client(
+		addr, base,
+		chunk_size=chunk_size, offline=offline, session=session,
+		auth=auth, cookies=cookies, headers=headers, timeout=timeout,
+		username=username, password=password,
+	)
 	
 	# Query version number from daemon and validate it
 	assert_version(client.apply_workarounds()["Version"])
