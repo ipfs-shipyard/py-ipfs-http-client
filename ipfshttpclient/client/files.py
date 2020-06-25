@@ -366,18 +366,20 @@ class Base(base.ClientBase):
 	
 	
 	@base.returns_no_item
-	def get(self, cid, **kwargs):
-		"""Downloads a file, or directory of files from IPFS.
-
-		Files are placed in the current working directory.
-
+	def get(self, cid, target: utils.path_t = ".", **kwargs):
+		"""Downloads a file, or directory of files from IPFS
+		
 		Parameters
 		----------
 		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The path to the IPFS object(s) to be outputted
+		target
+			The directory to place the downloaded files in
+			
+			Defaults to the current working directory.
 		"""
 		args = (str(cid),)
-		return self._client.download('/get', args, **kwargs)
+		return self._client.download('/get', target, args, **kwargs)
 	
 	
 	def cat(self, cid, offset=0, length=-1, **kwargs):

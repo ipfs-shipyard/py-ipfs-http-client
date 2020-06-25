@@ -1,6 +1,7 @@
 import os
 import shutil
 import sys
+import tempfile
 
 import pytest
 import pytest_cid
@@ -403,6 +404,16 @@ def test_get_path(client, cleanup_pins):
 		assert "fsdfgh" in os.listdir(os.getcwd())
 	finally:
 		os.remove("fsdfgh")
+		assert "fsdfgh" not in os.listdir(os.getcwd())
+
+
+@pytest.mark.dependency(depends=["test_add_recursive"])
+def test_get_path_with_target(client, cleanup_pins):
+	test_hash = FAKE_DIR_HASH[0]["Hash"] + "/fsdfgh"
+	
+	with tempfile.TemporaryDirectory() as dirpath:
+		client.get(test_hash, dirpath)
+		assert "fsdfgh" in os.listdir(dirpath)
 		assert "fsdfgh" not in os.listdir(os.getcwd())
 
 
