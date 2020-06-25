@@ -83,30 +83,16 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
 	~ipfshttpclient.exceptions.ProtocolError
 	~ipfshttpclient.exceptions.StatusError
 	~ipfshttpclient.exceptions.TimeoutError
-
-
+	
 	All parameters are identical to those passed to the constructor of the
 	:class:`~ipfshttpclient.Client` class.
-
-	Returns
-	-------
-		:class:`~ipfshttpclient.Client`
 	"""
 	# Create client instance
 	client = Client(addr, base, chunk_size=chunk_size, session=session, **defaults)
-
-	# Query version number from daemon and validate it
-	version_str = client.version()["Version"]
-	assert_version(version_str)
 	
-	# Apply workarounds based on daemon version
-	version = tuple(map(int, version_str.split('-', 1)[0].split('.')))
-	if version < (0, 5):  # pragma: no cover (workaround)
-		# Not really a workaround, but make use of HEAD requests on versions that
-		# support them to speed things up if we are not interested in the response
-		# anyways
-		client._workarounds.add("use_http_head_for_no_result")
-
+	# Query version number from daemon and validate it
+	assert_version(client.apply_workarounds()["Version"])
+	
 	return client
 
 
@@ -202,7 +188,28 @@ class Client(files.Base, miscellaneous.Base):
 	###########
 	# HELPERS #
 	###########
-
+	
+	def apply_workarounds(self):
+		"""Query version information of the referenced daemon and enable any
+		   workarounds known for the corresponding version
+		
+		Returns
+		-------
+		The version information returned by the daemon
+		"""
+		version_info = self.version()
+		
+		version = tuple(map(int, version_info["Version"].split('-', 1)[0].split('.')))
+		
+		self._workarounds.clear()
+		if version < (0, 5):  # pragma: no cover (workaround)
+			# Not really a workaround, but make use of HEAD requests on versions
+			# that support them to speed things up if we are not interested in the
+			# response anyways
+			self._workarounds.add("use_http_head_for_no_result")
+		
+		return version_info
+	
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
 	def add_bytes(self, data, **kwargs):
