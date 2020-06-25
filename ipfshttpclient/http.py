@@ -519,9 +519,8 @@ class HTTPClient:
 
 	@pass_defaults
 	def download(
-			self, path: str,
+			self, path: str, target: utils.path_t = ".",
 			args: ty.Sequence[str] = [], *,
-			filepath: ty.Optional[str] = None,
 			opts: ty.Mapping[str, str] = {},
 			compress: bool = False,
 			offline: bool = False,
@@ -547,12 +546,12 @@ class HTTPClient:
 		----------
 		path
 			The command path relative to the given base
-		args
-			Positional parameters to be sent along with the HTTP request
-		filepath
-			The local path where IPFS will store downloaded files
+		target
+			The local path where downloaded files should be stored at
 			
 			Defaults to the current working directory.
+		args
+			Positional parameters to be sent along with the HTTP request
 		opts
 			Query string paramters to be sent along with the HTTP request
 		compress
@@ -580,7 +579,6 @@ class HTTPClient:
 			Set this to :py:`math.inf` to disable timeouts entirely.
 		"""
 		url = self.base + path
-		wd = filepath or '.'
 
 		params = []
 		params.append(('stream-channels', 'true'))
@@ -602,4 +600,4 @@ class HTTPClient:
 		mode = 'r|gz' if compress else 'r|'
 		
 		with tarfile.open(fileobj=res.raw, mode=mode) as tf:
-			tf.extractall(path=wd)
+			tf.extractall(path=utils.convert_path(target))
