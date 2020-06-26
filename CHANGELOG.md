@@ -18,6 +18,9 @@ Other changes:
     * The new *period_special* parameter allows toggling whether glob patterns match dot-files implicietly and defaults to `True` (previously it was effectively `False`)
     * The new *follow_symlinks* parameter similarily determines whether symbolic links will be followed when scanning directory trees and defaults to `False` (the previous default on Unix, albeit this likely wasn't intentional)
     * `.add()` will now limit its scan to the directories required to match the given glob patterns (passing in regular expression objects will still scan the tree unconditionally however) – custom matchers have full control over which directories are visited
+ * The requests-based HTTP backend has been supplemented by another backend based on [HTTPx](https://www.python-httpx.org/) for Python 3.6+
+    * Due to a minor limitation within the library (no ability to apply address family restrictions during name resolution) this currently included as a preview and must be manually enabled, to do this ensure that the `httpx` library is installed in your Python environment and run your program with the environment variable *PY_IPFS_HTTP_CLIENT_PREFER_HTTPX* set to *yes*.
+    * In the hopefully not too long future, HTTPx will be used to finally provide async/await support for this library.
 
 py-ipfs-http-client 0.4.12 (21.05.2019)
 ---------------------------------------

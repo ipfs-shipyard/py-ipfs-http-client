@@ -1,6 +1,5 @@
 """A module to handle generic operations.
 """
-import collections.abc
 import mimetypes
 import os
 import pathlib
@@ -149,14 +148,3 @@ class return_field:
 			res = cmd(*args, **kwargs)
 			return res[self.field]
 		return wrapper
-
-
-def deep_update(d, u):
-	""" Performs a deep recursive merge/update of u into d.
-	"""
-	for k, v in u.items():
-		if isinstance(v, collections.abc.Mapping):
-			d[k] = deep_update(d.get(k, {}), v)
-		else:
-			d[k] = v
-	return d
