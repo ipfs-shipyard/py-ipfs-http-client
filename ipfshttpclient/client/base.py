@@ -86,10 +86,10 @@ def ident(value: T) -> T:
 
 class ResponseWrapIterator(ty.Generic[T, R]):
 	__slots__ = ("_inner", "_item_wrap_cb")
-	#_inner: http.StreamDecodeIterator
+	#_inner: http.StreamDecodeIteratorSync
 	#_item_wrap_cb: wrap_cb_t
 	
-	def __init__(self, inner: http.StreamDecodeIterator, item_wrap_cb: wrap_cb_t):
+	def __init__(self, inner: http.StreamDecodeIteratorSync, item_wrap_cb: wrap_cb_t):
 		self._inner = inner
 		self._item_wrap_cb = item_wrap_cb
 	
@@ -277,7 +277,7 @@ class ClientBase:
 		if auth is None and (username or password):
 			auth = (username, password)
 		
-		self._client = http.HTTPClient(
+		self._client = http.ClientSync(
 			addr, base, offline=offline,
 			auth=auth, cookies=cookies, headers=headers, timeout=timeout,
 		)

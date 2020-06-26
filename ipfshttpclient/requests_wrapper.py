@@ -198,6 +198,7 @@ class HTTPAdapter(requests.adapters.HTTPAdapter):
 class Session(requests.Session):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		self.family = socket.AF_UNSPEC
 
 		# Additionally to mounting our variant of the usual HTTP and HTTPS
 		# adapter, also mount it for some variants of the default schemes that
@@ -209,7 +210,7 @@ class Session(requests.Session):
 				self.mount("{0}+{1}://".format(scheme, name), adapter)
 
 	def request(self, method, url, *args, **kwargs):
-		family = kwargs.pop("family", socket.AF_UNSPEC)
+		family = kwargs.pop("family", self.family)
 		if family != socket.AF_UNSPEC:
 			# Inject provided address family value as extension to scheme
 			url = urllib.parse.urlparse(url)

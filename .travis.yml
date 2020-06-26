@@ -13,6 +13,8 @@ matrix:
       - python: "3.8"
         env: IPFS_VERSION=compat
       - python: "3.8"
+        env: TOXENV=py3-httpx
+      - python: "3.8"
         env: TOXENV=styleck
         before_install: ":"
      
