@@ -21,6 +21,7 @@ def is_available():  # noqa
 		try:
 			ipfshttpclient.connect()
 		except ipfshttpclient.exceptions.Error as error:
+			print("Failed to connect to IPFS daemon:", error)
 			__is_available = False
 			
 			# Make sure version incompatibility is displayed to users
