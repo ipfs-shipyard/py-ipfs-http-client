@@ -16,7 +16,7 @@ DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
 VERSION_MINIMUM   = "0.4.21"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.6.0"
+VERSION_MAXIMUM   = "0.7.0"
 
 from . import bitswap
 from . import block
