@@ -1,4 +1,4 @@
-py-ipfs-http-client 0.5.0 (XX.05.2020)
+py-ipfs-http-client 0.6.0 (30.06.2020)
 --------------------------------------
 
 **Breaking changes in this release**:
