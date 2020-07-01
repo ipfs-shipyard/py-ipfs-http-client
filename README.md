@@ -1,21 +1,21 @@
 # py-ipfs-http-client
 
 [![Made by the IPFS Community](https://img.shields.io/badge/made%20by-IPFS%20Community-blue.svg?style=flat-square)](https://docs.ipfs.io/community/)
-[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.io/)
 [![IRC #py-ipfs on chat.freenode.net](https://img.shields.io/badge/freenode%20IRC-%23py--ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23py-ipfs)
 [![Matrix #py-ipfs:ninetailed.ninja](https://img.shields.io/matrix/py-ipfs:ninetailed.ninja?color=blue&label=matrix+chat&style=flat-square)](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one)
 [![Standard README Compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![](https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
-[![Build Status](https://travis-ci.org/ipfs/py-ipfs-http-client.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-http-client)
+[![PyPI Package ipfshttpclient](https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
+[![Build Status](https://travis-ci.com/ipfs-shipyard/py-ipfs-http-client.svg?branch=master)](https://travis-ci.com/github/ipfs-shipyard/py-ipfs-http-client)
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
 Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
 
-**Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
-See the [relevant section of the README](#important-changes-from-ipfsapi-04x) for details.
+**Note**: The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
+See the [relevant section of the CHANGELOG](CHANGELOG.md#py-ipfs-http-client-0411-13052019) for details. There is also a `ipfsApi` library from which this library originated that is completely
+unmaintained and does not work with any recent go-IPFS version.
 
-**Note:** This library occasionally has to change to stay compatible with the IPFS HTTP API.
+**Note**: This library occasionally has to change to stay compatible with the IPFS HTTP API.
 Currently, this library is tested against [go-ipfs v0.6.0](https://github.com/ipfs/go-ipfs/releases/tag/v0.6.0).
 We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.22 therefore
 being to oldest supported version at this time.
@@ -28,7 +28,7 @@ being to oldest supported version at this time.
   - [Migrating from 0.4.x to 0.6.0](#migrating-from-04x-to-060)
 - [Featured Projects](#featured-projects)
 - [Contribute](#contribute)
-  - [IRC](#irc)
+  - [Chat (IRC/Matrix)](#chat-ircmatrix)
   - [Bug reports](#bug-reports)
   - [Pull requests](#pull-requests)
 - [License](#license)
@@ -41,7 +41,7 @@ Install with pip:
 pip install ipfshttpclient
 ```
 
-## Development install from Source
+### Development install from Source
 
 ```sh
 # Clone the source repository
@@ -154,14 +154,14 @@ Use an IPFS server with basic auth (replace username and password with real cred
 
 ```py
 >>> import ipfshttpclient
->>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', username="foo", password="bar")
+>>> client = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', auth=("username", "password"))
 ```
 
 Pass custom headers to your IPFS api with each request:
 ```py
 >>> import ipfshttpclient
 >>> headers = {"CustomHeader": "foobar"}
->>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
+>>> client = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
 ```
 
 
@@ -182,7 +182,6 @@ Please see the CHANGELOG for [the minor breaking changes between these releases]
 
 Projects that currently use py-ipfs-http-client. If your project isn't here, feel free to submit a PR to add it!
 
-- [git-remote-ipfs](https://github.com/larsks/git-remote-ipfs) allows users to push and pull git repositories from the IPFS network.
 - [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](https://www.iso.org/standard/44717.html)) files for distributed indexing and replay using IPFS.
 
 ## Contribute
@@ -200,13 +199,13 @@ You can submit bug reports using the [GitHub issue tracker](https://github.com/i
 ### Pull requests
 
 Pull requests are welcome.  Before submitting a new pull request, please
-make sure that your code passes both the [code formatting](https://www.python.org/dev/peps/pep-0008/) check:
+make sure that your code passes both the [code formatting (PEP-8 with tab indentation)](https://www.python.org/dev/peps/pep-0008/) check:
 
-    $ tox -e codestyle
+    $ tox -e styleck
 
 And the unit tests:
 
-    $ tox
+    $ tox -e py3
 
 You can arrange to run the code style tests automatically before each commit by
 installing a `pre-commit` hook:
