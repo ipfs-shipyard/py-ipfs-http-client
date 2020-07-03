@@ -50,7 +50,7 @@ class Section(base.SectionBase):
 	#TODO: Add `flush(path="/")`
 
 
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def ls(self, path, **kwargs):
 		"""Lists contents of a directory in the MFS.
 
@@ -170,7 +170,7 @@ class Section(base.SectionBase):
 		return self._client.request('/files/rm', args, **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def stat(self, path, **kwargs):
 		"""Returns basic ``stat`` information for an MFS file
 		(including its hash).
@@ -359,22 +359,27 @@ class Base(base.ClientBase):
 		resp = self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)
 		if not multiple and not is_dir and not wrap_with_directory:
 			assert len(resp) == 1
-			return resp[0]
-		return resp
+			return base.ResponseBase(resp[0])
+		elif kwargs.get("stream", False):
+			return base.ResponseWrapIterator(resp, base.ResponseBase)
+		return [base.ResponseBase(v) for v in resp]
 	
 	
-	def get(self, cid, **kwargs):
-		"""Downloads a file, or directory of files from IPFS.
-
-		Files are placed in the current working directory.
-
+	@base.returns_no_item
+	def get(self, cid, target: utils.path_t = ".", **kwargs):
+		"""Downloads a file, or directory of files from IPFS
+		
 		Parameters
 		----------
 		cid : Union[str, cid.CIDv0, cid.CIDv1]
 			The path to the IPFS object(s) to be outputted
+		target
+			The directory to place the downloaded files in
+			
+			Defaults to the current working directory.
 		"""
 		args = (str(cid),)
-		return self._client.download('/get', args, **kwargs)
+		return self._client.download('/get', target, args, **kwargs)
 	
 	
 	def cat(self, cid, offset=0, length=-1, **kwargs):
@@ -413,7 +418,7 @@ class Base(base.ClientBase):
 		return self._client.request('/cat', args, **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def ls(self, cid, **kwargs):
 		"""Returns a list of objects linked to by the given hash.
 

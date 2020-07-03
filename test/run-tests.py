@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
 import contextlib
+import itertools
 import locale
-import pathlib
 import os
+import pathlib
 import random
 import shutil
 import subprocess
@@ -127,6 +128,18 @@ try:
 	with tempfile.NamedTemporaryFile("r+") as coveragerc:
 		coverage_args = []
 		if os.name != "nt":
+			PREFER_HTTPX = (os.environ.get("PY_IPFS_HTTP_CLIENT_PREFER_HTTPX", "no").lower()
+			                not in ("0", "f", "false", "n", "no"))
+			
+			# Assemble list of files to exclude from coverage analysis
+			omitted_files = [
+				"ipfshttpclient/requests_wrapper.py",
+			]
+			if PREFER_HTTPX and sys.version_info >= (3, 6):
+				omitted_files.append("ipfshttpclient/http_requests.py")
+			else:  #PY35: Fallback to old requests-based code instead of HTTPX
+				omitted_files.append("ipfshttpclient/http_httpx.py")
+			
 			# Assemble list of coverage data exclusion patterns (also escape the
 			# hash sign [#] as it has a special meaning [comment] in the generated
 			# configuration file)
@@ -136,6 +149,9 @@ try:
 				
 				# Ignore typing-only branches
 				r"if\s+(?:[A-Za-z]+\s*[.]\s*)?TYPE_CHECKING\s*:",
+				
+				# Ignore dummy ellipsis expression line
+				r"^\s*\.\.\.\s*$",
 			]
 			if sys.version_info.major == 2:
 				exclusions.append(r"\#PY3")
@@ -151,28 +167,35 @@ try:
 					"|".join(map(str, range(sys.version_info.minor + 1, 20)))
 				))
 			
+			if PREFER_HTTPX and sys.version_info >= (3, 6):
+				exclusions.append(r"\# pragma: http-backend=requests")
+			else:  #PY35: Fallback to old requests-based code instead of HTTPX
+				exclusions.append(r"\# pragma: http-backend=httpx")
+			
 			# Create temporary file with extended *coverage.py* configuration data
-			coveragerc.file.writelines(map(lambda s: s + "\n", [
+			coveragerc.file.writelines(map(lambda s: s + "\n", itertools.chain((
 				"[run]",
 				"omit =",
-				"	ipfshttpclient/requests_wrapper.py",
+			), map(lambda s: "\t" + s, omitted_files),
+			(
 				"[report]",
 				"# Exclude lines specific to some other Python version from coverage",
-				"exclude_lines ="
-			] + list(map(lambda s: "\t" + s, exclusions))))
+				"exclude_lines =",
+			), map(lambda s: "\t" + s, exclusions))))
 			coveragerc.file.flush()
 			
 			coverage_args = [
 				"--cov=ipfshttpclient",
 				"--cov-branch",
 				"--cov-config={0}".format(coveragerc.name),
-				"--cov-fail-under=87",
+				"--no-cov-on-fail",
+				"--cov-fail-under=90",
 				"--cov-report=term",
 				"--cov-report=html:{}".format(str(TEST_PATH / "cov_html")),
 				"--cov-report=xml:{}".format(str(TEST_PATH / "cov.xml")),
 			]
 		
-		# Launch py.test in-process
+		# Launch pytest in-process
 		PYTEST_CODE = pytest.main([
 			"--verbose",
 		] + coverage_args + sys.argv[1:], plugins=[DaemonProcessPlugin()])

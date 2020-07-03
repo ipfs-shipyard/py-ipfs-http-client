@@ -6,6 +6,7 @@ Classes:
 """
 
 import os
+import typing as ty
 import warnings
 
 import multiaddr
@@ -13,9 +14,9 @@ import multiaddr
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
-VERSION_MINIMUM   = "0.4.21"
+VERSION_MINIMUM   = "0.4.22"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.6.0"
+VERSION_MAXIMUM   = "0.7.0"
 
 from . import bitswap
 from . import block
@@ -35,7 +36,7 @@ from . import repo
 from . import swarm
 from . import unstable
 
-from .. import encoding, exceptions, multipart, utils
+from .. import encoding, exceptions, http, multipart, utils
 
 
 def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, blacklist=VERSION_BLACKLIST):
@@ -69,12 +70,27 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 			raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
-def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
-            chunk_size=multipart.default_chunk_size,
-            session=False, **defaults):
+def connect(
+		addr: http.addr_t = DEFAULT_ADDR,
+		base: str = DEFAULT_BASE, *,
+		
+		chunk_size: int = multipart.default_chunk_size,
+		offline: bool = False,
+		session: bool = False,
+		
+		auth: http.auth_t = None,
+		cookies: http.cookies_t = None,
+		headers: http.headers_t = {},
+		timeout: http.timeout_t = 120,
+		
+		# Backward-compat
+		username: ty.Optional[str] = None,
+		password: ty.Optional[str] = None
+):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
-	daemon to validate that its version is supported.
-
+	daemon to validate that its version is supported as well as applying any
+	known workarounds for the given daemon version
+	
 	Raises
 	------
 	~ipfshttpclient.exceptions.VersionMismatch
@@ -83,30 +99,21 @@ def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
 	~ipfshttpclient.exceptions.ProtocolError
 	~ipfshttpclient.exceptions.StatusError
 	~ipfshttpclient.exceptions.TimeoutError
-
-
+	
 	All parameters are identical to those passed to the constructor of the
 	:class:`~ipfshttpclient.Client` class.
-
-	Returns
-	-------
-		:class:`~ipfshttpclient.Client`
 	"""
 	# Create client instance
-	client = Client(addr, base, chunk_size=chunk_size, session=session, **defaults)
-
-	# Query version number from daemon and validate it
-	version_str = client.version()["Version"]
-	assert_version(version_str)
+	client = Client(
+		addr, base,
+		chunk_size=chunk_size, offline=offline, session=session,
+		auth=auth, cookies=cookies, headers=headers, timeout=timeout,
+		username=username, password=password,
+	)
 	
-	# Apply workarounds based on daemon version
-	version = tuple(map(int, version_str.split('-', 1)[0].split('.')))
-	if version < (0, 5):  # pragma: no cover (workaround)
-		# Not really a workaround, but make use of HEAD requests on versions that
-		# support them to speed things up if we are not interested in the response
-		# anyways
-		client._workarounds.add("use_http_head_for_no_result")
-
+	# Query version number from daemon and validate it
+	assert_version(client.apply_workarounds()["Version"])
+	
 	return client
 
 
@@ -202,9 +209,30 @@ class Client(files.Base, miscellaneous.Base):
 	###########
 	# HELPERS #
 	###########
-
+	
+	def apply_workarounds(self):
+		"""Query version information of the referenced daemon and enable any
+		   workarounds known for the corresponding version
+		
+		Returns
+		-------
+		The version information returned by the daemon
+		"""
+		version_info = self.version()
+		
+		version = tuple(map(int, version_info["Version"].split('-', 1)[0].split('.')))
+		
+		self._workarounds.clear()
+		if version < (0, 5):  # pragma: no cover (workaround)
+			# Not really a workaround, but make use of HEAD requests on versions
+			# that support them to speed things up if we are not interested in the
+			# response anyways
+			self._workarounds.add("use_http_head_for_no_result")
+		
+		return version_info
+	
 	@utils.return_field('Hash')
-	@base.returns_single_item
+	@base.returns_single_item(dict)
 	def add_bytes(self, data, **kwargs):
 		"""Adds a set of bytes as a file to IPFS.
 
@@ -230,7 +258,7 @@ class Client(files.Base, miscellaneous.Base):
 		                            data=body, headers=headers, **kwargs)
 
 	@utils.return_field('Hash')
-	@base.returns_single_item
+	@base.returns_single_item(dict)
 	def add_str(self, string, **kwargs):
 		"""Adds a Python string as a file to IPFS.
 
@@ -276,7 +304,7 @@ class Client(files.Base, miscellaneous.Base):
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item()
 	def get_json(self, cid, **kwargs):
 		"""Loads a json object from IPFS.
 

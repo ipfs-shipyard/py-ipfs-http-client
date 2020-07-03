@@ -1,3 +1,4 @@
+import collections.abc
 import conftest
 from threading import Timer
 import time
@@ -41,8 +42,8 @@ def test_log_tail(client):
 		time.sleep(TIME_TO_GC)
 
 		# The log should have been parsed into a dictionary object with
-		# various keys depending on the event that occured.
-		assert type(next(log_tail_iter)) is dict
+		# various keys depending on the event that occurred.
+		assert isinstance(next(log_tail_iter), collections.abc.Mapping)
 
 
 ############

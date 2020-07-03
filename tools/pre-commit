@@ -1,20 +1,53 @@
 #!/bin/sh
+set -eu
 
-if [ "x$1" = "x--install" ]; then
-	top_dir=$(git rev-parse --show-toplevel)
-	git_dir=$(git rev-parse --git-dir)
+PROGNAME="${0}"
 
-	if [ -f "$git_dir/hooks/pre-commit" ]; then
-		echo "ERROR: found existing pre-commit hook; " \
-			"cowardly giving up." >&2
-		exit 1
-	fi
+usage()
+{
+	echo "Usage: ${PROGNAME} [--install]"
+	echo
+	echo "  --install     Install the pre-commit hook"
+	echo "  -h, --help    Display this help and exit"
+	echo
+	echo "Without any options the pre-commit checks are run."
+}
 
-	echo "installing pre-commit hook in $git_dir/hooks"
+if [ $# -gt 0 ];
+then
+	case "${1}" in
+		"--install")
+			top_dir="$(git rev-parse --show-toplevel)"
+			git_dir="$(git rev-parse --git-dir)"
+			
+			if [ -f "${git_dir}/hooks/pre-commit" ];
+			then
+				echo "ERROR: found existing pre-commit hook; " \
+				     "cowardly giving up." >&2
+				exit 1
+			fi
+			
+			echo " • Installing pre-commit hook to ${git_dir}/hooks"
+			ln -s "${top_dir}/tools/pre-commit" "${git_dir}/hooks/pre-commit"
 
-	ln -s $top_dir/tools/pre-commit $git_dir/hooks/pre-commit
-	exit
+			echo " • Enabling GIT hook Unicode support"
+			git config --local --type=bool hooks.allownonascii true
+			exit
+		;;
+
+		"-h"|"--help")
+			usage
+			exit 0
+		;;
+
+		*)
+			echo "${PROGNAME}: Unknown option “${1}”" >&2
+			echo >&2
+			usage >&2
+			exit 2
+		;;
+	esac
 fi
 
-# run code style tests before accepting a commit
-tox -e codestyle
+# Run code style tests before accepting a commit
+tox -e styleck

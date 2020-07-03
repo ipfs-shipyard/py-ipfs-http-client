@@ -2,7 +2,7 @@ from . import base
 
 
 class FiltersSection(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def add(self, address, *addresses, **kwargs):
 		"""Adds a given multiaddr filter to the filter list.
 
@@ -32,7 +32,7 @@ class FiltersSection(base.SectionBase):
 		return self._client.request('/swarm/filters/add', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def rm(self, address, *addresses, **kwargs):
 		"""Removes a given multiaddr filter from the filter list.
 
@@ -66,7 +66,7 @@ class Section(base.SectionBase):
 	filters = base.SectionProperty(FiltersSection)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def addrs(self, **kwargs):
 		"""Returns the addresses of currently connected peers by peer id.
 
@@ -106,7 +106,7 @@ class Section(base.SectionBase):
 		return self._client.request('/swarm/addrs', decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def connect(self, address, *addresses, **kwargs):
 		"""Opens a connection to a given address.
 
@@ -134,7 +134,7 @@ class Section(base.SectionBase):
 		return self._client.request('/swarm/connect', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def disconnect(self, address, *addresses, **kwargs):
 		"""Closes the connection to a given address.
 
@@ -165,7 +165,7 @@ class Section(base.SectionBase):
 		return self._client.request('/swarm/disconnect', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def peers(self, **kwargs):
 		"""Returns the addresses & IDs of currently connected peers.
 

@@ -26,7 +26,7 @@ class SubChannel:
 
 
 class Section(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def ls(self, **kwargs):
 		"""Lists subscribed topics by name
 
@@ -54,7 +54,7 @@ class Section(base.SectionBase):
 		return self._client.request('/pubsub/ls', decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def peers(self, topic=None, **kwargs):
 		"""List the peers we are pubsubbing with.
 

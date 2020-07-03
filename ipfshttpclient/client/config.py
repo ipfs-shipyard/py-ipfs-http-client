@@ -2,7 +2,7 @@ from . import base
 
 
 class Section(base.SectionBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def get(self, **kwargs):
 		#TODO: Support the optional `key` parameter
 		"""Returns the current used server configuration.
@@ -25,7 +25,7 @@ class Section(base.SectionBase):
 		return self._client.request('/config/show', decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def replace(self, config, **kwargs):
 		"""Replaces the existing configuration with a new configuration tree.
 
@@ -35,7 +35,7 @@ class Section(base.SectionBase):
 		return self._client.request('/config/replace', (config,), decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def set(self, key, value=None, **kwargs):
 		"""Add or replace a single configuration value.
 

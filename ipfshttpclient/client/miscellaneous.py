@@ -4,7 +4,7 @@ from .. import exceptions
 
 
 class Base(base.ClientBase):
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def dns(self, domain_name, recursive=False, **kwargs):
 		"""Resolves DNS links to the referenced object.
 
@@ -46,7 +46,7 @@ class Base(base.ClientBase):
 		return self._client.request('/dns', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def id(self, peer=None, **kwargs):
 		"""Shows IPFS Node ID info.
 
@@ -89,6 +89,7 @@ class Base(base.ClientBase):
 	#TODO: isOnline()
 	
 	
+	@base.returns_multiple_items(base.ResponseBase)
 	def ping(self, peer, *peers, count=10, **kwargs):
 		"""Provides round-trip latency information for the routing system.
 		
@@ -126,7 +127,7 @@ class Base(base.ClientBase):
 		return self._client.request('/ping', args, decoder='json', **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def resolve(self, name, recursive=False, **kwargs):
 		"""Accepts an identifier and resolves it to the referenced item.
 		
@@ -173,14 +174,14 @@ class Base(base.ClientBase):
 		another IPFS daemon instance.
 		"""
 		try:
-			return self._client.request('/shutdown')
+			self._client.request('/shutdown')
 		except exceptions.ConnectionError:
 			# Sometimes the daemon kills the connection before sending a
 			# response causing an incorrect `ConnectionError` to bubble
 			pass
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def version(self, **kwargs):
 		"""Returns the software version of the currently connected node.
 		

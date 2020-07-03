@@ -30,7 +30,7 @@ class Section(base.SectionBase):
 		return self._client.request('/block/get', args, **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def put(self, file, **kwargs):
 		"""Stores the contents of the given file object as an IPFS block.
 
@@ -57,7 +57,7 @@ class Section(base.SectionBase):
 		                            headers=headers, **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item(base.ResponseBase)
 	def stat(self, cid, **kwargs):
 		"""Returns a dict with the size of the block with the given hash.
 
