@@ -347,7 +347,8 @@ class Section(base.SectionBase):
 		args = (str(cid),)
 		return self._client.request('/object/stat', args, decoder='json', **kwargs)
 
-	@base.returns_single_item
+
+	@base.returns_single_item(base.ResponseBase)
 	def diff(self, a, b, **kwargs):
 		"""Diff two cids.
 
