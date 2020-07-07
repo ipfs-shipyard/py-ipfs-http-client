@@ -365,7 +365,7 @@ def test_add_subdir_dotfiles_dotstarpattern(client, cleanup_pins):
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_ALMOST_EMPTY_COMPLETE_HASH)
 
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(scope='session')
 def test_add_recursive(client, cleanup_pins):
 	res = client.add(FAKE_DIR_PATH, recursive=True)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_HASH)

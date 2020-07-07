@@ -346,3 +346,36 @@ class Section(base.SectionBase):
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/stat', args, decoder='json', **kwargs)
+
+
+	@base.returns_single_item(base.ResponseBase)
+	def diff(self, a, b, **kwargs):
+		"""Diff two cids.
+
+		.. code-block:: python
+
+			>>> client.object.diff(
+					'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n',
+			        'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'
+				)
+			{'Changes': [{
+				'Type': 2,
+				'Path': '',
+				'Before':
+					{'/': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'},
+				'After':
+					{'/': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'}}]}
+
+		Parameters
+		----------
+		a : Union[str, cid.CIDv0, cid.CIDv1]
+			Key of object a for comparison
+		b : Union[str, cid.CIDv0, cid.CIDv1]
+			Key of object b for comparison
+
+		Returns
+		-------
+			dict
+		"""
+		args = (str(a), str(b))
+		return self._client.request('/object/diff', args, decoder='json', **kwargs)
