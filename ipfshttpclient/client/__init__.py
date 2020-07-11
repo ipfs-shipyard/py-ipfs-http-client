@@ -233,7 +233,7 @@ class Client(files.Base, miscellaneous.Base):
 	
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
-	def add_bytes(self, data, **kwargs):
+	def add_bytes(self, data: bytes, **kwargs):
 		"""Adds a set of bytes as a file to IPFS.
 
 		.. code-block:: python
@@ -245,7 +245,7 @@ class Client(files.Base, miscellaneous.Base):
 
 		Parameters
 		----------
-		data : bytes
+		data
 			Content to be added as a file
 
 		Returns

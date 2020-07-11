@@ -5,24 +5,31 @@ import typing as ty
 import json
 
 from . import exceptions
+from . import utils
 
 
-T_co = ty.TypeVar("T_co", covariant=True)
+if ty.TYPE_CHECKING:
+	import typing_extensions as ty_ext
+else:
+	from . import utils as ty_ext
 
 
-def empty_gen() -> ty.Generator[T_co, None, None]:
+T = ty.TypeVar("T")
+
+
+def empty_gen() -> ty.Generator[T, None, None]:
 	"""A generator that yields nothing"""
 	if False:  # pragma: no branch
-		yield ty.cast(T_co, None)
+		yield ty.cast(T, None)  # type: ignore[unreachable]
 
 
-class Encoding(ty.Generic[T_co], metaclass=abc.ABCMeta):
+class Encoding(ty.Generic[T], metaclass=abc.ABCMeta):
 	"""Abstract base for a data parser/encoder interface"""
 	#name: str
 	is_stream = False  # type: bool
 	
 	@abc.abstractmethod
-	def parse_partial(self, raw: bytes) -> ty.Generator[T_co, ty.Any, ty.Any]:
+	def parse_partial(self, raw: bytes) -> ty.Generator[T, ty.Any, ty.Any]:
 		"""Parses the given data and yields all complete data sets that can
 		be built from this.
 		
@@ -36,7 +43,7 @@ class Encoding(ty.Generic[T_co], metaclass=abc.ABCMeta):
 			Data to be parsed
 		"""
 	
-	def parse_finalize(self) -> ty.Generator[T_co, ty.Any, ty.Any]:
+	def parse_finalize(self) -> ty.Generator[T, ty.Any, ty.Any]:
 		"""Finalizes parsing based on remaining buffered data and yields the
 		remaining data sets
 		
@@ -47,7 +54,7 @@ class Encoding(ty.Generic[T_co], metaclass=abc.ABCMeta):
 		return empty_gen()
 	
 	@abc.abstractmethod
-	def encode(self, obj: T_co) -> bytes:
+	def encode(self, obj: T) -> bytes:
 		"""Serializes the given Python object to a bytes string
 
 		Raises
@@ -66,7 +73,7 @@ class Dummy(Encoding[bytes]):
 	name = "none"
 	is_stream = True
 	
-	def parse_partial(self, raw: bytes) -> bytes:
+	def parse_partial(self, raw: bytes) -> ty.Generator[bytes, ty.Any, ty.Any]:
 		"""Yields the data passed into this method
 		
 		Parameters
@@ -88,17 +95,19 @@ class Dummy(Encoding[bytes]):
 		return obj
 
 
-class Json(Encoding[object]):
+class Json(Encoding[utils.json_value_t]):
 	"""JSON parser/encoder that handles concatenated JSON"""
 	name = 'json'
 	
-	def __init__(self):
-		self._buffer    = []  # type: ty.List[str]
+	def __init__(self) -> None:
+		self._buffer    = []  # type: ty.List[ty.Optional[str]]
 		self._decoder1  = codecs.getincrementaldecoder('utf-8')()
 		self._decoder2  = json.JSONDecoder()
 		self._lasterror = None  # type: ty.Optional[ValueError]
 	
-	def parse_partial(self, data: bytes) -> ty.Generator[object, ty.Any, ty.Any]:
+	@ty.no_type_check  # It works just fine and I don't want to rewrite it just
+	                   # because mypy doesn't understand…  # noqa: E114, E116
+	def parse_partial(self, data: bytes) -> ty.Generator[utils.json_value_t, ty.Any, ty.Any]:
 		"""Incrementally decodes JSON data sets into Python objects.
 		
 		Raises
@@ -189,7 +198,7 @@ class Json(Encoding[object]):
 			# Remove all processed buffers
 			del self._buffer[0:index]
 	
-	def parse_finalize(self) -> ty.Generator[object, ty.Any, ty.Any]:
+	def parse_finalize(self) -> ty.Generator[utils.json_value_t, ty.Any, ty.Any]:
 		"""Raises errors for incomplete buffered data that could not be parsed
 		because the end of the input data has been reached.
 		
@@ -206,7 +215,7 @@ class Json(Encoding[object]):
 
 			# Late raise errors that looked like they could have been fixed if
 			# the caller had provided more data
-			if self._buffer:
+			if self._buffer and self._lasterror:
 				raise exceptions.DecodingError('json', self._lasterror) from self._lasterror
 		finally:
 			# Reset state
@@ -216,7 +225,7 @@ class Json(Encoding[object]):
 		
 		return empty_gen()
 	
-	def encode(self, obj: object) -> bytes:
+	def encode(self, obj: utils.json_value_t) -> bytes:
 		"""Returns ``obj`` serialized as JSON formatted bytes
 		
 		Raises
@@ -240,22 +249,19 @@ class Json(Encoding[object]):
 __encodings = {
 	Dummy.name: Dummy,
 	Json.name: Json,
-}
+}  # type: ty.Dict[str, ty.Type[Encoding[ty.Any]]]
 
 
-if ty.TYPE_CHECKING:
-	@ty.overload
-	def get_encoding(name: ty.Literal["none"]) -> Dummy:
-		...
-	
-	@ty.overload
-	def get_encoding(name: ty.Literal["json"]) -> Json:
-		...
+@ty.overload
+def get_encoding(name: ty_ext.Literal["none"]) -> Dummy:
+	...
 
+@ty.overload  # noqa: E302
+def get_encoding(name: ty_ext.Literal["json"]) -> Json:
+	...
 
-def get_encoding(name: str) -> Encoding[ty.Any]:
-	"""
-	Returns an Encoder object for the named encoding
+def get_encoding(name: str) -> Encoding[ty.Any]:  # noqa: E302
+	"""Returns an Encoder object for the given encoding name
 	
 	Raises
 	------
@@ -263,7 +269,7 @@ def get_encoding(name: str) -> Encoding[ty.Any]:
 	
 	Parameters
 	----------
-	name : str
+	name
 		Encoding name. Supported options:
 		
 		 * ``"none"``

@@ -9,7 +9,7 @@ import os
 import typing as ty
 import urllib.parse
 
-import urllib3.exceptions
+import urllib3.exceptions  # type: ignore[import]
 
 from . import encoding
 from . import exceptions
@@ -24,7 +24,7 @@ PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lo
                   not in ("false", "no"))
 if PATCH_REQUESTS:
 	from . import requests_wrapper as requests
-else:  # pragma: no cover (always enabled in production)
+elif not ty.TYPE_CHECKING:  # pragma: no cover (always enabled in production)
 	import requests
 
 
@@ -48,14 +48,14 @@ def map_args_to_requests(
 		kwargs["headers"] = headers
 	
 	if timeout is not None:
-		if isinstance(timeout, tuple) and len(timeout) == 2:
-			timeout = (
+		if isinstance(timeout, tuple):
+			timeout_ = (
 				timeout[0] if timeout[0] < math.inf else None,
 				timeout[1] if timeout[1] < math.inf else None,
-			)
+			)  # type: ty.Union[ty.Optional[float], ty.Tuple[ty.Optional[float], ty.Optional[float]]]
 		else:
-			timeout = timeout if timeout < math.inf else None
-		kwargs["timeout"] = timeout
+			timeout_ = timeout if timeout < math.inf else None
+		kwargs["timeout"] = timeout_
 	
 	if params is not None:
 		kwargs["params"] = {}
@@ -70,17 +70,17 @@ def map_args_to_requests(
 	return kwargs
 
 
-class ClientSync(ClientSyncBase[requests.Session]):
+class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined]
 	__slots__ = ("_base_url", "_session_props")
 	#_base_url: str
 	#_session_props: ty.Dict[str, ty.Any]
 	
-	def _init(self, addr: addr_t, base: str, *,
+	def _init(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
 	          auth: auth_t,
 	          cookies: cookies_t,
 	          headers: headers_t,
 	          params: params_t,
-	          timeout: timeout_t):
+	          timeout: timeout_t) -> None:
 		self._base_url, family, host_numeric = multiaddr_to_url_data(addr, base)
 		
 		self._session_props = map_args_to_requests(
@@ -93,8 +93,8 @@ class ClientSync(ClientSyncBase[requests.Session]):
 		if PATCH_REQUESTS:  # pragma: no branch (always enabled in production)
 			self._session_props["family"] = family
 	
-	def _make_session(self) -> requests.Session:
-		session = requests.Session()
+	def _make_session(self) -> requests.Session:  # type: ignore[name-defined]
+		session = requests.Session()  # type: ignore[attr-defined]
 		try:
 			for name, value in self._session_props.items():
 				setattr(session, name, value)
@@ -105,10 +105,10 @@ class ClientSync(ClientSyncBase[requests.Session]):
 			session.close()
 			raise
 	
-	def _do_raise_for_status(self, response):
+	def _do_raise_for_status(self, response: requests.Request) -> None:  # type: ignore[name-defined]
 		try:
 			response.raise_for_status()
-		except requests.exceptions.HTTPError as error:
+		except requests.exceptions.HTTPError as error:  # type: ignore[attr-defined]
 			content = []
 			try:
 				decoder = encoding.get_encoding("json")
@@ -136,7 +136,7 @@ class ClientSync(ClientSyncBase[requests.Session]):
 			headers: headers_t,
 			timeout: timeout_t,
 			chunk_size: ty.Optional[int]
-	) -> ty.Tuple[ty.List[Closable], ty.Iterator[bytes]]:
+	) -> ty.Tuple[ty.List[Closable], ty.Generator[bytes, ty.Any, ty.Any]]:
 		# Ensure path is relative so that it is resolved relative to the base
 		while path.startswith("/"):
 			path = path[1:]
@@ -162,9 +162,9 @@ class ClientSync(ClientSyncBase[requests.Session]):
 					stream=True,
 				)
 				closables.insert(0, res)
-			except (requests.ConnectTimeout, requests.Timeout) as error:
+			except (requests.ConnectTimeout, requests.Timeout) as error:  # type: ignore[attr-defined]
 				raise exceptions.TimeoutError(error) from error
-			except requests.ConnectionError as error:
+			except requests.ConnectionError as error:  # type: ignore[attr-defined]
 				# Report protocol violations separately
 				#
 				# This used to happen because requests wouldn't catch

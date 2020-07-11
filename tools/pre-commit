@@ -49,5 +49,5 @@ then
 	esac
 fi
 
-# Run code style tests before accepting a commit
-tox -e styleck
+# Run code style and type tests before accepting a commit
+tox -e styleck -e typeck

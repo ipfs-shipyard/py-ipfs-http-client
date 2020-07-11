@@ -1,31 +1,40 @@
 import abc
 import socket
+import sys
 import tarfile
 import typing as ty
 import urllib.parse
 
-import multiaddr
-from multiaddr.protocols import (P_DNS, P_DNS4, P_DNS6, P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP)
+import multiaddr  # type: ignore[import]
+from multiaddr.protocols import (P_DNS, P_DNS4, P_DNS6,  # type: ignore[import]
+                                 P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP)
 
 from . import encoding
 from . import exceptions
 from . import utils
 
 
-T_co = ty.TypeVar("T_co", covariant=True)
+if ty.TYPE_CHECKING:
+	import http.cookiejar  # noqa: F401
+	from typing_extensions import Literal, Protocol  # noqa: F401
+else:
+	Protocol = utils.Protocol
 
-if hasattr(ty, "Protocol"):  #PY38+
-	ty_Protocol = ty.Protocol
-elif ty.TYPE_CHECKING:
-	import typing_extensions
-	ty_Protocol = typing_extensions.Protocol
+
+if sys.version_info >= (3, 8):  #PY38+
+	ty_Literal_json = ty.Literal["json"]
+	ty_Literal_none = ty.Literal["none"]
 else:  #PY37-
-	ty_Protocol = object
+	ty_Literal_json = ty_Literal_none = str
 
 
-class Closable(ty_Protocol):
-	def close(self):
+class Closable(Protocol):
+	def close(self) -> None:
 		...
+
+
+T_co = ty.TypeVar("T_co", covariant=True)
+S = ty.TypeVar("S", bound=Closable)
 
 
 addr_t = ty.Union[multiaddr.Multiaddr, bytes, str]
@@ -49,7 +58,7 @@ timeout_t = ty.Optional[ty.Union[
 workarounds_t = ty.Optional[ty.Set[str]]
 
 
-def _notify_stream_iter_closed():
+def _notify_stream_iter_closed() -> None:
 	pass  # Mocked by unit tests to check if the decode iterator is closed at proper times
 
 
@@ -80,7 +89,7 @@ class StreamDecodeIteratorSync(ty.Generic[T_co]):
 		self._closables = closables  # type: ty.List[Closable]
 		self._parser = parser  # type: ty.Optional[encoding.Encoding[T_co]]
 		self._response_iter = response  # type: ty.Optional[ty.Generator[bytes, ty.Any, ty.Any]]
-		self._parser_iter = None  # type: ty.Optional[ty.Generator[bytes, ty.Any, ty.Any]]
+		self._parser_iter = None  # type: ty.Optional[ty.Generator[T_co, ty.Any, ty.Any]]
 
 	def __iter__(self) -> "StreamDecodeIteratorSync[T_co]":
 		return self
@@ -88,19 +97,20 @@ class StreamDecodeIteratorSync(ty.Generic[T_co]):
 	def __next__(self) -> T_co:
 		while True:
 			# Try reading from current parser iterator
-			if self._parser_iter is not None:
+			parser_iter = self._parser_iter
+			if parser_iter is not None:
 				try:
-					result = next(self._parser_iter)  # type: T_co
+					result = next(parser_iter)  # type: T_co
 					
 					# Detect late error messages that occured after some data
 					# has already been sent
 					if isinstance(result, dict) and result.get("Type") == "error":
 						msg = result["Message"]
-						raise exceptions.PartialErrorResponse(msg, None, [])
+						raise exceptions.PartialErrorResponse(msg)
 					
 					return result
 				except StopIteration:
-					self._parser_iter = None
+					self._parser_iter = parser_iter = None
 					
 					# Forward exception to caller if we do not expect any
 					# further data
@@ -113,22 +123,23 @@ class StreamDecodeIteratorSync(ty.Generic[T_co]):
 				self.close()
 				raise StopIteration()
 			
+			assert self._parser is not None
 			try:
 				data = next(self._response_iter)  # type: bytes
 				
 				# Create new parser iterator using the newly received data
 				if len(data) > 0:
-					self._parser_iter = iter(self._parser.parse_partial(data))
+					self._parser_iter = self._parser.parse_partial(data)
 			except StopIteration:
 				# No more data to receive – destroy response iterator and
 				# iterate over the final fragments returned by the parser
 				self._response_iter = None
-				self._parser_iter   = iter(self._parser.parse_finalize())
+				self._parser_iter   = self._parser.parse_finalize()
 	
 	def __enter__(self) -> "StreamDecodeIteratorSync[T_co]":
 		return self
 	
-	def __exit__(self, *a) -> None:
+	def __exit__(self, *a: ty.Any) -> None:
 		self.close()
 	
 	def close(self) -> None:
@@ -149,29 +160,35 @@ class StreamDecodeIteratorSync(ty.Generic[T_co]):
 		_notify_stream_iter_closed()
 
 
-if ty.TYPE_CHECKING:
-	@ty.overload
-	def stream_decode_full(
-			response: Closable,
-			response_iter: ty.Generator[bytes, ty.Any, ty.Any],
-			parser: encoding.Dummy
-	) -> bytes:
-		...
+@ty.overload
+def stream_decode_full(
+		response: Closable,
+		response_iter: ty.Generator[bytes, ty.Any, ty.Any],
+		parser: encoding.Dummy
+) -> bytes:
+	...
 
-
+@ty.overload  # noqa: E302
 def stream_decode_full(
 		closables: ty.List[Closable],
 		response: ty.Generator[bytes, ty.Any, ty.Any],
+		parser: encoding.Json
+) -> ty.List[utils.json_dict_t]:
+	...
+
+def stream_decode_full(  # type: ignore[misc]  # noqa: E302
+		closables: ty.List[Closable],
+		response: ty.Generator[bytes, ty.Any, ty.Any],
 		parser: encoding.Encoding[T_co]
-) -> ty.List[T_co]:
+) -> ty.Union[ty.List[T_co], bytes]:
 	with StreamDecodeIteratorSync(closables, response, parser) as response_iter:
 		# Collect all responses
-		result = list(response_iter)  # type: ty.List[bytes]
+		result = list(response_iter)  # type: ty.List[T_co]
 		
 		# Return byte streams concatenated into one message, instead of split
 		# at arbitrary boundaries
 		if parser.is_stream:
-			return b"".join(result)
+			return b"".join(result)  # type: ignore[arg-type]
 		return result
 
 
@@ -217,13 +234,13 @@ class ReadableStreamWrapper:
 			finally:
 				self._buffer.extend(chunk[length:])
 	
-	def close(self):
+	def close(self) -> None:
 		self._generator.close()
 		self._buffer.clear()
 
 
-def multiaddr_to_url_data(addr: addr_t, base: str) \
-    -> ty.Tuple[str, socket.AddressFamily, bool]:
+def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimported]
+) -> ty.Tuple[str, socket.AddressFamily, bool]:
 	try:
 		addr = multiaddr.Multiaddr(addr)
 	except multiaddr.exceptions.ParseError as error:
@@ -305,7 +322,7 @@ def map_args_to_params(
 	return params
 
 
-class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
+class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 	"""An HTTP client for interacting with the IPFS daemon
 	
 	Parameters
@@ -335,17 +352,17 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 		phases; if the value is ``None`` then all timeouts will be disabled
 	"""
 	__slots__ = ("_session", "workarounds")
-	#_session: ty.Optional[T_co]
+	#_session: ty.Optional[S]
 	#workarounds: ty.Set[str]
 	
-	def __init__(self, addr: addr_t, base: str, *,
+	def __init__(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
 	             offline: bool = False,
 	             workarounds: workarounds_t = None,
 	             auth: auth_t = None,
 	             cookies: cookies_t = None,
 	             headers: headers_t = None,
-	             timeout: timeout_t = None):
-		self._session = None  # type: ty.Optional[T_co]
+	             timeout: timeout_t = None) -> None:
+		self._session = None  # type: ty.Optional[S]
 		self.workarounds = workarounds if workarounds else set()  # type: ty.Set[str]
 		
 		#XXX: Figure out what stream-channels is and if we still need it
@@ -366,19 +383,19 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 		)
 	
 	@abc.abstractmethod
-	def _init(self, addr: addr_t, base: str, *,
+	def _init(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
 	          auth: auth_t,
 	          cookies: cookies_t,
 	          headers: headers_t,
 	          params: params_t,
-	          timeout: timeout_t):
+	          timeout: timeout_t) -> None:
 		...
 	
 	@abc.abstractmethod
-	def _make_session(self) -> T_co:
+	def _make_session(self) -> S:
 		...
 	
-	def _access_session(self) -> ty.Tuple[ty.List[Closable], T_co]:
+	def _access_session(self) -> ty.Tuple[ty.List[Closable], S]:
 		if self._session is not None:
 			return [], self._session
 		else:
@@ -409,86 +426,103 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 			auth: auth_t,
 			data: reqdata_sync_t,
 			headers: headers_t,
-			timeout: timeout_t
-	) -> ty.Tuple[ty.List[Closable], ty.Iterator[bytes]]:
+			timeout: timeout_t,
+			chunk_size: ty.Optional[int]
+	) -> ty.Tuple[ty.List[Closable], ty.Generator[bytes, ty.Any, ty.Any]]:
 		...
 	
 	#XXX: There must be some way to make the following shorter…
-	if ty.TYPE_CHECKING:
-		@ty.overload
-		def request(
-				self, path: str,
-				args: ty.Sequence[str] = [], *,
-				opts: ty.Mapping[str, str] = {},
-				decoder: str = "none",
-				stream: bool = False,
-				offline: bool = False,
-				return_result: ty.Literal[False],
-				auth: auth_t = None,
-				cookies: cookies_t = None,
-				data: reqdata_sync_t = None,
-				headers: headers_t = None,
-				timeout: timeout_t = None
-		) -> None:
-			...
-		
-		@ty.overload
-		def request(
-				self, path: str,
-				args: ty.Sequence[str] = [], *,
-				opts: ty.Mapping[str, str] = {},
-				decoder: ty.Literal["none"] = "none",
-				stream: ty.Literal[False] = False,
-				offline: bool = False,
-				return_result: ty.Literal[True] = True,
-				auth: auth_t = None,
-				cookies: cookies_t = None,
-				data: reqdata_sync_t = None,
-				headers: headers_t = None,
-				timeout: timeout_t = None
-		) -> bytes:
-			...
-		
-		@ty.overload
-		def request(
-				self, path: str,
-				args: ty.Sequence[str] = [], *,
-				opts: ty.Mapping[str, str] = {},
-				decoder: ty.Literal["none"] = "none",
-				stream: ty.Literal[True],
-				offline: bool = False,
-				return_result: ty.Literal[True] = True,
-				auth: auth_t = None,
-				cookies: cookies_t = None,
-				data: reqdata_sync_t = None,
-				headers: headers_t = None,
-				timeout: timeout_t = None
-		) -> StreamDecodeIteratorSync[bytes]:
-			...
-		
-		@ty.overload
-		def request(
-				self, path: str,
-				args: ty.Sequence[str] = [], *,
-				opts: ty.Mapping[str, str] = {},
-				decoder: ty.Literal["json"],
-				stream: ty.Literal[False] = False,
-				offline: bool = False,
-				return_result: ty.Literal[True] = True,
-				auth: auth_t = None,
-				cookies: cookies_t = None,
-				data: reqdata_sync_t = None,
-				headers: headers_t = None,
-				timeout: timeout_t = None
-		) -> ty.List[object]:
-			...
-	
-	
+	@ty.overload
 	def request(
 			self, path: str,
 			args: ty.Sequence[str] = [], *,
 			opts: ty.Mapping[str, str] = {},
 			decoder: str = "none",
+			stream: bool = False,
+			offline: bool = False,
+			return_result: utils.Literal_False,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = None,
+			timeout: timeout_t = None
+	) -> None:
+		...
+	
+	@ty.overload
+	def request(
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			opts: ty.Mapping[str, str] = {},
+			decoder: ty_Literal_none = "none",
+			stream: utils.Literal_False = False,
+			offline: bool = False,
+			return_result: utils.Literal_True = True,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = None,
+			timeout: timeout_t = None
+	) -> bytes:
+		...
+	
+	@ty.overload
+	def request(
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			opts: ty.Mapping[str, str] = {},
+			decoder: ty_Literal_none = "none",
+			stream: utils.Literal_True,
+			offline: bool = False,
+			return_result: utils.Literal_True = True,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = None,
+			timeout: timeout_t = None
+	) -> StreamDecodeIteratorSync[bytes]:
+		...
+	
+	@ty.overload
+	def request(
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			opts: ty.Mapping[str, str] = {},
+			decoder: ty_Literal_json,
+			stream: utils.Literal_False = False,
+			offline: bool = False,
+			return_result: utils.Literal_True = True,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = None,
+			timeout: timeout_t = None
+	) -> ty.List[utils.json_dict_t]:
+		...
+	
+	@ty.overload
+	def request(
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			opts: ty.Mapping[str, str] = {},
+			decoder: ty_Literal_json,
+			stream: utils.Literal_True,
+			offline: bool = False,
+			return_result: utils.Literal_True = True,
+			auth: auth_t = None,
+			cookies: cookies_t = None,
+			data: reqdata_sync_t = None,
+			headers: headers_t = None,
+			timeout: timeout_t = None
+	) -> StreamDecodeIteratorSync[utils.json_dict_t]:
+		...
+	
+	
+	def request(  # type: ignore[misc]
+			self, path: str,
+			args: ty.Sequence[str] = [], *,
+			opts: ty.Mapping[str, str] = {},
+			decoder: ty.Union[ty_Literal_json, ty_Literal_none] = "none",
 			stream: bool = False,
 			offline: bool = False,
 			return_result: bool = True,
@@ -499,9 +533,9 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 			timeout: timeout_t = None
 	) -> ty.Optional[ty.Union[  # noqa: ET122 (checker bug)
 		StreamDecodeIteratorSync[bytes],
-		StreamDecodeIteratorSync[object],
+		StreamDecodeIteratorSync[utils.json_dict_t],
 		bytes,
-		ty.List[object],
+		ty.List[utils.json_dict_t],
 	]]:
 		"""Sends an HTTP request to the IPFS daemon
 		
@@ -521,7 +555,7 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 		path
 			The command path relative to the given base
 		decoder
-			The encoder to use to parse the HTTP response
+			The name of the encoder to use to parse the HTTP response
 		stream
 			Whether to return an iterable yielding the received items incrementally
 			instead of receiving and decoding all items up-front before returning
@@ -552,20 +586,20 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 		# Don't attempt to decode response or stream
 		# (which would keep an iterator open that will then never be waited for)
 		if not return_result:
-			decoder = None
+			decoder = "none"
 		
 		# HTTP method must always be "POST" since go-IPFS 0.5
 		method = "POST"
 		if "use_http_head_for_no_result" in self.workarounds and not return_result:  # pragma: no cover
 			method = "HEAD"
 		
-		parser = encoding.get_encoding(decoder if decoder else "none")
+		parser = encoding.get_encoding(decoder)
 		
 		closables, res = self._request(
 			method, path, map_args_to_params(args, opts, offline=offline),
 			auth=auth, data=data, headers=headers, timeout=timeout,
 			chunk_size=None,
-		)
+		)  # type: ty.Tuple[ty.List[Closable], ty.Generator[bytes, ty.Any, ty.Any]]
 		try:
 			if not return_result:
 				for closable in closables:
@@ -573,10 +607,11 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 				return None
 			elif stream:
 				# Decode each item as it is read
-				return StreamDecodeIteratorSync(closables, res, parser)
+				return StreamDecodeIteratorSync(closables, res, parser)  # type: ignore[misc]
 			else:
 				# Decode received item immediately
-				return stream_decode_full(closables, res, parser)
+				return stream_decode_full(closables, res,
+				                          parser)  # type: ignore[arg-type]
 		except:
 			# Extra cleanup code for closables
 			#
@@ -651,12 +686,12 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 			
 			Set this to :py:`math.inf` to disable timeouts entirely.
 		"""
-		opts = opts.copy()
-		opts["archive"] = "true"
-		opts["compress"] = "true" if compress else "false"
+		opts2 = dict(opts.items())  # type: ty.Dict[str, str]
+		opts2["archive"] = "true"
+		opts2["compress"] = "true" if compress else "false"
 		
 		closables, res = self._request(
-			"POST", path, map_args_to_params(args, opts, offline=offline),
+			"POST", path, map_args_to_params(args, opts2, offline=offline),
 			auth=auth, data=data, headers=headers, timeout=timeout,
 			chunk_size=tarfile.RECORDSIZE,
 		)
@@ -664,7 +699,8 @@ class ClientSyncBase(ty.Generic[T_co], metaclass=abc.ABCMeta):
 			# try to stream download as a tar file stream
 			mode = 'r|gz' if compress else 'r|'
 			
-			with tarfile.open(fileobj=ReadableStreamWrapper(res), mode=mode) as tf:
+			fileobj = ReadableStreamWrapper(res)  # type: ty.IO[bytes]  # type: ignore[assignment]
+			with tarfile.open(fileobj=fileobj, mode=mode) as tf:
 				tf.extractall(path=utils.convert_path(target))
 		finally:
 			for closable in closables:

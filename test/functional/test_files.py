@@ -166,7 +166,6 @@ def calc_path_rel_to_cwd(p):
 
 def test_add_single_from_str_with_dir(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, wrap_with_directory=True)
-	
 	assert pytest_cid.match(FAKE_FILE1_DIR_HASH) == res
 	
 	dir_hash = None

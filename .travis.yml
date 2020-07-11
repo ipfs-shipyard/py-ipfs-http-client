@@ -17,6 +17,9 @@ matrix:
       - python: "3.8"
         env: TOXENV=styleck
         before_install: ":"
+      - python: "3.8"
+        env: TOXENV=typeck
+        before_install: ":"
      
       # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
       #

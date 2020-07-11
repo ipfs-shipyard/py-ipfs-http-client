@@ -1,3 +1,4 @@
+# type: ignore
 """Exposes the full ``requests`` HTTP library API, while adding an extra
 ``family`` parameter to all HTTP request operations that may be used to restrict
 the address family used when resolving a domain-name to an IP address.

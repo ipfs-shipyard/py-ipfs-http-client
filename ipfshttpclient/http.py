@@ -8,6 +8,7 @@ from .http_common import (
 	workarounds_t,
 )
 
+
 __all__ = (
 	"addr_t", "auth_t", "cookies_t", "headers_t", "params_t", "reqdata_sync_t",
 	"timeout_t", "workarounds_t",
@@ -22,10 +23,10 @@ if PREFER_HTTPX:  # pragma: http-backend=httpx
 	try:  #PY36+
 		from . import http_httpx as _backend
 	except (ImportError, SyntaxError):  #PY35
-		from . import http_requests as _backend
+		from . import http_requests as _backend  # type: ignore[no-redef]
 else:  # pragma: http-backend=requests
 	try:
-		from . import http_requests as _backend
+		from . import http_requests as _backend  # type: ignore[no-redef]
 	except ImportError:  # pragma: no cover
 		from . import http_httpx as _backend
 

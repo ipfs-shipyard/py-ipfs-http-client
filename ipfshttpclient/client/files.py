@@ -333,14 +333,14 @@ class Base(base.ClientBase):
 				File name and hash of the added file node, will return a list
 				of one or more items unless only a single file was given
 		"""
-		opts = {  # type: ty.Dict[str, ty.Union[str, bool]]
+		opts = {
 			"trickle": trickle,
 			"only-hash": only_hash,
 			"wrap-with-directory": wrap_with_directory,
 			"pin": pin,
 			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
 			"nocopy": nocopy
-		}
+		}  # type: ty.Dict[str, ty.Union[str, bool]]
 		for option_name, option_value in [
 			("chunker", chunker),
 			("cid-version", cid_version),
