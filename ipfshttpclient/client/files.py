@@ -237,6 +237,7 @@ class Base(base.ClientBase):
 	        period_special: bool = True, only_hash: bool = False,
 	        wrap_with_directory: bool = False, chunker: ty.Optional[str] = None,
 	        pin: bool = True, raw_leaves: bool = None, nocopy: bool = False,
+	        cid_version: ty.Optional[int] = None,
 	        **kwargs):
 		"""Adds a file, several files or directory of files to IPFS
 		
@@ -323,7 +324,9 @@ class Base(base.ClientBase):
 			when *nocopy* is True, or ``False`` otherwise)
 		nocopy
 			Add the file using filestore. Implies raw-leaves. (experimental).
-		
+		cid_version
+			CID version. Default value is provided by IPFS daemon. (experimental)
+
 		Returns
 		-------
 			Union[dict, list]
@@ -338,8 +341,12 @@ class Base(base.ClientBase):
 			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
 			"nocopy": nocopy
 		}
-		if chunker is not None:
-			opts["chunker"] = chunker
+		for option_name, option_value in [
+			("chunker", chunker),
+			("cid-version", cid_version),
+		]:
+			if option_value is not None:
+				opts[option_name] = option_value
 		kwargs.setdefault("opts", {}).update(opts)
 		
 		# There may be other cases where nocopy will silently fail to work, but
