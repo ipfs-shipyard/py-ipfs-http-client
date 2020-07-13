@@ -371,6 +371,20 @@ def test_add_recursive(client, cleanup_pins):
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_HASH)
 
 
+def test_add_cid_version_0(client, cleanup_pins):
+    with tempfile.TemporaryDirectory() as empty_dir:
+        response = client.add(empty_dir, cid_version=0)
+        assert len(response) == 1
+        assert response[0]["Hash"] == "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn"
+
+
+def test_add_cid_version_1(client, cleanup_pins):
+    with tempfile.TemporaryDirectory() as empty_dir:
+        response = client.add(empty_dir, cid_version=1)
+        assert len(response) == 1
+        assert response[0]["Hash"] == "bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354"
+
+
 @pytest.mark.dependency(depends=["test_add_recursive"])
 def test_get_file(client, cleanup_pins):
 	test_hash = FAKE_DIR_HASH[1]["Hash"]
