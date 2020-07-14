@@ -58,7 +58,7 @@ Basic use-case (requires a running instance of IPFS daemon):
 
 ```py
 >>> import ipfshttpclient
->>> client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001/http')
+>>> client = ipfshttpclient.connect()  # Connects to: /dns/localhost/tcp/5001/http
 >>> res = client.add('test.txt')
 >>> res
 {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
