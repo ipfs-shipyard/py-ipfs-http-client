@@ -27,10 +27,10 @@ being to oldest supported version at this time.
 - [Documentation](#documentation)
   - [Migrating from 0.4.x to 0.6.0](#migrating-from-04x-to-060)
 - [Featured Projects](#featured-projects)
-- [Contribute](#contribute)
-  - [Chat (IRC/Matrix)](#chat-ircmatrix)
+- [Contributing](#contributing)
   - [Bug reports](#bug-reports)
   - [Pull requests](#pull-requests)
+  - [Chat with Us (IRC/Matrix)](#chat-with-us-ircmatrix)
 - [License](#license)
 
 ## Install
@@ -184,36 +184,59 @@ Projects that currently use py-ipfs-http-client. If your project isn't here, fee
 
 - [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](https://www.iso.org/standard/44717.html)) files for distributed indexing and replay using IPFS.
 
-## Contribute
+## Contributing
 
-### Chat (IRC/Matrix)
+### Easy Tasks
 
-You can find us on [#py-ipfs on chat.freenode.org](http://webchat.freenode.net/?channels=%23py-ipfs) or in our [Matrix chat room](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one). Oin us if you have any suggestions, questions or if you just want to discuss IPFS and Python in general.
-
-Please note that the channel is not monitored all the time and hence you may only receive a reply to your message later that day. Using Matrix makes it easier to stay connected in the background, so please prefer the Matrix option or use an IRC bouncer.
+Over time many smaller day-to-day tasks have piled up (mostly supporting some
+newer APIs). If want to help out without getting too involved picking up one
+of tasks of our [help wanted issue list](https://github.com/ipfs-shipyard/py-ipfs-http-client/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+would go a long way towards making this library more feature-complete. 👍
 
 ### Bug reports
 
-You can submit bug reports using the [GitHub issue tracker](https://github.com/ipfs/py-ipfs-http-client/issues).
+You can submit bug reports using the
+[GitHub issue tracker](https://github.com/ipfs/py-ipfs-http-client/issues).
 
 ### Pull requests
 
 Pull requests are welcome.  Before submitting a new pull request, please
-make sure that your code passes both the [code formatting (PEP-8 with tab indentation)](https://www.python.org/dev/peps/pep-0008/) check:
+make sure that your code passes both the
+[code formatting](https://www.python.org/dev/peps/pep-0008/)
+(PEP-8 with tab indentation) and
+[typing](https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html)
+(PEP-484 using mypy) checks:
 
-    $ tox -e styleck
+    $ tox -e styleck -e typeck
 
-And the unit tests:
+As well as the unit tests:
 
-    $ tox -e py3
+    $ tox -e py3 -e py3-httpx
 
-You can arrange to run the code style tests automatically before each commit by
-installing a `pre-commit` hook:
+If you are unsure, don't hasitate to just submit your code and a human will
+take a look. 🙂
+
+If you can, Please make sure to include new unit tests for new features or
+changes in behavior. We aim to bring coverage to 100% at some point.
+
+#### Installing the pre-commit Hook
+
+You can arrange for the code style and typing tests to be run automatically
+before each commit by installing the GIT `pre-commit` hook:
 
     $ ./tools/pre-commit --install
 
-Please make sure to include new unit tests for new features or changes in
-behavior. We aim to bring coverage to 100% at some point.
+### Chat with Us (IRC/Matrix)
+
+You can find us on [#py-ipfs on chat.freenode.org](http://webchat.freenode.net/?channels=%23py-ipfs)
+or in our [Matrix chat room](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one).
+Join us if you have any suggestions, questions or if you just want to discuss
+IPFS and Python in general.
+
+Please note that the channel is not monitored all the time and hence you may
+only receive a reply to your message later that day. Using Matrix makes it
+easier to stay connected in the background, so please prefer the Matrix option
+or use an IRC bouncer.
 
 ## License
 
