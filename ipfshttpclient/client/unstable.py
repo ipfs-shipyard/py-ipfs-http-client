@@ -3,30 +3,30 @@ from . import base
 
 class LogSection(base.SectionBase):
 	@base.returns_single_item(base.ResponseBase)
-	def level(self, subsystem, level, **kwargs):
-		r"""Changes the logging output of a running daemon.
+	def level(self, subsystem: str, level: str, **kwargs: base.CommonArgs):
+		r"""Changes the logging output level for a given subsystem
 		
 		**This API is subject to future change or removal!**
 		
 		.. code-block:: python
-
+		
 			>>> client.unstable.log.level("path", "info")
 			{"Message": "Changed log level of 'path' to 'info'\n"}
-
+		
 		Parameters
 		----------
-		subsystem : str
+		subsystem
 			The subsystem logging identifier (Use ``"all"`` for all subsystems)
-		level : str
+		level
 			The desired logging level. Must be one of:
-
+			
 			 * ``"debug"``
 			 * ``"info"``
 			 * ``"warning"``
 			 * ``"error"``
 			 * ``"fatal"``
 			 * ``"panic"``
-
+		
 		Returns
 		-------
 			dict
@@ -41,13 +41,13 @@ class LogSection(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def ls(self, **kwargs):
-		"""Lists the logging subsystems of a running daemon.
+	def ls(self, **kwargs: base.CommonArgs):
+		"""Lists the available logging subsystems
 		
 		**This API is subject to future change or removal!**
 		
 		.. code-block:: python
-
+		
 			>>> client.unstable.log.ls()
 			{'Strings': [
 				'github.com/ipfs/go-libp2p/p2p/host', 'net/identify',
@@ -67,7 +67,7 @@ class LogSection(base.SectionBase):
 				'ipfsaddr', 'github.com/ipfs/go-libp2p/p2p/net/swarm/addr',
 				'bitswap', 'reprovider', 'supernode/proxy', 'crypto', 'tour',
 				'commands/cli', 'blockservice']}
-
+		
 		Returns
 		-------
 			dict
@@ -80,8 +80,8 @@ class LogSection(base.SectionBase):
 	
 	
 	@base.returns_multiple_items(base.ResponseBase, stream=True)
-	def tail(self, **kwargs):
-		r"""Reads log outputs as they are written.
+	def tail(self, **kwargs: base.CommonArgs):
+		r"""Streams log outputs as they are generated
 		
 		**This API is subject to future change or removal!**
 		
@@ -89,7 +89,7 @@ class LogSection(base.SectionBase):
 		context manager (``with``-statement) or using the ``.close()`` method.
 		
 		.. code-block:: python
-
+		
 			>>> with client.unstable.log.tail() as log_tail_iter:
 			...     for item in log_tail_iter:
 			...         print(item)
@@ -112,7 +112,7 @@ class LogSection(base.SectionBase):
 			 "session":"7770b5e0-25ec-47cd-aa64-f42e65a10023",
 			 "time":"2016-08-22T13:25:27.435843012Z"}
 			…
-
+		
 		Returns
 		-------
 			Iterable[dict]
@@ -124,8 +124,8 @@ class LogSection(base.SectionBase):
 
 class RefsSection(base.SectionBase):
 	@base.returns_multiple_items(base.ResponseBase)
-	def __call__(self, cid, **kwargs):
-		"""Returns a list of hashes of objects referenced by the given hash.
+	def __call__(self, cid: base.cid_t, **kwargs: base.CommonArgs):
+		"""Returns the hashes of objects referenced by the given hash
 		
 		**This API is subject to future change or removal!** You likely want to
 		use :meth:`~ipfshttpclient.object.links` instead.
@@ -139,7 +139,7 @@ class RefsSection(base.SectionBase):
 		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			Path to the object(s) to list refs from
 		
 		Returns
@@ -151,8 +151,8 @@ class RefsSection(base.SectionBase):
 
 
 	@base.returns_multiple_items(base.ResponseBase)
-	def local(self, **kwargs):
-		"""Displays the hashes of all local objects.
+	def local(self, **kwargs: base.CommonArgs):
+		"""Returns the hashes of all local objects
 		
 		**This API is subject to future change or removal!**
 		
@@ -172,8 +172,6 @@ class RefsSection(base.SectionBase):
 
 
 class Section(base.SectionBase):
-	"""
-	Features that are subject to change and are only provided for convinience
-	"""
+	"""Features that are subject to change and are only provided for convenience"""
 	log  = base.SectionProperty(LogSection)
 	refs = base.SectionProperty(RefsSection)

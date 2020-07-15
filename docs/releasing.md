@@ -24,9 +24,12 @@ Sphinx to process Markdown documentation as if it where reStructuredText.
 <!-- APT line: `sudo apt install python3-sphinx python3-recommonmark`  -->
 <!--DNF line: `sudo dnf install python3-sphinx python3-recommonmark`-->
 
-At least reCommonMark 0.5 is required, so install it using PIP:
+At least Sphinx 3.0 with the `sphinx_autodoc_typehints` and reCommonMark 0.5 plugins is required,
+so install them using PIP:
 
-`pip3 install recommonmark~=0.5.0`
+`pip3 install Sphinx~=3.0 sphinx_autodoc_typehints recommonmark~=0.5.0`
+
+For best results Sphinx should be run with Python 3.8+ or typings will be incomplete.
 
 ## Hosting Documentation
 

@@ -1,10 +1,12 @@
+import typing as ty
+
 from . import base
 
 
 class Section(base.SectionBase):
 	@base.returns_single_item(base.ResponseBase)
-	def wantlist(self, peer=None, **kwargs):
-		"""Returns blocks currently on the bitswap wantlist.
+	def wantlist(self, peer: ty.Optional[str] = None, **kwargs: base.CommonArgs):
+		"""Returns blocks currently on the bitswap wantlist
 		
 		.. code-block:: python
 		
@@ -17,8 +19,8 @@ class Section(base.SectionBase):
 		
 		Parameters
 		----------
-		peer : str
-			Peer to show wantlist for.
+		peer
+			Peer to show wantlist for
 		
 		Returns
 		-------
@@ -33,8 +35,8 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def stat(self, **kwargs):
-		"""Returns some diagnostic information from the bitswap agent.
+	def stat(self, **kwargs: base.CommonArgs):
+		"""Returns some diagnostic information from the bitswap agent
 		
 		.. code-block:: python
 		

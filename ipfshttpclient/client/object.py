@@ -1,35 +1,39 @@
+import typing as ty
+
 from . import base
 
 from .. import multipart
+from .. import utils
 
 
 class PatchSection(base.SectionBase):
 	@base.returns_single_item(base.ResponseBase)
-	def add_link(self, root, name, ref, create=False, **kwargs):
-		"""Creates a new merkledag object based on an existing one.
-
-		The new object will have a link to the provided object.
-
+	def add_link(self, root: base.cid_t, name: str, ref: base.cid_t,
+	             create: bool = False, **kwargs: base.CommonArgs):
+		"""Creates a new merkledag object based on an existing one
+		
+		The new object will have an additional link to the given CID.
+		
 		.. code-block:: python
-
+		
 			>>> client.object.patch.add_link(
 			...     'QmR79zQQj2aDfnrNgczUhvf2qWapEfQ82YQRt3QjrbhSb2',
 			...     'Johnny',
 			...     'QmR79zQQj2aDfnrNgczUhvf2qWapEfQ82YQRt3QjrbhSb2'
 			... )
 			{'Hash': 'QmNtXbF3AjAk59gQKRgEdVabHcSsiPUnJwHnZKyj2x8Z3k'}
-
+		
 		Parameters
 		----------
-		root : str
+		root
 			IPFS hash for the object being modified
-		name : str
+		name
 			name for the new link
-		ref : str
+		ref
 			IPFS hash for the object being linked to
-		create : bool
+		create
 			Create intermediary nodes
-
+		
 		Returns
 		-------
 			dict
@@ -39,30 +43,31 @@ class PatchSection(base.SectionBase):
 		+------+----------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["create"] = create
-
-		args = (root, name, ref)
+		
+		args = (str(root), name, str(ref),)
 		return self._client.request('/object/patch/add-link', args, decoder='json', **kwargs)
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def append_data(self, cid, new_data, **kwargs):
-		"""Creates a new merkledag object based on an existing one.
-
-		The new object will have the provided data appended to it,
-		and will thus have a new Hash.
-
+	def append_data(self, cid: base.cid_t, new_data: utils.clean_file_t,
+	                **kwargs: base.CommonArgs):
+		"""Creates a new merkledag object based on an existing one
+		
+		The new object will have the same links as the previous object, but with
+		the provided data appended to it.
+		
 		.. code-block:: python
-
+		
 			>>> client.object.patch.append_data("QmZZmY … fTqm", io.BytesIO(b"bla"))
 			{'Hash': 'QmR79zQQj2aDfnrNgczUhvf2qWapEfQ82YQRt3QjrbhSb2'}
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			The hash of an ipfs object to modify
-		new_data : Union[str, bytes, os.PathLike, io.IOBase, int]
+		new_data
 			The data to append to the object's data section
-
+		
 		Returns
 		-------
 			dict
@@ -78,26 +83,27 @@ class PatchSection(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def rm_link(self, root, link, **kwargs):
-		"""Creates a new merkledag object based on an existing one.
-
-		The new object will lack a link to the specified object.
-
+	def rm_link(self, root: base.cid_t, link: str, **kwargs: base.CommonArgs):
+		"""Creates a new merkledag object based on an existing one
+		
+		The new object will lack a link to the specified object, but otherwise
+		be unchanged.
+		
 		.. code-block:: python
-
+		
 			>>> client.object.patch.rm_link(
 			...     'QmNtXbF3AjAk59gQKRgEdVabHcSsiPUnJwHnZKyj2x8Z3k',
 			...     'Johnny'
 			... )
 			{'Hash': 'QmR79zQQj2aDfnrNgczUhvf2qWapEfQ82YQRt3QjrbhSb2'}
-
+		
 		Parameters
 		----------
-		root : str
+		root
 			IPFS hash of the object to modify
-		link : str
+		link
 			name of the link to remove
-
+		
 		Returns
 		-------
 			dict
@@ -106,32 +112,33 @@ class PatchSection(base.SectionBase):
 		| Hash | Hash of the newly derived object |
 		+------+----------------------------------+
 		"""
-		args = (root, link)
+		args = (str(root), link)
 		return self._client.request('/object/patch/rm-link', args, decoder='json', **kwargs)
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def set_data(self, root, data, **kwargs):
-		"""Creates a new merkledag object based on an existing one.
-
+	def set_data(self, root: base.cid_t, data: utils.clean_file_t,
+	             **kwargs: base.CommonArgs):
+		"""Creates a new merkledag object based on an existing one
+		
 		The new object will have the same links as the old object but
 		with the provided data instead of the old object's data contents.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.object.patch.set_data(
 			...     'QmNtXbF3AjAk59gQKRgEdVabHcSsiPUnJwHnZKyj2x8Z3k',
 			...     io.BytesIO(b'bla')
 			... )
 			{'Hash': 'QmSw3k2qkv4ZPsbu9DVEJaTMszAQWNgM1FTFYpfZeNQWrd'}
-
+		
 		Parameters
 		----------
-		root : str
+		root
 			IPFS hash of the object to modify
-		data : Union[str, bytes, os.PathLike, io.IOBase, int]
+		data
 			The new data to store in root
-
+		
 		Returns
 		-------
 			dict
@@ -140,7 +147,7 @@ class PatchSection(base.SectionBase):
 		| Hash | Hash of the newly derived object |
 		+------+----------------------------------+
 		"""
-		args = (root,)
+		args = (str(root),)
 		body, headers = multipart.stream_files(data, chunk_size=self.chunk_size)
 		return self._client.request('/object/patch/set-data', args, decoder='json', data=body,
 		                            headers=headers, **kwargs)
@@ -151,19 +158,19 @@ class Section(base.SectionBase):
 	patch = base.SectionProperty(PatchSection)
 	
 	
-	def data(self, cid, **kwargs):
-		r"""Returns the raw bytes in an IPFS object.
-
+	def data(self, cid: base.cid_t, **kwargs: base.CommonArgs):
+		r"""Returns the raw bytes in an IPFS object
+		
 		.. code-block:: python
-
+		
 			>>> client.object.data('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
 			b'\x08\x01'
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			Key of the object to retrieve, in CID format
-
+		
 		Returns
 		-------
 			bytes
@@ -174,11 +181,11 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def get(self, cid, **kwargs):
+	def get(self, cid: base.cid_t, **kwargs: base.CommonArgs):
 		"""Get and serialize the DAG node named by CID.
 		
 		.. code-block:: python
-
+		
 			>>> client.object.get('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
 			{'Data': '\x08\x01',
 			 'Links': [
@@ -193,12 +200,12 @@ class Section(base.SectionBase):
 				{'Hash': 'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
 				 'Name': 'published-version', 'Size': 55}
 			]}
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			Key of the object to retrieve, in CID format
-
+		
 		Returns
 		-------
 			dict
@@ -214,11 +221,11 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def links(self, cid, **kwargs):
-		"""Returns the links pointed to by the specified object.
-
+	def links(self, cid: base.cid_t, **kwargs: base.CommonArgs):
+		"""Returns the links pointed to by the specified object
+		
 		.. code-block:: python
-
+		
 			>>> client.object.links('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDx … ca7D')
 			{'Hash': 'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
 			 'Links': [
@@ -232,12 +239,12 @@ class Section(base.SectionBase):
 				 'Name': 'lib',               'Size': 268261},
 				{'Hash': 'QmSY8RfVntt3VdxWppv9w5hWgNrE31uctgTiYwKir8eXJY',
 				 'Name': 'published-version', 'Size': 55}]}
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			Key of the object to retrieve, in CID format
-
+		
 		Returns
 		-------
 			dict
@@ -253,25 +260,25 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def new(self, template=None, **kwargs):
-		"""Creates a new object from an IPFS template.
-
+	def new(self, template: ty.Optional[str] = None, **kwargs: base.CommonArgs):
+		"""Creates a new object from an IPFS template
+		
 		By default this creates and returns a new empty merkledag node, but you
 		may pass an optional template argument to create a preformatted node.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.object.new()
 			{'Hash': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'}
-
+		
 		Parameters
 		----------
-		template : str
+		template
 			Blueprints from which to construct the new object. Possible values:
-
+			
 			 * ``"unixfs-dir"``
 			 * ``None``
-
+		
 		Returns
 		-------
 			dict
@@ -285,11 +292,11 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def put(self, file, **kwargs):
+	def put(self, file: utils.clean_file_t, **kwargs: base.CommonArgs):
 		"""Stores input as a DAG object and returns its key.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.object.put(io.BytesIO(b'''
 			...       {
 			...           "Data": "another",
@@ -305,12 +312,12 @@ class Section(base.SectionBase):
 				 'Size': 8, 'Name': 'some link'}
 			 ]
 			}
-
+		
 		Parameters
 		----------
-		file : Union[str, bytes, os.PathLike, io.IOBase, int]
+		file
 			(JSON) object from which the DAG object will be created
-
+		
 		Returns
 		-------
 			dict
@@ -325,35 +332,35 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def stat(self, cid, **kwargs):
+	def stat(self, cid: base.cid_t, **kwargs: base.CommonArgs):
 		"""Get stats for the DAG node named by cid.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.object.stat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
 			{'LinksSize': 256, 'NumLinks': 5,
 			 'Hash': 'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
 			 'BlockSize': 258, 'CumulativeSize': 274169, 'DataSize': 2}
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			Key of the object to retrieve, in CID format
-
+		
 		Returns
 		-------
 			dict
 		"""
 		args = (str(cid),)
 		return self._client.request('/object/stat', args, decoder='json', **kwargs)
-
-
+	
+	
 	@base.returns_single_item(base.ResponseBase)
-	def diff(self, a, b, **kwargs):
+	def diff(self, a: base.cid_t, b: base.cid_t, **kwargs: base.CommonArgs):
 		"""Diff two cids.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.object.diff(
 					'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n',
 			        'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'
@@ -365,14 +372,14 @@ class Section(base.SectionBase):
 					{'/': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'},
 				'After':
 					{'/': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'}}]}
-
+		
 		Parameters
 		----------
-		a : Union[str, cid.CIDv0, cid.CIDv1]
+		a
 			Key of object a for comparison
-		b : Union[str, cid.CIDv0, cid.CIDv1]
+		b
 			Key of object b for comparison
-
+		
 		Returns
 		-------
 			dict

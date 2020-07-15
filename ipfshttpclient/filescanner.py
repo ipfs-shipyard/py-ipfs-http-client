@@ -364,7 +364,11 @@ class NoRecusionAdapterMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 		       and self._child.should_report(path, is_dir=is_dir)
 
 
-_match_spec_t = ty.Union[ty.AnyStr, "re_pattern_t[ty.AnyStr]", Matcher[ty.AnyStr]]
+if ty.TYPE_CHECKING:
+	_match_spec_t = ty.Union[ty.AnyStr, re_pattern_t[ty.AnyStr], Matcher[ty.AnyStr]]
+else:  # Using `re_pattern_t` here like in the type checking case makes
+       # sphinx_autodoc_typehints explode  # noqa: E114
+	_match_spec_t = ty.Union[ty.AnyStr, re_pattern_t, Matcher[ty.AnyStr]]
 match_spec_t = ty.Union[
 	ty.Iterable[_match_spec_t[ty.AnyStr]],
 	_match_spec_t[ty.AnyStr]

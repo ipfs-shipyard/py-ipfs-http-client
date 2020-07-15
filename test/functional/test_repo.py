@@ -30,7 +30,7 @@ def test_gc_no_result(client):
 
 	# Collect the garbage object with object count before and after
 	orig_objs = client.repo.stat()["NumObjects"]
-	gc = client.repo.gc(return_result=False)
+	gc = client.repo.gc(quiet=True)
 	cur_objs = client.repo.stat()["NumObjects"]
 
 	# Verify the garbage object was collected

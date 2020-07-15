@@ -2,19 +2,19 @@
 The class hierachy for exceptions is::
 
 	Error
-	 +-- VersionMismatch
-	 +-- AddressError
-	 +-- EncoderError
-	 |    +-- EncoderMissingError
-	 |    +-- EncodingError
-	 |    +-- DecodingError
-	 +-- CommunicationError
-	      +-- ProtocolError
-	      +-- StatusError
-	      +-- ErrorResponse
-	           +-- PartialErrorResponse
-	      +-- ConnectionError
-	      +-- TimeoutError
+	 ├── VersionMismatch
+	 ├── AddressError
+	 ├── EncoderError
+	 │    ├── EncoderMissingError
+	 │    ├── EncodingError
+	 │    └── DecodingError
+	 └── CommunicationError
+	      ├── ProtocolError
+	      ├── StatusError
+	      ├── ErrorResponse
+	      │    └── PartialErrorResponse
+	      ├── ConnectionError
+	      └── TimeoutError
 
 """
 import typing as ty

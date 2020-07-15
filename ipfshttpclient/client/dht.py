@@ -5,11 +5,11 @@ from .. import exceptions
 
 class Section(base.SectionBase):
 	@base.returns_single_item(base.ResponseBase)
-	def findpeer(self, peer_id, *peer_ids, **kwargs):
-		"""Queries the DHT for all of the associated multiaddresses.
-
+	def findpeer(self, peer_id: str, *peer_ids: str, **kwargs: base.CommonArgs):
+		"""Queries the DHT for all of the associated multiaddresses
+		
 		.. code-block:: python
-
+		
 			>>> client.dht.findpeer("QmaxqKpiYNr62uSFBhxJAMmEMkT6dvc3oHkrZN … MTLZ")
 			[{'ID': 'QmfVGMFrwW6AV6fTWmD6eocaTybffqAvkVLXQEFrYdk6yc',
 			  'Extra': '', 'Type': 6, 'Responses': None},
@@ -27,12 +27,12 @@ class Section(base.SectionBase):
 					'/ip4/164.132.197.107/tcp/4001',
 					'/ip4/127.0.0.1/tcp/4001']}
 			  ]}]
-
+		
 		Parameters
 		----------
-		peer_id : str
+		peer_id
 			The ID of the peer to search for
-
+		
 		Returns
 		-------
 			dict
@@ -40,14 +40,14 @@ class Section(base.SectionBase):
 		"""
 		args = (peer_id,) + peer_ids
 		return self._client.request('/dht/findpeer', args, decoder='json', **kwargs)
-
-
+	
+	
 	@base.returns_multiple_items(base.ResponseBase)
-	def findprovs(self, cid, *cids, **kwargs):
-		"""Finds peers in the DHT that can provide a specific value.
-
+	def findprovs(self, cid: base.cid_t, *cids: base.cid_t, **kwargs: base.CommonArgs):
+		"""Finds peers in the DHT that can provide a specific value
+		
 		.. code-block:: python
-
+		
 			>>> client.dht.findprovs("QmNPXDC6wTXVmZ9Uoc8X1oqxRRJr4f1sDuyQu … mpW2")
 			[{'ID': 'QmaxqKpiYNr62uSFBhxJAMmEMkT6dvc3oHkrZNpH2VMTLZ',
 			  'Extra': '', 'Type': 6, 'Responses': None},
@@ -68,12 +68,12 @@ class Section(base.SectionBase):
 					'/ip4/52.32.109.74/tcp/1028'
 				  ]}
 			  ]}]
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			The DHT key to find providers for
-
+		
 		Returns
 		-------
 			dict
@@ -84,28 +84,28 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def get(self, key, *keys, **kwargs):
-		"""Queries the DHT for its best value related to given key.
-
+	def get(self, key: str, *keys: str, **kwargs: base.CommonArgs):
+		"""Queries the DHT for its best value related to given key
+		
 		There may be several different values for a given key stored in the
 		DHT; in this context *best* means the record that is most desirable.
 		There is no one metric for *best*: it depends entirely on the key type.
 		For IPNS, *best* is the record that is both valid and has the highest
 		sequence number (freshest). Different key types may specify other rules
 		for what they consider to be the *best*.
-
+		
 		Parameters
 		----------
-		key : str
+		key
 			One or more keys whose values should be looked up
-
+		
 		Returns
 		-------
 			str
 		"""
 		args = (key,) + keys
 		res = self._client.request('/dht/get', args, decoder='json', **kwargs)
-
+		
 		if isinstance(res, dict) and "Extra" in res:
 			return res["Extra"]
 		else:
@@ -113,32 +113,32 @@ class Section(base.SectionBase):
 				if "Extra" in r and len(r["Extra"]) > 0:
 					return r["Extra"]
 		raise exceptions.Error("empty response from DHT")
-
-
+	
+	
 	#TODO: Implement `provide(cid)`
-
-
+	
+	
 	@base.returns_multiple_items(base.ResponseBase)
-	def put(self, key, value, **kwargs):
-		"""Writes a key/value pair to the DHT.
-
+	def put(self, key: str, value: str, **kwargs: base.CommonArgs):
+		"""Writes a key/value pair to the DHT
+		
 		Given a key of the form ``/foo/bar`` and a value of any form, this will
 		write that value to the DHT with that key.
-
+		
 		Keys have two parts: a keytype (foo) and the key name (bar). IPNS uses
 		the ``/ipns/`` keytype, and expects the key name to be a Peer ID. IPNS
 		entries are formatted with a special strucutre.
-
+		
 		You may only use keytypes that are supported in your ``ipfs`` binary:
 		``go-ipfs`` currently only supports the ``/ipns/`` keytype. Unless you
 		have a relatively deep understanding of the key's internal structure,
 		you likely want to be using the :meth:`~ipfshttpclient.Client.name_publish`
 		instead.
-
+		
 		Value is arbitrary text.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.dht.put("QmVgNoP89mzpgEAAqK8owYoDEyB97Mkc … E9Uc", "test123")
 			[{'ID': 'QmfLy2aqbhU1RqZnGQyqHSovV8tDufLUaPfN1LNtg5CvDZ',
 			  'Extra': '', 'Type': 5, 'Responses': None},
@@ -149,28 +149,28 @@ class Section(base.SectionBase):
 			 …
 			 {'ID': 'QmP6TAKVDCziLmx9NV8QGekwtf7ZMuJnmbeHMjcfoZbRMd',
 			  'Extra': '', 'Type': 1, 'Responses': []}]
-
+		
 		Parameters
 		----------
-		key : str
+		key
 			A unique identifier
-		value : str
+		value
 			Abitrary text to associate with the input (2048 bytes or less)
-
+		
 		Returns
 		-------
 			list
 		"""
 		args = (key, value)
 		return self._client.request('/dht/put', args, decoder='json', **kwargs)
-
-
+	
+	
 	@base.returns_multiple_items(base.ResponseBase)
-	def query(self, peer_id, *peer_ids, **kwargs):
+	def query(self, peer_id: str, *peer_ids: str, **kwargs: base.CommonArgs):
 		"""Finds the closest Peer IDs to a given Peer ID by querying the DHT.
-
+		
 		.. code-block:: python
-
+		
 			>>> client.dht.query("/ip4/104.131.131.82/tcp/4001/ipfs/QmaCpDM … uvuJ")
 			[{'ID': 'QmPkFbxAQ7DeKD5VGSh9HQrdS574pyNzDmxJeGrRJxoucF',
 			  'Extra': '', 'Type': 2, 'Responses': None},
@@ -181,12 +181,12 @@ class Section(base.SectionBase):
 			 …
 			 {'ID': 'QmYYy8L3YD1nsF4xtt4xmsc14yqvAAnKksjo3F3iZs5jPv',
 			  'Extra': '', 'Type': 1, 'Responses': []}]
-
+		
 		Parameters
 		----------
-		peer_id : str
+		peer_id
 			The peerID to run the query against
-
+		
 		Returns
 		-------
 			dict

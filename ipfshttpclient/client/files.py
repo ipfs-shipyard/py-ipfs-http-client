@@ -1,4 +1,3 @@
-import io
 import typing as ty
 
 from . import base
@@ -8,20 +7,19 @@ from .. import utils
 
 
 class Section(base.SectionBase):
-	"""
-	Functions used to manage files in IPFS's virtual “Mutable File System” (MFS)
-	file storage space.
-	"""
+	"""Manage files in IPFS's virtual “Mutable File System” (MFS) file storage space"""
 	
 	@base.returns_no_item
-	def cp(self, source, dest, **kwargs):
-		"""Copies files within the MFS.
-
-		Due to the nature of IPFS this will not actually involve any of the
-		file's content being copied.
-
+	def cp(self, source: str, dest: str, **kwargs: base.CommonArgs):
+		"""Creates a copy of a file within the MFS
+		
+		Due to the nature of IPFS this will not actually involve any copying of
+		the file's content. Instead, a new link will be added to the directory
+		containing *dest* referencing the CID of *source* – this is very similar
+		to how hard links to read-only files work in classical filesystems.
+		
 		.. code-block:: python
-
+		
 			>>> client.files.ls("/")
 			{'Entries': [
 				{'Size': 0, 'Hash': '', 'Name': 'Software', 'Type': 0},
@@ -34,14 +32,14 @@ class Section(base.SectionBase):
 				{'Size': 0, 'Hash': '', 'Name': 'bla', 'Type': 0},
 				{'Size': 0, 'Hash': '', 'Name': 'test', 'Type': 0}
 			]}
-
+		
 		Parameters
 		----------
-		source : str
+		source
 			Filepath within the MFS to copy from
-		dest : str
+		dest
 			Destination filepath within the MFS to which the file will be
-			copied to
+			copied/linked to
 		"""
 		args = (source, dest)
 		return self._client.request('/files/cp', args, **kwargs)
@@ -51,21 +49,21 @@ class Section(base.SectionBase):
 
 
 	@base.returns_single_item(base.ResponseBase)
-	def ls(self, path, **kwargs):
-		"""Lists contents of a directory in the MFS.
-
+	def ls(self, path: str, **kwargs: base.CommonArgs):
+		"""Lists contents of a directory in the MFS
+		
 		.. code-block:: python
-
+		
 			>>> client.files.ls("/")
 			{'Entries': [
 				{'Size': 0, 'Hash': '', 'Name': 'Software', 'Type': 0}
 			]}
-
+		
 		Parameters
 		----------
-		path : str
+		path
 			Filepath within the MFS
-
+		
 		Returns
 		-------
 			dict
@@ -79,63 +77,64 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_no_item
-	def mkdir(self, path, parents=False, **kwargs):
-		"""Creates a directory within the MFS.
-
+	def mkdir(self, path: str, parents: bool = False, **kwargs: base.CommonArgs):
+		"""Creates a directory within the MFS
+		
 		.. code-block:: python
-
+		
 			>>> client.files.mkdir("/test")
-
+		
 		Parameters
 		----------
-		path : str
+		path
 			Filepath within the MFS
-		parents : bool
+		parents
 			Create parent directories as needed and do not raise an exception
 			if the requested directory already exists
 		"""
 		kwargs.setdefault("opts", {})["parents"] = parents
-
+		
 		args = (path,)
 		return self._client.request('/files/mkdir', args, **kwargs)
 	
 	
 	@base.returns_no_item
-	def mv(self, source, dest, **kwargs):
-		"""Moves files and directories within the MFS.
-
+	def mv(self, source: str, dest: str, **kwargs: base.CommonArgs):
+		"""Moves files and directories within the MFS
+		
 		.. code-block:: python
-
+		
 			>>> client.files.mv("/test/file", "/bla/file")
-
+		
 		Parameters
 		----------
-		source : str
+		source
 			Existing filepath within the MFS
-		dest : str
+		dest
 			Destination to which the file will be moved in the MFS
 		"""
 		args = (source, dest)
 		return self._client.request('/files/mv', args, **kwargs)
 	
 	
-	def read(self, path, offset=0, count=None, **kwargs):
-		"""Reads a file stored in the MFS.
-
+	def read(self, path: str, offset: int = 0, count: ty.Optional[int] = None,
+	         **kwargs: base.CommonArgs):
+		"""Reads a file stored in the MFS
+		
 		.. code-block:: python
-
+		
 			>>> client.files.read("/bla/file")
 			b'hi'
-
+		
 		Parameters
 		----------
-		path : str
+		path
 			Filepath within the MFS
-		offset : int
+		offset
 			Byte offset at which to begin reading at
-		count : int
-			Maximum number of bytes to read
-
+		count
+			Maximum number of bytes to read (default is the entire remaining length)
+		
 		Returns
 		-------
 			bytes : MFS file contents
@@ -144,48 +143,52 @@ class Section(base.SectionBase):
 		if count is not None:
 			opts["count"] = count
 		kwargs.setdefault("opts", {}).update(opts)
-
+		
 		args = (path,)
 		return self._client.request('/files/read', args, **kwargs)
 	
 	
 	@base.returns_no_item
-	def rm(self, path, recursive=False, **kwargs):
-		"""Removes a file from the MFS.
-
+	def rm(self, path: str, recursive: bool = False, **kwargs: base.CommonArgs):
+		"""Removes a file from the MFS
+		
+		Note that the file's contents will not actually be removed from the IPFS
+		node until the next repository GC run. If it is important to have the
+		file's contents erased from the node this may be done manually by calling
+		:meth`~ipfshttpclient.Client.repo.gc` at a time of convenience.
+		
 		.. code-block:: python
-
+		
 			>>> client.files.rm("/bla/file")
-
+		
 		Parameters
 		----------
-		path : str
+		path
 			Filepath within the MFS
-		recursive : bool
+		recursive
 			Recursively remove directories?
 		"""
 		kwargs.setdefault("opts", {})["recursive"] = recursive
-
+		
 		args = (path,)
 		return self._client.request('/files/rm', args, **kwargs)
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def stat(self, path, **kwargs):
-		"""Returns basic ``stat`` information for an MFS file
-		(including its hash).
-
+	def stat(self, path: str, **kwargs: base.CommonArgs):
+		"""Returns basic ``stat`` information for an MFS file (including its hash)
+		
 		.. code-block:: python
-
+		
 			>>> client.files.stat("/test")
 			{'Hash': 'QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
 			 'Size': 0, 'CumulativeSize': 4, 'Type': 'directory', 'Blocks': 0}
-
+		
 		Parameters
 		----------
-		path : str
+		path
 			Filepath within the MFS
-
+		
 		Returns
 		-------
 			dict : MFS file information
@@ -195,33 +198,35 @@ class Section(base.SectionBase):
 	
 	
 	@base.returns_no_item
-	def write(self, path, file, offset=0, create=False, truncate=False, count=None, **kwargs):
-		"""Writes to a mutable file in the MFS.
-
+	def write(self, path: str, file: utils.clean_file_t, offset: int = 0,
+	          create: bool = False, truncate: bool = False,
+	          count: ty.Optional[int] = None, **kwargs: base.CommonArgs):
+		"""Writes a file into the MFS
+		
 		.. code-block:: python
-
+		
 			>>> client.files.write("/test/file", io.BytesIO(b"hi"), create=True)
-
+		
 		Parameters
 		----------
-		path : str
+		path
 			Filepath within the MFS
-		file : Union[str, bytes, os.PathLike, io.RawIOBase, int]
+		file
 			IO stream object with data that should be written
-		offset : int
+		offset
 			Byte offset at which to begin writing at
-		create : bool
+		create
 			Create the file if it does not exist
-		truncate : bool
+		truncate
 			Truncate the file to size zero before writing
-		count : int
+		count
 			Maximum number of bytes to read from the source ``file``
 		"""
 		opts = {"offset": offset, "create": create, "truncate": truncate}
 		if count is not None:
 			opts["count"] = count
 		kwargs.setdefault("opts", {}).update(opts)
-
+		
 		args = (path,)
 		body, headers = multipart.stream_files(file, chunk_size=self.chunk_size)
 		return self._client.request('/files/write', args, data=body, headers=headers, **kwargs)
@@ -231,14 +236,15 @@ class Base(base.ClientBase):
 	files = base.SectionProperty(Section)
 	
 	
-	def add(self, file: ty.Union[utils.path_t, int, io.IOBase], *files,
-	        recursive: bool = False, pattern: multipart.match_spec_t[ty.AnyStr] = None,
+	def add(self, file: utils.clean_file_t, *files: utils.clean_file_t,
+	        recursive: bool = False,
+	        pattern: multipart.match_spec_t[ty.AnyStr] = None,
 	        trickle: bool = False, follow_symlinks: bool = False,
 	        period_special: bool = True, only_hash: bool = False,
 	        wrap_with_directory: bool = False, chunker: ty.Optional[str] = None,
 	        pin: bool = True, raw_leaves: bool = None, nocopy: bool = False,
 	        cid_version: ty.Optional[int] = None,
-	        **kwargs):
+	        **kwargs: base.CommonArgs):
 		"""Adds a file, several files or directory of files to IPFS
 		
 		Arguments marked as “directories only” will be ignored unless *file*
@@ -294,14 +300,14 @@ class Base(base.ClientBase):
 		recursive
 			Upload files in subdirectories, if *file* refers to a directory?
 		pattern
-			A `*glob* <https://docs.python.org/3/library/glob.html>`_ pattern,
+			A :mod:`glob` pattern,
 			compiled regular expression object or arbitrary matcher used to limit
 			the files and directories included as part of adding a directory
 			(directories only)
 		trickle
 			Use trickle-dag format (optimized for streaming) when generating
-			the dag; see `the FAQ <https://github.com/ipfs/faq/issues/218>` for
-			more information
+			the dag; see `the old FAQ <https://github.com/ipfs/faq/issues/218>`_
+			for more information
 		follow_symlinks
 			Follow symbolic links when recursively scanning directories? (directories only)
 		period_special
@@ -326,12 +332,13 @@ class Base(base.ClientBase):
 			Add the file using filestore. Implies raw-leaves. (experimental).
 		cid_version
 			CID version. Default value is provided by IPFS daemon. (experimental)
-
+		
 		Returns
 		-------
 			Union[dict, list]
 				File name and hash of the added file node, will return a list
-				of one or more items unless only a single file was given
+				of one or more items unless only a single file (not directory)
+				was given
 		"""
 		opts = {
 			"trickle": trickle,
@@ -373,12 +380,13 @@ class Base(base.ClientBase):
 	
 	
 	@base.returns_no_item
-	def get(self, cid, target: utils.path_t = ".", **kwargs):
+	def get(self, cid: base.cid_t, target: utils.path_t = ".",
+	        **kwargs: base.CommonArgs) -> None:
 		"""Downloads a file, or directory of files from IPFS
 		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			The path to the IPFS object(s) to be outputted
 		target
 			The directory to place the downloaded files in
@@ -389,27 +397,28 @@ class Base(base.ClientBase):
 		return self._client.download('/get', target, args, **kwargs)
 	
 	
-	def cat(self, cid, offset=0, length=-1, **kwargs):
-		r"""Retrieves the contents of a file identified by hash.
-
+	def cat(self, cid: base.cid_t, offset: int = 0,
+	        length: ty.Optional[int] = None, **kwargs: base.CommonArgs):
+		r"""Retrieves the contents of a file identified by hash
+		
 		.. code-block:: python
-
+		
 			>>> client.cat('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
 			Traceback (most recent call last):
 			  ...
 			ipfsapi.exceptions.Error: this dag node is a directory
 			>>> client.cat('QmeKozNssnkJ4NcyRidYgDY2jfRZqVEoRGfipkgath71bX')
 			b'<!DOCTYPE html>\n<html>\n\n<head>\n<title>ipfs example viewer</…'
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			The name or path of the IPFS object(s) to be retrieved
-		offset : int
+		offset
 			Byte offset to begin reading from
-		length : int
-			Maximum number of bytes to read(-1 for all)
-
+		length
+			Maximum number of bytes to read (defaults to reading the entire file)
+		
 		Returns
 		-------
 			bytes
@@ -419,18 +428,18 @@ class Base(base.ClientBase):
 		opts = {}
 		if offset != 0:
 			opts['offset'] = offset
-		if length != -1:
+		if length is not None:
 			opts['length'] = length
 		kwargs.setdefault('opts', opts)
 		return self._client.request('/cat', args, **kwargs)
 	
 	
 	@base.returns_single_item(base.ResponseBase)
-	def ls(self, cid, **kwargs):
-		"""Returns a list of objects linked to by the given hash.
-
+	def ls(self, cid: base.cid_t, **kwargs: base.CommonArgs):
+		"""Returns a list of objects linked to by the given hash
+		
 		.. code-block:: python
-
+		
 			>>> client.ls('QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D')
 			{'Objects': [
 				{'Hash': 'QmTkzDwWqPbnAh5YiV5VwcTLnGdwSNsNTn2aDxdXBFca7D',
@@ -443,12 +452,12 @@ class Base(base.ClientBase):
 					]
 				}
 			]}
-
+		
 		Parameters
 		----------
-		cid : Union[str, cid.CIDv0, cid.CIDv1]
+		cid
 			The path to the IPFS object(s) to list links from
-
+		
 		Returns
 		-------
 			dict

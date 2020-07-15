@@ -1,5 +1,8 @@
 import functools
+import sys
 import typing as ty
+
+import multiaddr  # type: ignore[import]
 
 from . import DEFAULT_ADDR, DEFAULT_BASE
 
@@ -8,13 +11,16 @@ from .. import multipart, http, utils
 
 if ty.TYPE_CHECKING:
 	import typing_extensions as ty_ext
-	
-	import cid  # type: ignore[import]
-	cid_t = ty.Union[str, cid.CIDv0, cid.CIDv1]
 else:
 	ty_ext = utils
-	
+
+if "cid" in sys.modules:
+	import cid  # type: ignore[import]
+	cid_t = ty.Union[str, cid.CIDv0, cid.CIDv1]
+elif not ty.TYPE_CHECKING:
 	cid_t = str
+
+multiaddr_t = ty.Union[str, multiaddr.Multiaddr]
 
 
 # Alias JSON types
@@ -23,20 +29,24 @@ json_list_t = utils.json_list_t
 json_primitive_t = utils.json_primitive_t
 json_value_t = utils.json_value_t
 
-# The following would be useful once GH/python/mypy#4441 is implemented.
-#if hasattr(ty_ext, "TypedDict"):
-#	CommonArgs = ty_ext.TypedDict("CommonArgs", {
-#		"offline": bool,
-#		"return_result": bool,
-#		"auth": http.auth_t,
-#		"cookies": http.cookies_t,
-#		"data": http.reqdata_sync_t,
-#		"headers": http.headers_t,
-#		"timeout": http.timeout_t,
-#	})
-#elif not ty.TYPE_CHECKING:
-#	CommonArgs = ty.Dict[str, ty.Any]
-
+# The following would be much more useful once GH/python/mypy#4441 is implemented…
+if ty.TYPE_CHECKING:
+	# Lame workaround for type checkers
+	CommonArgs = ty.Union[bool, http.auth_t, http.cookies_t, http.reqdata_sync_t,
+	                      http.headers_t, http.timeout_t]
+elif hasattr(ty, "TypedDict"):
+	# This is what type checkers should actually use
+	CommonArgs = ty.TypedDict("CommonArgs", {
+		"offline": bool,
+		"return_result": bool,
+		"auth": http.auth_t,
+		"cookies": http.cookies_t,
+		"data": http.reqdata_sync_t,
+		"headers": http.headers_t,
+		"timeout": http.timeout_t,
+	})
+else:
+	CommonArgs = ty.Dict[str, ty.Any]
 
 # work around GH/mypy/mypy#731: no recursive structural types yet
 response_item_t = ty.Union[
@@ -191,7 +201,8 @@ def returns_multiple_items(item_wrap_cb: wrap_cb_t[T, R] = ident, *, stream: boo
 			if isinstance(result, list):
 				return [item_wrap_cb(r) for r in result]
 			if result is None:
-				assert not kwargs.get("return_result", True)
+				# WORKAROUND: Remove the `or …` part in 0.7.X
+				assert not kwargs.get("return_result", True) or kwargs.get("quiet", False)
 				return None
 			assert kwargs.get("stream", False) or stream, (
 				"Called IPFS HTTP-Client function should only ever return a list, "
@@ -331,52 +342,6 @@ class SectionBase:
 
 
 class ClientBase:
-	"""
-	Parameters
-	----------
-	addr
-		The `Multiaddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
-		API daemon location, as used in the *API* key of `go-ipfs Addresses
-		section
-		<https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
-		
-		Supported addressing patterns are currently:
-		
-		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
-		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
-		 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
-		
-		Additional forms (proxying) may be supported in the future.
-	base
-		The HTTP URL path prefix (or “base”) at which the API is exposed on the
-		API daemon
-	chunk_size
-		The size of data chunks passed to the operating system when uploading
-		files or text/binary content
-	offline
-		Ask daemon to operate in “offline mode” – that is, it should not consult
-		the network when unable to find resources locally, but fail instead
-	session
-		Create this :class:`~ipfshttpclient.Client` instance with a session
-		already open? (Useful for long-running client objects.)
-	auth
-		HTTP basic authentication `(username, password)` tuple to send along with
-		each request to the API daemon
-	cookies
-		HTTP cookies to send along with each request to the API daemon
-	headers
-		Custom HTTP headers to send along with each request to the API daemon
-	timeout
-		Connection timeout (in seconds) when connecting to the API daemon
-		
-		If a tuple is passed its contents will be interpreted as the values for
-		the connecting and receiving phases respectively, otherwise the value will
-		apply to both phases.
-		
-		The default value is implementation-defined. A value of `math.inf`
-		disables the respective timeout.
-	"""
-	
 	def __init__(  # type: ignore[no-any-unimported]
 			self,
 			addr: http.addr_t = DEFAULT_ADDR,
@@ -395,7 +360,51 @@ class ClientBase:
 			username: ty.Optional[str] = None,
 			password: ty.Optional[str] = None
 	):
-		"""Connects to the API port of an IPFS node."""
+		"""
+		Arguments
+		---------
+		addr
+			The `Multiaddr <dweb:/ipns/multiformats.io/multiaddr/>`_ describing the
+			API daemon location, as used in the *API* key of `go-ipfs Addresses
+			section
+			<https://github.com/ipfs/go-ipfs/blob/master/docs/config.md#addresses>`_
+			
+			Supported addressing patterns are currently:
+			
+			 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>`` (HTTP)
+			 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/http`` (HTTP)
+			 * ``/{dns,dns4,dns6,ip4,ip6}/<host>/tcp/<port>/https`` (HTTPS)
+			
+			Additional forms (proxying) may be supported in the future.
+		base
+			The HTTP URL path prefix (or “base”) at which the API is exposed on the
+			API daemon
+		chunk_size
+			The size of data chunks passed to the operating system when uploading
+			files or text/binary content
+		offline
+			Ask daemon to operate in “offline mode” – that is, it should not consult
+			the network when unable to find resources locally, but fail instead
+		session
+			Create this :class:`~ipfshttpclient.Client` instance with a session
+			already open? (Useful for long-running client objects.)
+		auth
+			HTTP basic authentication `(username, password)` tuple to send along with
+			each request to the API daemon
+		cookies
+			HTTP cookies to send along with each request to the API daemon
+		headers
+			Custom HTTP headers to send along with each request to the API daemon
+		timeout
+			Connection timeout (in seconds) when connecting to the API daemon
+			
+			If a tuple is passed its contents will be interpreted as the values for
+			the connecting and receiving phases respectively, otherwise the value will
+			apply to both phases.
+			
+			The default value is implementation-defined. A value of `math.inf`
+			disables the respective timeout.
+		"""
 		
 		self.chunk_size = chunk_size
 		

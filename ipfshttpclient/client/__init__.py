@@ -39,7 +39,9 @@ from . import unstable
 from .. import encoding, exceptions, http, multipart, utils
 
 
-def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, blacklist=VERSION_BLACKLIST):
+def assert_version(version: str, minimum: str = VERSION_MINIMUM,
+                   maximum: str = VERSION_MAXIMUM,
+                   blacklist: ty.Iterable[str] = VERSION_BLACKLIST) -> None:
 	"""Make sure that the given daemon version is supported by this client
 	version.
 
@@ -49,12 +51,14 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 
 	Parameters
 	----------
-	version : str
+	version
 		The actual version of an IPFS daemon
-	minimum : str
-		The minimal IPFS daemon version to allowed
-	maximum : str
-		The maximum IPFS daemon version to allowed
+	minimum
+		The minimal IPFS daemon version allowed (inclusive)
+	maximum
+		The maximum IPFS daemon version allowed (exclusive)
+	blacklist
+		Versions explicitly disallowed even if in range *minimum* – *maximum*
 	"""
 	# Convert version strings to integer tuples
 	version = list(map(int, version.split('-', 1)[0].split('.')))
@@ -93,12 +97,12 @@ def connect(
 	
 	Raises
 	------
-	~ipfshttpclient.exceptions.VersionMismatch
-	~ipfshttpclient.exceptions.ErrorResponse
-	~ipfshttpclient.exceptions.ConnectionError
-	~ipfshttpclient.exceptions.ProtocolError
-	~ipfshttpclient.exceptions.StatusError
-	~ipfshttpclient.exceptions.TimeoutError
+		~ipfshttpclient.exceptions.VersionMismatch
+		~ipfshttpclient.exceptions.ErrorResponse
+		~ipfshttpclient.exceptions.ConnectionError
+		~ipfshttpclient.exceptions.ProtocolError
+		~ipfshttpclient.exceptions.StatusError
+		~ipfshttpclient.exceptions.TimeoutError
 	
 	All parameters are identical to those passed to the constructor of the
 	:class:`~ipfshttpclient.Client` class.
@@ -164,7 +168,8 @@ class Client(files.Base, miscellaneous.Base):
 				self._client.close()
 	"""
 	
-	__doc__ += base.ClientBase.__doc__
+	# Fix up docstring so that Sphinx doesn't ignore the constructors parameter list
+	__doc__ += "\n\n" + "\n".join(l[1:] for l in base.ClientBase.__init__.__doc__.split("\n"))
 	
 	bitswap   = base.SectionProperty(bitswap.Section)
 	block     = base.SectionProperty(block.Section)
@@ -216,7 +221,8 @@ class Client(files.Base, miscellaneous.Base):
 		
 		Returns
 		-------
-		The version information returned by the daemon
+			dict
+				The version information returned by the daemon
 		"""
 		version_info = self.version()
 		
