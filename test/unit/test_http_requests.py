@@ -45,11 +45,11 @@ cookiejar = http.cookiejar.CookieJar()
 def test_map_args_to_requests(kwargs, expected):
 	assert ipfshttpclient.http_requests.map_args_to_requests(**kwargs) == expected
 
-@pytest.mark.parametrize("args,kwargs,expected1,expected2", [
+@pytest.mark.parametrize("args,kwargs,expected1,expected2,expected3", [
 	(("/dns/localhost/tcp/5001/http", "api/v0"), {}, "http://localhost:5001/api/v0/", {
 		"family": socket.AF_UNSPEC,
 		"params": {'stream-channels': 'true'},
-	}),
+	}, None),
 	
 	(("/dns6/ietf.org/tcp/443/https", "/base/"), {
 		"auth": ("user", "pass"),
@@ -63,10 +63,10 @@ def test_map_args_to_requests(kwargs, expected):
 		"cookies": cookiejar,
 		"headers": {"name": "value"},
 		"params": {'offline': 'true', 'stream-channels': 'true'},
-		"timeout": (None, None),
-	}),
+	}, (math.inf, math.inf)),
 ])
-def test_client_args_to_session_props(args, kwargs, expected1, expected2):
+def test_client_args_to_session_props(args, kwargs, expected1, expected2, expected3):
 	client = ipfshttpclient.http_requests.ClientSync(*args, **kwargs)
 	assert client._base_url == expected1
 	assert client._session_props == expected2
+	assert client._default_timeout == expected3

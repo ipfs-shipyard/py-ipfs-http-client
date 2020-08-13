@@ -222,6 +222,18 @@ def test_download_timeout(slow_http_server):
 	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
 		http_client.download('/timeout', timeout=0.1)
 
+def test_download_timeout_session(slow_http_server):
+	"""Tests that a timed-out download raises a TimeoutError."""
+	http_client = ipfshttpclient.http.ClientSync(
+		"/ip4/{0}/tcp/{1}/http".format(*slow_http_server.server_address),
+		ipfshttpclient.DEFAULT_BASE,
+		timeout=0.1
+	)
+	
+	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
+		http_client.download('/timeout')
+
+
 def test_request_connect_error():
 	"""Tests that a request to a non-existing server raises a ConnectionError."""
 	http_client = ipfshttpclient.http.ClientSync(
