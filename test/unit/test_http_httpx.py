@@ -47,10 +47,10 @@ cookiejar = http.cookiejar.CookieJar()
 def test_map_args_to_httpx(kwargs, expected):
 	assert ipfshttpclient.http_httpx.map_args_to_httpx(**kwargs) == expected
 
-@pytest.mark.parametrize("args,kwargs,expected_kwargs,expected_base", [
+@pytest.mark.parametrize("args,kwargs,expected_kwargs,expected_base,expected_laddr", [
 	(("/dns/localhost/tcp/5001/http", "api/v0"), {}, {
 		"params": [("stream-channels", "true")],
-	}, "http://localhost:5001/api/v0/"),
+	}, "http://localhost:5001/api/v0/", None),
 	
 	(("/dns6/ietf.org/tcp/443/https", "/base/"), {
 		"auth": ("user", "pass"),
@@ -59,15 +59,15 @@ def test_map_args_to_httpx(kwargs, expected):
 		"offline": True,
 		"timeout": (math.inf, math.inf),
 	}, {
-		#XXX: This should also store the expected address family somewhere
 		"auth": ("user", "pass"),
 		"cookies": cookiejar,
 		"headers": {"name": "value"},
 		"params": [("offline", "true"), ("stream-channels", "true")],
 		"timeout": (None, None, None, None),
-	}, "https://ietf.org:443/base/"),
+	}, "https://ietf.org:443/base/", "::"),
 ])
-def test_client_args_to_session_kwargs(args, kwargs, expected_kwargs, expected_base):
+def test_client_args_to_session_kwargs(args, kwargs, expected_kwargs, expected_base, expected_laddr):
 	client = ipfshttpclient.http_httpx.ClientSync(*args, **kwargs)
 	assert client._session_kwargs == expected_kwargs
 	assert client._session_base == expected_base
+	assert client._session_laddr == expected_laddr
