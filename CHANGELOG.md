@@ -9,6 +9,7 @@ Bugfixes:
 
  * The value of the `timeout` parameter on `ipfshttpclient.{connect,Client}` is no longer ignored when using the `requests` HTTP backend (default)
     * (The per-API-call `timeout` parameter was unaffected by this.)
+ * The HTTPx HTTP backend now properly applies address family restrictions encoded as part of the daemon MultiAddr (needed minor upstream change)
 
 py-ipfs-http-client 0.6.0 (30.06.2020)
 --------------------------------------

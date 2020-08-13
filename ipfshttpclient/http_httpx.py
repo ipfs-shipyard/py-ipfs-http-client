@@ -7,8 +7,8 @@ asynchronous API soon™.
 import math
 import socket
 import typing as ty
-import warnings
 
+import httpcore
 import httpx
 
 from . import encoding
@@ -26,7 +26,7 @@ if ty.TYPE_CHECKING:
 	import typing_extensions
 	
 	# By using the precise types from HTTPx we'll also get type errors if our
-	# types become somehow incompatible with the one from that library
+	# types become somehow incompatible with the ones from that library
 	RequestArgs = typing_extensions.TypedDict("RequestArgs", {
 		"auth": "httpx._types.AuthTypes",
 		"cookies": "httpx._types.CookieTypes",
@@ -75,9 +75,10 @@ def map_args_to_httpx(
 
 
 class ClientSync(ClientSyncBase[httpx.Client]):
-	__slots__ = ("_session_base", "_session_kwargs")
+	__slots__ = ("_session_base", "_session_kwargs", "_session_laddr")
 	_session_base: "httpx._types.URLTypes"
 	_session_kwargs: RequestArgs
+	_session_laddr: ty.Optional[str]
 	
 	def _init(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
 	          auth: auth_t,
@@ -90,12 +91,15 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 		host_numeric: bool
 		base_url, family, host_numeric = multiaddr_to_url_data(addr, base)
 		
-		#FIXME once https://github.com/encode/httpcore/pull/100 is released
-		if family != socket.AF_UNSPEC and not host_numeric:
-			warnings.warn(
-				"Restricting the address family on name lookups is not yet supported by HTTPx",
-				UserWarning
-			)
+		self._session_laddr = None
+		if family != socket.AF_UNSPEC:
+			if family == socket.AF_INET:
+				self._session_laddr = "0.0.0.0"
+			elif family == socket.AF_INET6:
+				self._session_laddr = "::"
+			else:
+				assert False, ("multiaddr_to_url_data should only return a socket "
+				               "address family of AF_INET, AF_INET6 or AF_UNSPEC")
 		
 		self._session_base = base_url
 		self._session_kwargs = map_args_to_httpx(
@@ -107,7 +111,18 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 		)
 	
 	def _make_session(self) -> httpx.Client:
-		return httpx.Client(**self._session_kwargs, base_url=self._session_base)
+		connection_pool = httpcore.SyncConnectionPool(
+			local_address = self._session_laddr,
+			
+			#XXX: Argument values duplicated from httpx._client.Client._init_transport:
+			keepalive_expiry          = 5.0,  #XXX: Value duplicated from httpx._client.KEEPALIVE_EXPIRY
+			max_connections           = 100,  #XXX: Value duplicated from httpx._config.DEFAULT_LIMITS
+			max_keepalive_connections = 20,   #XXX: Value duplicated from httpx._config.DEFAULT_LIMITS
+			ssl_context               = httpx.create_ssl_context(trust_env=True),
+		)
+		return httpx.Client(**self._session_kwargs,
+		                    base_url  = self._session_base,
+		                    transport = connection_pool)
 	
 	def _do_raise_for_status(self, response: httpx.Response) -> None:
 		try:
