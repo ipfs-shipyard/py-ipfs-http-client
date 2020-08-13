@@ -5,6 +5,11 @@ py-ipfs-http-client 0.6.1 (XX.XX.20XX)
  * Deprecate `.repo.gc(…)`s `return_result` parameter in favour of the newly introduced `quiet` parameter to match the newer HTTP API
  * If you use the undocumented `return_result` parameter anywhere else consider such use deprecated, support for this parameter will be removed in 0.7.X everywhere
 
+Bugfixes:
+
+ * The value of the `timeout` parameter on `ipfshttpclient.{connect,Client}` is no longer ignored when using the `requests` HTTP backend (default)
+    * (The per-API-call `timeout` parameter was unaffected by this.)
+
 py-ipfs-http-client 0.6.0 (30.06.2020)
 --------------------------------------
 

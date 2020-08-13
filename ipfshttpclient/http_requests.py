@@ -71,7 +71,7 @@ def map_args_to_requests(
 
 
 class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined]
-	__slots__ = ("_base_url", "_session_props")
+	__slots__ = ("_base_url", "_session_props", "_default_timeout")
 	#_base_url: str
 	#_session_props: ty.Dict[str, ty.Any]
 	
@@ -88,8 +88,8 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			cookies=cookies,
 			headers=headers,
 			params=params,
-			timeout=timeout,
 		)
+		self._default_timeout = timeout
 		if PATCH_REQUESTS:  # pragma: no branch (always enabled in production)
 			self._session_props["family"] = family
 	
@@ -156,7 +156,7 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 						params=params,
 						auth=auth,
 						headers=headers,
-						timeout=timeout,
+						timeout=(timeout if timeout is not None else self._default_timeout),
 					),
 					data=data,
 					stream=True,
