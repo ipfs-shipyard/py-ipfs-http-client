@@ -1,16 +1,9 @@
 import io
 import pytest
 
+import conftest
 
-def test_export(client):
-    assert 0
-
-
-def test_import_(client):
-    assert 0
-
-
-def test_put_get(client):
+def test_put_get_resolve(client):
     data = io.BytesIO(br'{"links": []}')
     response = client.dag.put(data)
 
@@ -23,6 +16,8 @@ def test_put_get(client):
     assert 'links' in response
     assert response['links'] == []
 
+    response = client.dag.resolve('bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya')
 
-def test_resolve(client):
-    assert 0
+    assert 'Cid' in response
+    assert response['Cid']['/'] == 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
+
