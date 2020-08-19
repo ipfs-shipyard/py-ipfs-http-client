@@ -1,3 +1,4 @@
+import io
 import pytest
 
 
@@ -14,7 +15,11 @@ def test_import_(client):
 
 
 def test_put(client):
-    assert 0
+    data = io.BytesIO(br'{"links": []}')
+    response = client.dag.put(data)
+    assert 'Cid' in response
+    assert '/' in response['Cid']
+    assert response['Cid']['/'] == 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
 
 
 def test_resolve(client):
