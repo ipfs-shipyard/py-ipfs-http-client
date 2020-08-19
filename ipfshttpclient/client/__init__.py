@@ -22,7 +22,7 @@ from . import bitswap
 from . import block
 from . import bootstrap
 from . import config
-#TODO: `from . import dag`
+from . import dag
 from . import dht
 from . import files
 from . import key
@@ -175,6 +175,7 @@ class Client(files.Base, miscellaneous.Base):
 	block     = base.SectionProperty(block.Section)
 	bootstrap = base.SectionProperty(bootstrap.Section)
 	config    = base.SectionProperty(config.Section)
+	dag       = base.SectionProperty(dag.Section)
 	dht       = base.SectionProperty(dht.Section)
 	key       = base.SectionProperty(key.Section)
 	name      = base.SectionProperty(name.Section)
