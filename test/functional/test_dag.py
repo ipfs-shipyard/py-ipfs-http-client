@@ -1,7 +1,5 @@
 import io
-import pytest
 
-import conftest
 
 def test_put_get_resolve(client):
 	data = io.BytesIO(br'{"links": []}')
@@ -20,4 +18,3 @@ def test_put_get_resolve(client):
 
 	assert 'Cid' in response
 	assert response['Cid']['/'] == 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
-
