@@ -23,7 +23,10 @@ def test_put_get_resolve(client):
 
 
 def test_import_export(client):
+	# This file was created by inserting a simple JSON object into IPFS and
+	# exporting it using `ipfs dag export <cid> > file.car`
 	data_car = conftest.TEST_DIR / 'fake_json' / 'data.car'
+
 	with open(data_car, 'rb') as file:
 		response = client.dag.imprt(file)
 
