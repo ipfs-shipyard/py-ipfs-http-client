@@ -33,7 +33,9 @@ def test_import_export(client):
 	assert 'Root' in response
 	assert 'Cid' in response['Root']
 	assert '/' in response['Root']['Cid']
-	assert response['Root']['Cid']['/'] == 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
+
+	cid = response['Root']['Cid']
+	assert cid['/'] == 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
 
 	data = client.dag.export('bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya')
 
