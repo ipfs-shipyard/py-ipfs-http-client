@@ -1,14 +1,13 @@
-import typing as ty
-
 from . import base
 
 from .. import multipart
+from .. import utils
 
 
 class Section(base.SectionBase):
 	@base.returns_single_item(base.ResponseBase)
-	def get(self, cid: str, **kwargs: base.CommonArgs):
-		"""Get and serialize the DAG node named by CID.
+	def get(self, cid: base.cid_t, **kwargs: base.CommonArgs):
+		"""Retrieves the contents of a DAG node
 
 		.. code-block:: python
 
@@ -41,8 +40,8 @@ class Section(base.SectionBase):
 		return self._client.request('/dag/get', args, decoder='json', **kwargs)
 
 	@base.returns_single_item(base.ResponseBase)
-	def put(self, data: ty.IO, **kwargs: base.CommonArgs):
-		"""Stores input as a DAG object and returns its key.
+	def put(self, data: utils.clean_file_t, **kwargs: base.CommonArgs):
+		"""Decodes the given input file as a DAG object and returns their key
 
 		.. code-block:: python
 
@@ -63,7 +62,7 @@ class Section(base.SectionBase):
 		Parameters
 		----------
 		data
-			IO stream object with data that should be put
+			IO stream object of path to a file containing the data to put
 
 		Returns
 		-------
@@ -75,8 +74,8 @@ class Section(base.SectionBase):
 		                            headers=headers, **kwargs)
 
 	@base.returns_single_item(base.ResponseBase)
-	def resolve(self, cid: str, **kwargs: base.CommonArgs):
-		"""Resolves a DAG node from its Cid
+	def resolve(self, cid: base.cid_t, **kwargs: base.CommonArgs):
+		"""Resolves a DAG node from its CID, returning its address and remaining path
 
 		.. code-block:: python
 
@@ -100,8 +99,8 @@ class Section(base.SectionBase):
 		return self._client.request('/dag/resolve', args, decoder='json', **kwargs)
 
 	@base.returns_single_item(base.ResponseBase)
-	def imprt(self, data: ty.IO, **kwargs: base.CommonArgs):
-		"""Imports a .car file with a DAG to IPFS
+	def imprt(self, data: utils.clean_file_t, **kwargs: base.CommonArgs):
+		"""Imports a .car file with a DAG into IPFS
 
 		.. code-block:: python
 
@@ -113,6 +112,9 @@ class Section(base.SectionBase):
 					}
 				}
 			}
+
+		*Note*: This method is named ``.imprt`` (rather than ``.import``) to avoid causing a Python
+		:exc:`SyntaxError` due to ``import`` being global keyword in Python.
 
 		Parameters
 		----------
@@ -133,7 +135,10 @@ class Section(base.SectionBase):
 
 		.. code-block:: python
 
-			>>> bytes = client.dag.export('bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya')
+			>>> data = client.dag.export('bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya')
+
+		*Note*: When exporting larger DAG structures, remember that you can set the *stream*
+		parameter to ``True`` on any method to have it return results incrementally.
 
 		Parameters
 		----------
