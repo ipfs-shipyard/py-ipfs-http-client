@@ -1,9 +1,15 @@
 import io
 
+import pytest
+
 import conftest
 
 
 def test_put_get_resolve(client):
+	version = tuple(map(int, client.version()["Version"].split('-', 1)[0].split('.')))
+	if version < (0, 5):
+		pytest.skip("IPFS DAG APIs first appeared in go-IPFS 0.5")
+
 	data = io.BytesIO(br'{"links": []}')
 	response = client.dag.put(data)
 
@@ -23,10 +29,14 @@ def test_put_get_resolve(client):
 
 
 def test_import_export(client):
+	version = tuple(map(int, client.version()["Version"].split('-', 1)[0].split('.')))
+	if version < (0, 5):
+		pytest.skip("IPFS DAG APIs first appeared in go-IPFS 0.5")
+
 	# This file was created by inserting a simple JSON object into IPFS and
 	# exporting it using `ipfs dag export <cid> > file.car`
 	data_car = conftest.TEST_DIR / 'fake_json' / 'data.car'
-	data_car = str(data_car)
+	data_car = str(data_car)  #PY35
 
 	with open(data_car, 'rb') as file:
 		response = client.dag.imprt(file)
