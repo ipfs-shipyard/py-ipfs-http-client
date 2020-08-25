@@ -1,9 +1,11 @@
 py-ipfs-http-client 0.6.1 (XX.XX.20XX)
 --------------------------------------
 
- * Add typings for most of the public and private API and enable type checking with `mypy`
+ * Added typings for most of the public and private API and enable type checking with `mypy`
+ * Added support for connecting to the IPFS daemon using Unix domain sockets (implemented for both the requests and HTTPx backend)
  * Deprecate `.repo.gc(…)`s `return_result` parameter in favour of the newly introduced `quiet` parameter to match the newer HTTP API
  * If you use the undocumented `return_result` parameter anywhere else consider such use deprecated, support for this parameter will be removed in 0.7.X everywhere
+    * Rationale: This parameter used to map to using the HTTP HEAD method perform the given request without any reply being returned, but this feature has been dropped with go-IPFS 0.5 from the API.
 
 Bugfixes:
 

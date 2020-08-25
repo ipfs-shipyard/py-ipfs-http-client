@@ -7,11 +7,14 @@ import urllib.parse
 
 import multiaddr  # type: ignore[import]
 from multiaddr.protocols import (P_DNS, P_DNS4, P_DNS6,  # type: ignore[import]
-                                 P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP)
+                                 P_HTTP, P_HTTPS, P_IP4, P_IP6, P_TCP, P_UNIX)
 
 from . import encoding
 from . import exceptions
 from . import utils
+
+
+AF_UNIX = getattr(socket, "AF_UNIX", NotImplemented)
 
 
 if ty.TYPE_CHECKING:
@@ -240,7 +243,7 @@ class ReadableStreamWrapper:
 
 
 def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimported]
-) -> ty.Tuple[str, socket.AddressFamily, bool]:
+) -> ty.Tuple[str, ty.Optional[str], socket.AddressFamily, bool]:
 	try:
 		addr = multiaddr.Multiaddr(addr)
 	except multiaddr.exceptions.ParseError as error:
@@ -255,17 +258,31 @@ def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimpor
 		family = socket.AF_UNSPEC
 		host_numeric = proto.code in (P_IP4, P_IP6)
 		
+		uds_path = None  # type: ty.Optional[str]
 		if proto.code in (P_IP4, P_DNS4):
 			family = socket.AF_INET
 		elif proto.code in (P_IP6, P_DNS6):
 			family = socket.AF_INET6
+		elif proto.code == P_UNIX and AF_UNIX is not NotImplemented:
+			family = AF_UNIX
+			uds_path = host
 		elif proto.code != P_DNS:
 			raise exceptions.AddressError(addr)
 		
-		# Read port value
-		proto, port = next(addr_iter)
-		if proto.code != P_TCP:
-			raise exceptions.AddressError(addr)
+		if family == AF_UNIX:
+			assert uds_path is not None
+			netloc = urllib.parse.quote(uds_path, safe="")
+		else:
+			# Read port value for IP-based transports
+			proto, port = next(addr_iter)
+			if proto.code != P_TCP:
+				raise exceptions.AddressError(addr)
+			
+			# Pre-format network location URL part based on host+port
+			if ":" in host and not host.startswith("["):
+				netloc = "[{0}]:{1}".format(host, port)
+			else:
+				netloc = "{0}:{1}".format(host, port)
 		
 		# Read application-level protocol name
 		secure = False
@@ -291,17 +308,15 @@ def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimpor
 	
 	# Convert the parsed `addr` values to a URL base and parameters for the
 	# HTTP library
-	if ":" in host and not host.startswith("["):
-		host = "[{0}]".format(host)
 	base_url = urllib.parse.SplitResult(
 		scheme   = "http" if not secure else "https",
-		netloc   = "{0}:{1}".format(host, port),
+		netloc   = netloc,
 		path     = base,
 		query    = "",
 		fragment = ""
 	).geturl()
 	
-	return base_url, family, host_numeric
+	return base_url, uds_path, family, host_numeric
 
 
 def map_args_to_params(

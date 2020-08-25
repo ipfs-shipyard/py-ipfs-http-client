@@ -18,6 +18,8 @@ AF2NAME = {
 	int(socket.AF_INET):  "ip4",
 	int(socket.AF_INET6): "ip6",
 }
+if hasattr(socket, "AF_UNIX"):
+	AF2NAME[int(socket.AF_UNIX)] = "unix"
 NAME2AF = {name: af for af, name in AF2NAME.items()}
 
 
@@ -40,14 +42,20 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 	if not family or family == socket.AF_UNSPEC:
 		family = urllib3.util.connection.allowed_gai_family()
 
-	for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+	# Extension for Unix domain sockets
+	if hasattr(socket, "AF_UNIX") and family == socket.AF_UNIX:
+		gai_result = [(socket.AF_UNIX, socket.SOCK_STREAM, 0, "", host)]
+	else:
+		gai_result = socket.getaddrinfo(host, port, family, socket.SOCK_STREAM)
+
+	for res in gai_result:
 		af, socktype, proto, canonname, sa = res
 		sock = None
 		try:
 			sock = socket.socket(af, socktype, proto)
 
 			# If provided, set socket level options before connecting.
-			if socket_options is not None:
+			if socket_options is not None and family != getattr(socket, "AF_UNIX", NotImplemented):
 				for opt in socket_options:
 					sock.setsockopt(*opt)
 
@@ -94,6 +102,8 @@ class ConnectionOverrideMixin:
 
 		try:
 			dns_host = getattr(self, "_dns_host", self.host)
+			if hasattr(socket, "AF_UNIX") and extra_kw["family"] == socket.AF_UNIX:
+				dns_host = urllib.parse.unquote(dns_host)
 			conn = create_connection(
 				(dns_host, self.port), self.timeout, **extra_kw)
 		except socket.timeout:

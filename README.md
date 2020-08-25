@@ -157,11 +157,17 @@ Use an IPFS server with basic auth (replace username and password with real cred
 >>> client = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', auth=("username", "password"))
 ```
 
-Pass custom headers to your IPFS api with each request:
+Pass custom headers to the IPFS daemon with each request:
 ```py
 >>> import ipfshttpclient
 >>> headers = {"CustomHeader": "foobar"}
 >>> client = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
+```
+
+Connect to the IPFS daemon using a Unix domain socket (plain HTTP only):
+```py
+>>> import ipfshttpclient
+>>> client = ipfshttpclient.connect("/unix/run/ipfs/ipfs.sock")
 ```
 
 

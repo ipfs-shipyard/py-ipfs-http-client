@@ -75,10 +75,11 @@ def map_args_to_httpx(
 
 
 class ClientSync(ClientSyncBase[httpx.Client]):
-	__slots__ = ("_session_base", "_session_kwargs", "_session_laddr")
+	__slots__ = ("_session_base", "_session_kwargs", "_session_laddr", "_session_uds_path")
 	_session_base: "httpx._types.URLTypes"
 	_session_kwargs: RequestArgs
 	_session_laddr: ty.Optional[str]
+	_session_uds_path: ty.Optional[str]
 	
 	def _init(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
 	          auth: auth_t,
@@ -87,16 +88,20 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 	          params: params_t,
 	          timeout: timeout_t) -> None:
 		base_url: str
+		uds_path: ty.Optional[str]
 		family: socket.AddressFamily
 		host_numeric: bool
-		base_url, family, host_numeric = multiaddr_to_url_data(addr, base)
+		base_url, uds_path, family, host_numeric = multiaddr_to_url_data(addr, base)
 		
 		self._session_laddr = None
+		self._session_uds_path = None
 		if family != socket.AF_UNSPEC:
 			if family == socket.AF_INET:
 				self._session_laddr = "0.0.0.0"
 			elif family == socket.AF_INET6:
 				self._session_laddr = "::"
+			elif family == socket.AF_UNIX:
+				self._session_uds_path = uds_path
 			else:
 				assert False, ("multiaddr_to_url_data should only return a socket "
 				               "address family of AF_INET, AF_INET6 or AF_UNSPEC")
@@ -113,6 +118,7 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 	def _make_session(self) -> httpx.Client:
 		connection_pool = httpcore.SyncConnectionPool(
 			local_address = self._session_laddr,
+			uds = self._session_uds_path,
 			
 			#XXX: Argument values duplicated from httpx._client.Client._init_transport:
 			keepalive_expiry          = 5.0,  #XXX: Value duplicated from httpx._client.KEEPALIVE_EXPIRY
