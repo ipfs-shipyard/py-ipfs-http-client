@@ -71,8 +71,9 @@ def map_args_to_requests(
 
 
 class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined]
-	__slots__ = ("_base_url", "_session_props", "_default_timeout")
+	__slots__ = ("_base_url", "_default_timeout", "_session_props")
 	#_base_url: str
+	#_default_timeout: timeout_t
 	#_session_props: ty.Dict[str, ty.Any]
 	
 	def _init(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
@@ -81,7 +82,7 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 	          headers: headers_t,
 	          params: params_t,
 	          timeout: timeout_t) -> None:
-		self._base_url, family, host_numeric = multiaddr_to_url_data(addr, base)
+		self._base_url, _, family, host_numeric = multiaddr_to_url_data(addr, base)
 		
 		self._session_props = map_args_to_requests(
 			auth=auth,

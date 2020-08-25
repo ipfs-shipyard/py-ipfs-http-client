@@ -8,7 +8,9 @@ TestHttp -- A TCP client for interacting with an IPFS daemon
 """
 
 import json
+import os
 import socket
+import tempfile
 import time
 
 import pytest
@@ -23,7 +25,7 @@ import ipfshttpclient.exceptions
 @pytest.fixture(scope="module")
 def http_server(request):
 	"""
-	Slightly modified version of the ``pytest_localserver.plugin.http_server``
+	Slightly modified version of the :func:`pytest_localserver.plugin.httpserver`
 	fixture that will only start and stop the server application once for test
 	performance reasons.
 	"""
@@ -33,18 +35,48 @@ def http_server(request):
 	return server
 
 
+@pytest.fixture(scope="module")
+def http_server_uds(request):
+	"""Like :func:`http_server` but will listen on a Unix domain socket instead
+
+	If the current platform does not support Unix domain sockets, the
+	corresponding test will be skipped.
+	"""
+	if not hasattr(socket, "AF_UNIX"):
+		pytest.skip("Platform does not support Unix domain sockets")
+	
+	uds_path = tempfile.mktemp(".sock")
+	def remove_uds_path():
+		try:
+			os.remove(uds_path)
+		except FileNotFoundError:
+			pass
+	request.addfinalizer(remove_uds_path)
+	
+	server = pytest_localserver.http.ContentServer("unix://{0}".format(uds_path))
+	server.start()
+	request.addfinalizer(server.stop)
+	return server
+
+
 @pytest.fixture
 def http_client(http_server):
 	return ipfshttpclient.http.ClientSync(
 		"/ip4/{0}/tcp/{1}/http".format(*http_server.server_address),
-		ipfshttpclient.DEFAULT_BASE
+		ipfshttpclient.DEFAULT_BASE,
+	)
+
+
+@pytest.fixture
+def http_client_uds(http_server_uds):
+	return ipfshttpclient.http.ClientSync(
+		"/unix/{0}".format(http_server_uds.server_address.lstrip("/")),
+		ipfshttpclient.DEFAULT_BASE,
 	)
 
 
 def broken_http_server_app(environ, start_response):
-	"""
-	HTTP server application that will be slower to respond (0.5 seconds)
-	"""
+	"""HTTP server application that will return a malformed response"""
 	start_response("0 What the heck?", [])
 	
 	yield b""
@@ -58,9 +90,7 @@ def broken_http_server(request):
 
 
 def slow_http_server_app(environ, start_response):
-	"""
-	HTTP server application that will be slower to respond (0.5 seconds)
-	"""
+	"""HTTP server application that will be slower to respond (0.5 seconds)"""
 	start_response("400 Bad Request", [
 		("Content-Type", "text/json")
 	])
@@ -86,12 +116,27 @@ def test_successful_request(http_client, http_server):
 	res = http_client.request("/okay")
 	assert res == b"okay"
 
+def test_successful_request_uds(http_client_uds, http_server_uds):
+	"""Tests that a successful http request returns the proper message."""
+	http_server_uds.serve_content("okay", 200)
+	
+	res = http_client_uds.request("/okay")
+	assert res == b"okay"
+	print(http_server_uds.requests[0].headers)
+
 def test_generic_failure(http_client, http_server):
 	"""Tests that a failed http request raises an HTTPError."""
 	http_server.serve_content("fail", 500)
 	
 	with pytest.raises(ipfshttpclient.exceptions.StatusError):
 		http_client.request("/fail")
+
+def test_generic_failure_uds(http_client_uds, http_server_uds):
+	"""Tests that a failed http request raises an HTTPError."""
+	http_server_uds.serve_content("fail", 500)
+	
+	with pytest.raises(ipfshttpclient.exceptions.StatusError):
+		http_client_uds.request("/fail")
 
 def test_http_client_failure(http_client, http_server):
 	"""Tests that an http client failure raises an ipfsHTTPClientError."""
@@ -366,26 +411,33 @@ def test_readable_stream_wrapper_read_single_bytes(mocker):
 
 @pytest.mark.parametrize("args,expected", [
 	(("/dns/localhost/tcp/5001", "api/v0"),
-	 ("http://localhost:5001/api/v0/", socket.AF_UNSPEC, False)),
+	 ("http://localhost:5001/api/v0/", None, socket.AF_UNSPEC, False)),
 	
 	(("/dns/localhost/tcp/5001/http", "api/v0"),
-	 ("http://localhost:5001/api/v0/", socket.AF_UNSPEC, False)),
+	 ("http://localhost:5001/api/v0/", None, socket.AF_UNSPEC, False)),
 	
 	(("/dns4/localhost/tcp/5001/http", "api/v0"),
-	 ("http://localhost:5001/api/v0/", socket.AF_INET, False)),
+	 ("http://localhost:5001/api/v0/", None, socket.AF_INET, False)),
 	
 	(("/dns6/localhost/tcp/5001/http", "api/v0/"),
-	 ("http://localhost:5001/api/v0/", socket.AF_INET6, False)),
+	 ("http://localhost:5001/api/v0/", None, socket.AF_INET6, False)),
 	
 	(("/ip4/127.0.0.1/tcp/5001/https", "api/v1/"),
-	 ("https://127.0.0.1:5001/api/v1/", socket.AF_INET, True)),
+	 ("https://127.0.0.1:5001/api/v1/", None, socket.AF_INET, True)),
 	
 	(("/ip6/::1/tcp/5001/https", "api/v1"),
-	 ("https://[::1]:5001/api/v1/", socket.AF_INET6, True)),
+	 ("https://[::1]:5001/api/v1/", None, socket.AF_INET6, True)),
 	
 	(("/dns4/ietf.org/tcp/443/https", "/base/"),
-	 ("https://ietf.org:443/base/", socket.AF_INET, False)),
-])
+	 ("https://ietf.org:443/base/", None, socket.AF_INET, False)),
+] + ([  # Unix domain sockets aren't supported on all target platforms
+	(("/unix/run/ipfs/ipfs.sock", "api/v0"),
+	 ("http://%2Frun%2Fipfs%2Fipfs.sock/api/v0/", "/run/ipfs/ipfs.sock", socket.AF_UNIX, False)),
+	# Stupid, but standard behaviour: There is no way to append a target protocol item, after
+	# a path protocol like /unix, so terminating it with /https ends up part of the /unix path
+	(("/unix/run/ipfs/ipfs.sock/https", "api/v0"),
+	 ("http://%2Frun%2Fipfs%2Fipfs.sock%2Fhttps/api/v0/", "/run/ipfs/ipfs.sock/https", socket.AF_UNIX, False)),
+] if hasattr(socket, "AF_UNIX") else []))
 def test_multiaddr_to_url_data(args, expected):
 	assert ipfshttpclient.http_common.multiaddr_to_url_data(*args) == expected
 
@@ -395,12 +447,18 @@ def test_multiaddr_to_url_data(args, expected):
 	("/ip4/192.168.250.1/tcp/4001/p2p/QmVgNoP89mzpgEAAqK8owYoDEyB97MkcGvoWZir8otE9Uc", "api/v1/"),
 	("/ip4/::1/sctp/5001/https", "api/v1/"),
 	("/sctp/5001/http", "api/v0"),
+	("/unix", "api/v0"),
 	
-	# Should work, but currently doesn't (no proxy support)
-	("/dns/localhost/tcp/5001/socks5/dns/ietf.org/tcp/80/http", "/base/"),
-	("/dns/proxy-servers.example/tcp/5001/https/dns/ietf.org/tcp/80/http", "/base/"),
+	# Should work, but needs support in py-multiaddr first (tls protocol)
+	("/ip6/::1/tcp/5001/tls/http", "api/v1"),
 	
-	# Maybe should also work, but currently doesn't (HTTP/3)
+	# Should work, but needs support in py-multiaddr first (proxying protocols)
+	("/dns/localhost/tcp/1080/socks5/dns/ietf.org/tcp/80/http", "/base/"),
+	("/dns/localhost/tcp/1080/socks5/ip6/2001:1234:5678:9ABC::1/tcp/80/http", "/base/"),
+	("/dns/localhost/tcp/80/http-tunnel/dns/mgnt.my-server.example/tcp/443/https", "/srv/ipfs/api/v0"),
+	("/dns/proxy-servers.example/tcp/443/tls/http-tunnel/dns/my-server.example/tcp/5001/http", "/base/"),
+	
+	# Maybe should also work eventually, but currently doesn't (HTTP/3)
 	("/dns/localhost/udp/5001/quic/http", "/base"),
 ])
 def test_multiaddr_to_url_data_invalid(args):
