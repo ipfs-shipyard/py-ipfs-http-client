@@ -8,4 +8,4 @@
 # `0.4.1` and so on. When IPFS `0.5.0` is released, the first client version
 # to support it will also be released as `0.5.0`.
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
