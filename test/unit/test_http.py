@@ -7,7 +7,10 @@ Classes:
 TestHttp -- A TCP client for interacting with an IPFS daemon
 """
 
+import codecs
+import errno
 import json
+import locale
 import os
 import socket
 import tempfile
@@ -35,6 +38,34 @@ def http_server(request):
 	return server
 
 
+def make_temp_maxlen_socket_path():
+	"""Generate a socket filepath of exactly 96 bytes length
+	
+	When using this as part of the hostname value, the first label will definitely be longer then
+	the maximum permitted label length of 63 characters (issue found by CI). At the same time
+	the total binary path length will exceed the portably usable maximum of 96 bytes for the
+	path length in the `sockaddr_un.sun_path` C socket datastructure (as documented in the
+	``unix(7)`` Linux man-page).
+	"""
+	# The following was inspired by the `tempfile.mktemp` standard library function
+	temp_dir_bin = tempfile.gettempdir().encode(locale.getpreferredencoding())
+	with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0) as sock:
+		for _ in range(tempfile.TMP_MAX):
+			uds_name_len = (96 - len(temp_dir_bin) - len(os.sep) - len(b".sock"))
+			uds_name_bin = codecs.encode(os.urandom((uds_name_len + 2) // 2), "hex")[:uds_name_len]
+			uds_path_bin = os.path.join(temp_dir_bin, uds_name_bin + b".sock")
+			uds_path_str = uds_path_bin.decode(locale.getpreferredencoding())
+			if not os.path.exists(uds_path_bin):
+				try:
+					sock.bind(uds_path_bin)
+				except IOError:
+					continue
+				else:
+					return uds_path_str
+		
+		raise FileExistsError(errno.EEXIST, "No usable temporary filepath found")
+
+
 @pytest.fixture(scope="module")
 def http_server_uds(request):
 	"""Like :func:`http_server` but will listen on a Unix domain socket instead
@@ -45,7 +76,7 @@ def http_server_uds(request):
 	if not hasattr(socket, "AF_UNIX"):
 		pytest.skip("Platform does not support Unix domain sockets")
 	
-	uds_path = tempfile.mktemp(".sock")
+	uds_path = make_temp_maxlen_socket_path()
 	def remove_uds_path():
 		try:
 			os.remove(uds_path)
@@ -122,7 +153,6 @@ def test_successful_request_uds(http_client_uds, http_server_uds):
 	
 	res = http_client_uds.request("/okay")
 	assert res == b"okay"
-	print(http_server_uds.requests[0].headers)
 
 def test_generic_failure(http_client, http_server):
 	"""Tests that a failed http request raises an HTTPError."""

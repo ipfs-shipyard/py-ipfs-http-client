@@ -71,9 +71,10 @@ def map_args_to_requests(
 
 
 class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined]
-	__slots__ = ("_base_url", "_default_timeout", "_session_props")
+	__slots__ = ("_base_url", "_default_timeout", "_request_proxies", "_session_props")
 	#_base_url: str
 	#_default_timeout: timeout_t
+	#_request_proxies: ty.Optional[ty.Dict[str, str]]
 	#_session_props: ty.Dict[str, ty.Any]
 	
 	def _init(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
@@ -82,7 +83,7 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 	          headers: headers_t,
 	          params: params_t,
 	          timeout: timeout_t) -> None:
-		self._base_url, _, family, host_numeric = multiaddr_to_url_data(addr, base)
+		self._base_url, uds_path, family, host_numeric = multiaddr_to_url_data(addr, base)
 		
 		self._session_props = map_args_to_requests(
 			auth=auth,
@@ -93,6 +94,17 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 		self._default_timeout = timeout
 		if PATCH_REQUESTS:  # pragma: no branch (always enabled in production)
 			self._session_props["family"] = family
+		
+		# Ensure that no proxy lookups are done for the UDS pseudo-hostname
+		#
+		# I'm well aware of the `.proxies` attribute of the session object: As it turns out,
+		# setting *that* attribute will *not* bypass system proxy resolution – only the
+		# per-request keyword-argument can do *that*…!
+		self._request_proxies = None  # type: ty.Optional[ty.Dict[str, str]]
+		if uds_path:
+			self._request_proxies = {
+				"no_proxy": urllib.parse.quote(uds_path, safe=""),
+			}
 	
 	def _make_session(self) -> requests.Session:  # type: ignore[name-defined]
 		session = requests.Session()  # type: ignore[attr-defined]
@@ -159,6 +171,7 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 						headers=headers,
 						timeout=(timeout if timeout is not None else self._default_timeout),
 					),
+					proxies=self._request_proxies,
 					data=data,
 					stream=True,
 				)
