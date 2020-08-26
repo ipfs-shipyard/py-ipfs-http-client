@@ -58,8 +58,8 @@ At the time of writing the officially used key is: *12D3KooWEqnTdgqHnkkwarSrJjeM
 
 ## Update the source code
 
- 1. Make a GIT commit incrementing the version number in `ipfshttpclient/version.py`:  
-    `git commit -m "Release version 0.X.Y" ipfshttpclient/version.py`)
+ 1. Make a GIT commit incrementing the version number in `ipfshttpclient/version.py` and completing the currently open `CHANGELOG.md` entry:  
+    `git commit -m "Release version 0.X.Y" ipfshttpclient/version.py CHANGELOG.md`)
  2. Tag the GIT commit with the version number using an annotated and signed tag:  
     `git tag --sign -m "Release version 0.X.Y" 0.X.Y`
  3. Push the new version

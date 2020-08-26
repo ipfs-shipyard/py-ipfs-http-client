@@ -1,4 +1,10 @@
-py-ipfs-http-client 0.6.1 (XX.XX.20XX)
+py-ipfs-http-client 0.X.X (XX.XX.20XX)
+--------------------------------------
+
+ * (None yet)
+
+
+py-ipfs-http-client 0.6.1 (26.08.2020)
 --------------------------------------
 
  * Added typings for most of the public and private API and enable type checking with `mypy`
@@ -6,6 +12,7 @@ py-ipfs-http-client 0.6.1 (XX.XX.20XX)
  * Deprecate `.repo.gc(…)`s `return_result` parameter in favour of the newly introduced `quiet` parameter to match the newer HTTP API
  * If you use the undocumented `return_result` parameter anywhere else consider such use deprecated, support for this parameter will be removed in 0.7.X everywhere
     * Rationale: This parameter used to map to using the HTTP HEAD method perform the given request without any reply being returned, but this feature has been dropped with go-IPFS 0.5 from the API.
+ * Implemented DAG APIs for go-IPFS 0.5+: `.dag.get`, `.dag.put`, `.dag.imprt` and `.dag.export`
 
 Bugfixes:
 
