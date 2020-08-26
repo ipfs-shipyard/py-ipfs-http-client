@@ -28,17 +28,22 @@ else:  #PY37-
 	Literal_True = Literal_False = bool
 
 if sys.version_info >= (3, 6):  #PY36+
+	# `os.PathLike` only has a type param while type checking
 	if ty.TYPE_CHECKING:
-		PathLike = os.PathLike  # This has a type param only while type checking
+		PathLike = os.PathLike
+		PathLike_str = os.PathLike[str]
+		PathLike_bytes = os.PathLike[bytes]
 	else:
 		class PathLike(Protocol, ty.Generic[ty.AnyStr]):
 			def __fspath__(self) -> ty.AnyStr:
 				...
+		
+		PathLike_str = PathLike_bytes = os.PathLike
 	
-	path_str_t = ty.Union[str, PathLike[str]]
-	path_bytes_t = ty.Union[bytes, PathLike[bytes]]
+	path_str_t = ty.Union[str, PathLike_str]
+	path_bytes_t = ty.Union[bytes, PathLike_bytes]
 	path_t = ty.Union[path_str_t, path_bytes_t]
-	AnyPath = ty.TypeVar("AnyPath", str, PathLike[str], bytes, PathLike[bytes])
+	AnyPath = ty.TypeVar("AnyPath", str, PathLike_str, bytes, PathLike_bytes)
 	
 	path_types = (str, bytes, os.PathLike,)
 	path_obj_types = (os.PathLike,)
@@ -48,11 +53,11 @@ if sys.version_info >= (3, 6):  #PY36+
 		...
 	
 	@ty.overload
-	def convert_path(path: PathLike[str]) -> PathLike[str]:
+	def convert_path(path: PathLike_str) -> PathLike_str:
 		...
 	
 	@ty.overload
-	def convert_path(path: PathLike[bytes]) -> PathLike[bytes]:
+	def convert_path(path: PathLike_bytes) -> PathLike_bytes:
 		...
 	
 	@ty.overload
