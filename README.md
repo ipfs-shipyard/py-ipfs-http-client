@@ -2,10 +2,10 @@
 
 [![Made by the IPFS Community](https://img.shields.io/badge/made%20by-IPFS%20Community-blue.svg?style=flat-square)](https://docs.ipfs.io/community/)
 [![IRC #py-ipfs on chat.freenode.net](https://img.shields.io/badge/freenode%20IRC-%23py--ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23py-ipfs)
-[![Matrix #py-ipfs:ninetailed.ninja](https://img.shields.io/matrix/py-ipfs:ninetailed.ninja?color=blue&label=matrix+chat&style=flat-square)](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one)
+[![Matrix #py-ipfs:ninetailed.ninja](https://img.shields.io/matrix/py-ipfs:ninetailed.ninja?color=blue&label=matrix%20chat&server_fqdn=matrix.ninetailed.ninja&style=flat-square)](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=matrix.ninetailed.ninja&via=librem.one)
 [![Standard README Compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![PyPI Package ipfshttpclient](https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
-[![Build Status](https://travis-ci.com/ipfs-shipyard/py-ipfs-http-client.svg?branch=master)](https://travis-ci.com/github/ipfs-shipyard/py-ipfs-http-client)
+[![PyPI Package ipfshttpclient](https://img.shields.io/pypi/dm/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
+[![Build Status](https://img.shields.io/travis/com/ipfs-shipyard/py-ipfs-http-client/master.svg?style=flat-square)](https://travis-ci.com/github/ipfs-shipyard/py-ipfs-http-client)
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
