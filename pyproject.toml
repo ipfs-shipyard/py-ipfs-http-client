@@ -12,7 +12,13 @@ keywords     = "ipfs storage distribution development"
 license      = "MIT License"
 description-file = "README.md"
 
-requires-python = ">=3.5"
+# Notes: `typing.NoReturn` was introduced post-release in Python 3.5.4 and 3.6.2 and had
+#        a critical bug (https://bugs.python.org/issue34921) in 3.7.0 to 3.7.1. So the
+#        compatible versions below reflect the range of Python versions with working
+#        `typing.NoReturn` function signature support. (Also, many other `typing` module
+#        items were only introduced post-release of Python 3.5 and 3.6 and version
+#        restrictions on these versions ensure that those are all available as well.)
+requires-python = ">=3.5.4,!=3.6.0,!=3.6.1,!=3.7.0,!=3.7.1"
 requires = [
 	"multiaddr (>=0.0.7)",
 	"requests (>=2.11)"
