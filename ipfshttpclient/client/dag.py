@@ -41,7 +41,7 @@ class Section(base.SectionBase):
 
 	@base.returns_single_item(base.ResponseBase)
 	def put(self, data: utils.clean_file_t, format: str = 'cbor',
-		    input_enc: str = 'json', **kwargs: base.CommonArgs):
+	        input_enc: str = 'json', **kwargs: base.CommonArgs):
 		"""Decodes the given input file as a DAG object and returns their key
 
 		.. code-block:: python
@@ -74,7 +74,7 @@ class Section(base.SectionBase):
 		kwargs.setdefault('opts', {}).update(opts)
 		body, headers = multipart.stream_files(data, chunk_size=self.chunk_size)
 		return self._client.request('/dag/put', decoder='json', data=body,
-									headers=headers, **kwargs)
+		                            headers=headers, **kwargs)
 
 	@base.returns_single_item(base.ResponseBase)
 	def resolve(self, cid: base.cid_t, **kwargs: base.CommonArgs):
@@ -108,7 +108,7 @@ class Section(base.SectionBase):
 		.. code-block:: python
 
 			>>> with open('data.car', 'rb') as file
-			... 	client.dag.imprt(file)
+			...     client.dag.imprt(file)
 			{'Root': {
 					'Cid': {
 						'/': 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
@@ -131,7 +131,7 @@ class Section(base.SectionBase):
 		"""
 		body, headers = multipart.stream_files(data, chunk_size=self.chunk_size)
 		return self._client.request('/dag/import', decoder='json', data=body,
-									headers=headers, **kwargs)
+		                            headers=headers, **kwargs)
 
 	def export(self, cid: str, **kwargs: base.CommonArgs):
 		"""Exports a DAG into a .car file format
