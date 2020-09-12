@@ -64,6 +64,10 @@ class Section(base.SectionBase):
 		----------
 		data
 			IO stream object of path to a file containing the data to put
+		format
+			Format that the object will be added as. Default: cbor
+		input_enc
+			Format that the input object will be. Default: json
 
 		Returns
 		-------
