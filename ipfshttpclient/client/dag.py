@@ -40,7 +40,8 @@ class Section(base.SectionBase):
 		return self._client.request('/dag/get', args, decoder='json', **kwargs)
 
 	@base.returns_single_item(base.ResponseBase)
-	def put(self, data: utils.clean_file_t, **kwargs: base.CommonArgs):
+	def put(self, data: utils.clean_file_t, format: str = 'cbor',
+	        input_enc: str = 'json', **kwargs: base.CommonArgs):
 		"""Decodes the given input file as a DAG object and returns their key
 
 		.. code-block:: python
@@ -63,12 +64,18 @@ class Section(base.SectionBase):
 		----------
 		data
 			IO stream object of path to a file containing the data to put
+		format
+			Format that the object will be added as. Default: cbor
+		input_enc
+			Format that the input object will be. Default: json
 
 		Returns
 		-------
 			dict
 				Cid with the address of the dag object
 		"""
+		opts = {'format': format, 'input-enc': input_enc}
+		kwargs.setdefault('opts', {}).update(opts)
 		body, headers = multipart.stream_files(data, chunk_size=self.chunk_size)
 		return self._client.request('/dag/put', decoder='json', data=body,
 		                            headers=headers, **kwargs)
@@ -105,7 +112,7 @@ class Section(base.SectionBase):
 		.. code-block:: python
 
 			>>> with open('data.car', 'rb') as file
-			... 	client.dag.imprt(file)
+			...     client.dag.imprt(file)
 			{'Root': {
 					'Cid': {
 						'/': 'bafyreidepjmjhvhlvp5eyxqpmyyi7rxwvl7wsglwai3cnvq63komq4tdya'
