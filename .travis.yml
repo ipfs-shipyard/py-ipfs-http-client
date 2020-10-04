@@ -20,7 +20,7 @@ matrix:
       - python: "3.8"
         env: TOXENV=typeck
         before_install: ":"
-     
+
       # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
       #
       # Minimum testing version is 3.6, since the 3.5 binaries from python.org fail
@@ -34,7 +34,7 @@ matrix:
       - os: osx
         language: shell
         env: PYTHON_VERSION=3.8.2-macosx10.9
-     
+
       # Minimum testing version for Windows is 3.7 due to `-X utf8` flag support
       # being a life-saver for unbreaking the stupid INI parser used by all the
       # Python testing tools
@@ -54,20 +54,20 @@ before_install:
       ### ==== MODIFY THIS WHEN CHANGING TARGET OR MINIMUM IPFS VERSION ==== ###
       case "${IPFS_VERSION:-latest}" in
          latest)  # Currently targeted version
-            VERSION=0.6.0
-            SHA512_LINUX=57e4ac078f4605e3e765c6c5a54fe6e7f45268fa7ec06fc54f03e0046643dff65718f6f143a67fe08c458a7c86e30b5a53c400bdb57b6a2122bdc5df1a4b8f33
-            SHA512_DARWIN=daf6fd4cef6b892ecff432895912c3962c4033d81c275fd8ab7172612f87db0aedfeb0d4c5a408a3f07d6f56399b4d5300d25e81c20d9cc9bed59fef02581360
-            SHA512_WINDOWS=2fb04eaa90b57fa9239a9e05234f288d017ba6d9001fa5330929faec3d6e0ad8b7d7eab35c3d0ee42fdd52e0d60a9b591dee3e59251b6d0e00c3d1ead15bf12d
+            VERSION=0.7.0
+            SHA512_LINUX=1d5910f27e8d7ea333145f15c6edcbacc1e8db3a99365f0847467bdfa7c73f4d7a05562e46be8e932056c8324ed0769ca1b6758dfb0ac4c2e1b6066b57c4a086
+            SHA512_DARWIN=d864b58e832ce49df7ef77c8012ce9e6e7585f693c03ba8e4ebf86f772eebf0d6a00dde279cdc0f16250ad20bac6f67db6b3966848c3e3bcbdc4b4d2dee1cd89
+            SHA512_WINDOWS=2262220e0502f00d6d429cfd16d2f0c55fa73cafb100bd72589fd1f7d97b3527dc7d49d60460650796d754f2aa4b03ba07753457691ef7d1a10d10857b819045
          ;;
          compat)  # Earliest supported version
-            VERSION=0.4.22
-            SHA512_LINUX=49b99fec741d67f7bad8fb6fbbd984967f06dfc3de846d10dca34b166f621a182d12f13cf5ccf4e4f33747b67cede6f4205b4cd9b57ce5244128d1385ec82c85
+            VERSION=0.4.23
+            SHA512_LINUX=5eebebd4d4628a01c3b6615d96123a5c744f64da18fc0950e00d99a36abb02eee694c1bb67549341a645ebb99f30de9198c33b556cdee2609013409a510d1d2b
          ;;
       esac
       ### ------------------------------ END ------------------------------- ###
-      
+
       set -u
-      
+
       # Derive usable parameters from the above constants
       case "${TRAVIS_OS_NAME}" in
          linux)
@@ -77,7 +77,7 @@ before_install:
          osx)
             export IPFS_DL_PATH="go-ipfs/v${VERSION}/go-ipfs_v${VERSION}_darwin-amd64.tar.gz"
             export IPFS_DL_SHA512="${SHA512_DARWIN}"
-            
+
             # Make the `sha512sum` command available under that name
             export PATH="$(echo /usr/local/Cellar/coreutils/*/libexec/gnubin):${PATH}"
          ;;
@@ -87,7 +87,7 @@ before_install:
          ;;
       esac
       export IPFS_DL_BASENAME="${IPFS_DL_PATH##*/}"
-      
+
       set +u
 
    # Download the daemon application
@@ -110,14 +110,14 @@ install:
    # and fixup the environment whichever way required
    - |-
       export PYTHON_VERSION="${PYTHON_VERSION:-${TRAVIS_PYTHON_VERSION}}"
-      
+
       ### ====== MODIFY THIS WHEN CHANGING MACOS PYTHON TEST VERSIONS ====== ###
       case "${PYTHON_VERSION}" in
          3.6.8-macosx10.9) MD5_MACOS="786c4d9183c754f58751d52f509bc971" ;;
          3.8.2-macosx10.9) MD5_MACOS="f12203128b5c639dc08e5a43a2812cc7" ;;
       esac
       ### ------------------------------ END ------------------------------- ###
-      
+
       set -eu
       if [[ "${TRAVIS_OS_NAME}" = "osx" ]];
       then
@@ -134,10 +134,10 @@ install:
             VERSION_FLAG="--version=${PYTHON_VERSION}"
          fi
          choco install python ${VERSION_FLAG}
-         
+
          # Fix up Windows line endings incorrectly applied to test files
          find test/functional/fake_dir -type f -exec dos2unix \{\} \+
-         
+
          # Export sanely named python3 shell command
          python3() {
             py -3 -X utf8 "$@"
