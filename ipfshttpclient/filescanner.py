@@ -5,6 +5,7 @@ import fnmatch
 import os
 import re
 import sys
+import types
 import typing as ty
 
 from . import utils
@@ -511,7 +512,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 			#
 			# Note: `os.fwalk` support for binary paths was only added in 3.7+.
 			directory_str_or_fd = directory_str  # type: ty.Union[ty.AnyStr, int]
-			if HAVE_FWALK and (not isinstance(directory_str, bytes) or HAVE_FWALK_BYTES):
+			if HAVE_FWALK and (not isinstance(directory_str, bytes) or HAVE_FWALK_BYTES):  # type: ignore[unreachable]  # noqa: E501
 				self._close_fd = directory_str_or_fd = os.open(directory_str, os.O_RDONLY | O_DIRECTORY)
 			
 			self._generator = self._walk(
@@ -533,10 +534,24 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 	def send(self, value: ty.Any) -> FSNodeEntry:
 		return self._generator.send(value)
 	
-	def throw(self, typ: ty.Type[BaseException], val: ty.Optional[BaseException] = None,
-	          tb: ty.Any = None) -> FSNodeEntry:
+	@ty.overload
+	def throw(self, typ: ty.Type[BaseException],  # noqa: E704
+	          val: ty.Union[BaseException, object] = ...,
+	          tb: ty.Optional[types.TracebackType] = ...) -> FSNodeEntry: ...
+	
+	@ty.overload
+	def throw(self, typ: BaseException, val: None = ...,  # noqa: E704
+	          tb: ty.Optional[types.TracebackType] = ...) -> FSNodeEntry: ...
+	
+	def throw(self, typ: ty.Union[ty.Type[BaseException], BaseException],
+	          val: ty.Union[BaseException, object] = None,
+	          tb: ty.Optional[types.TracebackType] = None) -> FSNodeEntry:
 		try:
-			return self._generator.throw(typ, val, tb)
+			if isinstance(typ, type):
+				return self._generator.throw(typ, val, tb)
+			else:
+				assert val is None
+				return self._generator.throw(typ, val, tb)
 		except:
 			if self._close_fd is not None:
 				os.close(self._close_fd)
