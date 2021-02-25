@@ -3,22 +3,25 @@ import json
 
 import pytest
 
-import ipfshttpclient.encoding
-import ipfshttpclient.exceptions
+import ipfshttpclient4ipwb.encoding
+import ipfshttpclient4ipwb.exceptions
 
 
 
 @pytest.fixture
 def json_encoder():
-	return ipfshttpclient.encoding.Json()
+	return ipfshttpclient4ipwb.encoding.Json()
 
 
-def test_json_parse(json_encoder):
-	"""Asserts parsed key/value json matches expected output."""
-	data = {'key': 'value'}
-	raw = json.dumps(data).encode("utf-8")
-	res = json_encoder.parse(raw)
-	assert res['key'] == 'value'
+def test_dummy_encoder():
+	"""Tests if the dummy encoder does its trivial job"""
+	dummy_encoder = ipfshttpclient4ipwb.encoding.Dummy()
+	
+	for v in (b"123", b"4", b"ddjlflsdmlflsdfjlfjlfdsjldfs"):
+		assert dummy_encoder.encode(v) == v
+		
+		assert list(dummy_encoder.parse_partial(v)) == [v]
+	assert list(dummy_encoder.parse_finalize()) == []
 
 
 def test_json_parse_partial(json_encoder):
@@ -39,7 +42,7 @@ def test_json_parse_partial(json_encoder):
 	assert list(json_encoder.parse_finalize()) == []
 	
 	# String containing broken UTF-8
-	with pytest.raises(ipfshttpclient.exceptions.DecodingError):
+	with pytest.raises(ipfshttpclient4ipwb.exceptions.DecodingError):
 		list(json_encoder.parse_partial(b'{"hello": "\xc3ber world!"}'))
 	assert list(json_encoder.parse_finalize()) == []
 
@@ -59,43 +62,31 @@ def test_json_with_newlines(json_encoder):
 def test_json_parse_incomplete(json_encoder):
 	"""Tests if feeding the JSON parse incomplete data correctly produces an error."""
 	list(json_encoder.parse_partial(b'{"bla":'))
-	with pytest.raises(ipfshttpclient.exceptions.DecodingError):
+	with pytest.raises(ipfshttpclient4ipwb.exceptions.DecodingError):
 		json_encoder.parse_finalize()
 	
 	list(json_encoder.parse_partial(b'{"\xc3')) # Incomplete UTF-8 sequence
-	with pytest.raises(ipfshttpclient.exceptions.DecodingError):
+	with pytest.raises(ipfshttpclient4ipwb.exceptions.DecodingError):
 		json_encoder.parse_finalize()
 
 
-def test_json_parse_chained(json_encoder):
-	"""Tests if concatenated string of JSON object is being parsed correctly."""
-	data1 = {'key1': 'value1'}
-	data2 = {'key2': 'value2'}
-	res = json_encoder.parse(
-		json.dumps(data1).encode("utf-8") + json.dumps(data2).encode("utf-8")
-	)
-	assert len(res) == 2
-	assert res[0]['key1'] == 'value1'
-	assert res[1]['key2'] == 'value2'
-
-
-def test_json_parse_chained_newlines(json_encoder):
-	"""Tests parsing of concatenated string of JSON object containing a new line."""
-	data1 = {'key1': 'value1'}
-	data2 = {'key2': 'value2'}
-	res = json_encoder.parse(
-		json.dumps(data1).encode("utf-8") + b'\n' + json.dumps(data2).encode("utf-8")
-	)
-	assert len(res) == 2
-	assert res[0]['key1'] == 'value1'
-	assert res[1]['key2'] == 'value2'
-
-
 def test_json_encode(json_encoder):
-	"""Tests serilization of an object into a json formatted UTF-8 string."""
+	"""Tests serialization of an object into a JSON formatted UTF-8 string."""
 	data = {'key': 'value with Ünicøde characters ☺'}
 	assert json_encoder.encode(data) == \
 	       b'{"key":"value with \xc3\x9cnic\xc3\xb8de characters \xe2\x98\xba"}'
+
+def test_json_encode_invalid_surrogate(json_encoder):
+	"""Tests serialization of an object into a JSON formatted UTF-8 string."""
+	data = {'key': 'value with Ünicøde characters and disallowed surrgate: \uDC00'}
+	with pytest.raises(ipfshttpclient.exceptions.EncodingError):
+		json_encoder.encode(data)
+
+def test_json_encode_invalid_type(json_encoder):
+	"""Tests serialization of an object into a JSON formatted UTF-8 string."""
+	data = {'key': b'value that is not JSON encodable'}
+	with pytest.raises(ipfshttpclient.exceptions.EncodingError):
+		json_encoder.encode(data)
 
 
 def test_get_encoder_by_name():

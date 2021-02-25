@@ -1,14 +1,14 @@
 def test_add_list_rename_rm(client):
 	# Remove keys if they already exist
 	key_list = list(map(lambda k: k["Name"], client.key.list()["Keys"]))
-	if "ipfshttpclient-test-rsa" in key_list:
-		client.key.rm("ipfshttpclient-test-rsa")
-	if "ipfshttpclient-test-ed" in key_list:
-		client.key.rm("ipfshttpclient-test-ed")
+	if "ipfshttpclient4ipwb-test-rsa" in key_list:
+		client.key.rm("ipfshttpclient4ipwb-test-rsa")
+	if "ipfshttpclient4ipwb-test-ed" in key_list:
+		client.key.rm("ipfshttpclient4ipwb-test-ed")
 
 	# Add new RSA and ED25519 key
-	key1 = client.key.gen("ipfshttpclient-test-rsa", "rsa")["Name"]
-	key2 = client.key.gen("ipfshttpclient-test-ed", "ed25519")["Name"]
+	key1 = client.key.gen("ipfshttpclient4ipwb-test-rsa", "rsa")["Name"]
+	key2 = client.key.gen("ipfshttpclient4ipwb-test-ed", "ed25519")["Name"]
 
 	# Validate the keys exist now
 	key_list = list(map(lambda k: k["Name"], client.key.list()["Keys"]))
@@ -16,7 +16,7 @@ def test_add_list_rename_rm(client):
 	assert key2 in key_list
 
 	# Rename the EC key
-	key2_new = client.key.rename(key2, "ipfshttpclient-test-ed2")["Now"]
+	key2_new = client.key.rename(key2, "ipfshttpclient4ipwb-test-ed2")["Now"]
 
 	# Validate that the key was successfully renamed
 	key_list = list(map(lambda k: k["Name"], client.key.list()["Keys"]))

@@ -24,9 +24,12 @@ Sphinx to process Markdown documentation as if it where reStructuredText.
 <!-- APT line: `sudo apt install python3-sphinx python3-recommonmark`  -->
 <!--DNF line: `sudo dnf install python3-sphinx python3-recommonmark`-->
 
-At least reCommonMark 0.5 is required, so install it using PIP:
+At least Sphinx 3.0 with the `sphinx_autodoc_typehints` and reCommonMark 0.5 plugins is required,
+so install them using PIP:
 
-`pip3 install recommonmark~=0.5.0`
+`pip3 install Sphinx~=3.0 sphinx_autodoc_typehints recommonmark~=0.5.0`
+
+For best results Sphinx should be run with Python 3.8+ or typings will be incomplete.
 
 ## Hosting Documentation
 
@@ -55,8 +58,8 @@ At the time of writing the officially used key is: *12D3KooWEqnTdgqHnkkwarSrJjeM
 
 ## Update the source code
 
- 1. Make a GIT commit incrementing the version number in `ipfshttpclient/version.py`:  
-    `git commit -m "Release version 0.X.Y" ipfshttpclient/version.py`)
+ 1. Make a GIT commit incrementing the version number in `ipfshttpclient/version.py` and completing the currently open `CHANGELOG.md` entry:  
+    `git commit -m "Release version 0.X.Y" ipfshttpclient/version.py CHANGELOG.md`)
  2. Tag the GIT commit with the version number using an annotated and signed tag:  
     `git tag --sign -m "Release version 0.X.Y" 0.X.Y`
  3. Push the new version

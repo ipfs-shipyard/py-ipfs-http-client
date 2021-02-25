@@ -11,7 +11,12 @@ matrix:
       - python: "3.8"
         env: IPFS_VERSION=compat
       - python: "3.8"
+        env: TOXENV=py3-httpx
+      - python: "3.8"
         env: TOXENV=styleck
+        before_install: ":"
+      - python: "3.8"
+        env: TOXENV=typeck
         before_install: ":"
      
       # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
@@ -47,14 +52,14 @@ before_install:
       ### ==== MODIFY THIS WHEN CHANGING TARGET OR MINIMUM IPFS VERSION ==== ###
       case "${IPFS_VERSION:-latest}" in
          latest)  # Currently targeted version
-            VERSION=0.5.0-rc2
-            SHA512_LINUX=e6731c9dcfc12d1c7d8b712d54223edbe805251dfff1bf145b8bdfba0eda92ea6ecc74eef4ec6279108aad867e8adb4ce526198e502419984b42c4c44fa819d8
-            SHA512_DARWIN=5eecd0d3cc3794d15fe64fae61576e96a97f75ee3ab6dd6a1b86a57f10d4efff7015c6160ca6c9c9ee78943f89a166dc2b19464bfa18406f0aa518f814ff48bc
-            SHA512_WINDOWS=50eb241f7ad7d6690348d2a4265bb0fad1b6e233e9d8ddaf924716aa7e05f6c9697e9c72c5c6f6bdc9cd421a782311842a00333b38cb4ffbba7e25a28563b85c
+            VERSION=0.7.0
+            SHA512_LINUX=1d5910f27e8d7ea333145f15c6edcbacc1e8db3a99365f0847467bdfa7c73f4d7a05562e46be8e932056c8324ed0769ca1b6758dfb0ac4c2e1b6066b57c4a086
+            SHA512_DARWIN=d864b58e832ce49df7ef77c8012ce9e6e7585f693c03ba8e4ebf86f772eebf0d6a00dde279cdc0f16250ad20bac6f67db6b3966848c3e3bcbdc4b4d2dee1cd89
+            SHA512_WINDOWS=2262220e0502f00d6d429cfd16d2f0c55fa73cafb100bd72589fd1f7d97b3527dc7d49d60460650796d754f2aa4b03ba07753457691ef7d1a10d10857b819045
          ;;
          compat)  # Earliest supported version
-            VERSION=0.4.21
-            SHA512_LINUX=f344969cad4c2a4f81692c5e7e11dafc420694653fa37d1e389b5c458ee88ea34ea22efceb747351bb579247f1c494e47f667e7a178e8197ba4cad43a6e52f87
+            VERSION=0.4.23
+            SHA512_LINUX=5eebebd4d4628a01c3b6615d96123a5c744f64da18fc0950e00d99a36abb02eee694c1bb67549341a645ebb99f30de9198c33b556cdee2609013409a510d1d2b
          ;;
       esac
       ### ------------------------------ END ------------------------------- ###

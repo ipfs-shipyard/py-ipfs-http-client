@@ -1,6 +1,6 @@
 import pytest
 
-import ipfshttpclient.exceptions
+import ipfshttpclient4ipwb.exceptions
 
 
 class Resources:

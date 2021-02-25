@@ -1,12 +1,13 @@
 import os
 import shutil
 import sys
+import tempfile
 
 import pytest
 import pytest_cid
 
-import ipfshttpclient.exceptions
-import ipfshttpclient.filescanner
+import ipfshttpclient4ipwb.exceptions
+import ipfshttpclient4ipwb.filescanner
 
 import conftest
 
@@ -165,7 +166,6 @@ def calc_path_rel_to_cwd(p):
 
 def test_add_single_from_str_with_dir(client, cleanup_pins):
 	res = client.add(FAKE_FILE1_PATH, wrap_with_directory=True)
-	
 	assert pytest_cid.match(FAKE_FILE1_DIR_HASH) == res
 	
 	dir_hash = None
@@ -205,7 +205,7 @@ def test_add_nocopy_without_raw_leaves(client):
 	error_msg = None
 	try:
 		client.add(FAKE_FILE1_PATH, nocopy=True, raw_leaves=False)
-	except ipfshttpclient.exceptions.ErrorResponse as exc:
+	except ipfshttpclient4ipwb.exceptions.ErrorResponse as exc:
 		error_msg = exc.args[0]
 	assert error_msg is not None and "--raw-leaves" in error_msg
 
@@ -238,7 +238,7 @@ def test_add_nocopy_with_relative_path(client):
 	error_msg = None
 	try:
 		client.add(calc_path_rel_to_cwd(FAKE_FILE1_PATH), nocopy=True)
-	except ipfshttpclient.exceptions.ErrorResponse as exc:
+	except ipfshttpclient4ipwb.exceptions.ErrorResponse as exc:
 		error_msg = exc.args[0]
 
 	# For relative paths, multipart streaming layer won't append the
@@ -259,16 +259,16 @@ def test_add_filepattern_from_dirname(client, cleanup_pins):
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_HASH)
 
 
-@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+@pytest.mark.skipif(not ipfshttpclient4ipwb.filescanner.HAVE_FWALK,
                     reason="No point in disabling os.fwalk if it isn't actually supported")
 def test_add_filepattern_from_dirname_nofwalk(client, cleanup_pins, monkeypatch):
-	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	monkeypatch.setattr(ipfshttpclient4ipwb.filescanner, "HAVE_FWALK", False)
 	
 	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_HASH)
 
 
-@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+@pytest.mark.skipif(not ipfshttpclient4ipwb.filescanner.HAVE_FWALK,
                     reason="Passing directory as file descriptor requires os.fwalk")
 def test_add_filepattern_from_dirfd(client, cleanup_pins):
 	fd = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)  # type: int
@@ -284,10 +284,10 @@ def test_add_filepattern_from_dirname_recursive(client, cleanup_pins):
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
 
 
-@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+@pytest.mark.skipif(not ipfshttpclient4ipwb.filescanner.HAVE_FWALK,
                     reason="No point in disabling os.fwalk if it isn't actually supported")
 def test_add_filepattern_from_dirname_recursive_nofwalk(client, cleanup_pins, monkeypatch):
-	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	monkeypatch.setattr(ipfshttpclient4ipwb.filescanner, "HAVE_FWALK", False)
 	
 	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
@@ -296,7 +296,7 @@ def test_add_filepattern_from_dirname_recursive_nofwalk(client, cleanup_pins, mo
 @pytest.mark.skipif(sys.platform.startswith("win"),
                     reason="Opening directory FDs does not work on Windows")
 def test_add_filepattern_from_dirfd_recursive_nofwalk(client, cleanup_pins, monkeypatch):
-	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	monkeypatch.setattr(ipfshttpclient4ipwb.filescanner, "HAVE_FWALK", False)
 	
 	with pytest.raises(NotImplementedError):
 		fd = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)  # type: int
@@ -306,7 +306,7 @@ def test_add_filepattern_from_dirfd_recursive_nofwalk(client, cleanup_pins, monk
 			os.close(fd)
 
 
-@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+@pytest.mark.skipif(not ipfshttpclient4ipwb.filescanner.HAVE_FWALK,
                     reason="Passing directory as file descriptor requires os.fwalk")
 def test_add_filepattern_from_dirfd_recursive(client, cleanup_pins):
 	fd = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)  # type: int
@@ -323,10 +323,10 @@ def test_add_filepattern_from_dirname_recursive_binary(client, cleanup_pins):
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
 
 
-@pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
+@pytest.mark.skipif(not ipfshttpclient4ipwb.filescanner.HAVE_FWALK,
                     reason="No point in disabling os.fwalk if it isn't actually supported")
 def test_add_filepattern_from_dirname_recursive_nofwalk_binary(client, cleanup_pins, monkeypatch):
-	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
+	monkeypatch.setattr(ipfshttpclient4ipwb.filescanner, "HAVE_FWALK", False)
 	
 	res = client.add(os.fsencode(str(FAKE_DIR_PATH)),
 	                 pattern=os.fsencode(FAKE_DIR_FNPATTERN1), recursive=True)
@@ -364,10 +364,24 @@ def test_add_subdir_dotfiles_dotstarpattern(client, cleanup_pins):
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_ALMOST_EMPTY_COMPLETE_HASH)
 
 
-@pytest.mark.dependency()
+@pytest.mark.dependency(scope='session')
 def test_add_recursive(client, cleanup_pins):
 	res = client.add(FAKE_DIR_PATH, recursive=True)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_HASH)
+
+
+def test_add_cid_version_0(client, cleanup_pins):
+    with tempfile.TemporaryDirectory() as empty_dir:
+        response = client.add(empty_dir, cid_version=0)
+        assert len(response) == 1
+        assert response[0]["Hash"] == "QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn"
+
+
+def test_add_cid_version_1(client, cleanup_pins):
+    with tempfile.TemporaryDirectory() as empty_dir:
+        response = client.add(empty_dir, cid_version=1)
+        assert len(response) == 1
+        assert response[0]["Hash"] == "bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354"
 
 
 @pytest.mark.dependency(depends=["test_add_recursive"])
@@ -403,6 +417,16 @@ def test_get_path(client, cleanup_pins):
 		assert "fsdfgh" in os.listdir(os.getcwd())
 	finally:
 		os.remove("fsdfgh")
+		assert "fsdfgh" not in os.listdir(os.getcwd())
+
+
+@pytest.mark.dependency(depends=["test_add_recursive"])
+def test_get_path_with_target(client, cleanup_pins):
+	test_hash = FAKE_DIR_HASH[0]["Hash"] + "/fsdfgh"
+	
+	with tempfile.TemporaryDirectory() as dirpath:
+		client.get(test_hash, dirpath)
+		assert "fsdfgh" in os.listdir(dirpath)
 		assert "fsdfgh" not in os.listdir(os.getcwd())
 
 
@@ -491,5 +515,5 @@ def test_mfs_dir_make_fill_list_delete(client):
 	# Remove directory
 	client.files.rm(TEST_MFS_DIRECTORY, recursive=True)
 
-	with pytest.raises(ipfshttpclient.exceptions.Error):
+	with pytest.raises(ipfshttpclient4ipwb.exceptions.Error):
 		client.files.stat(TEST_MFS_DIRECTORY)

@@ -1,37 +1,36 @@
 # py-ipfs-http-client
 
 [![Made by the IPFS Community](https://img.shields.io/badge/made%20by-IPFS%20Community-blue.svg?style=flat-square)](https://docs.ipfs.io/community/)
-[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.io/)
 [![IRC #py-ipfs on chat.freenode.net](https://img.shields.io/badge/freenode%20IRC-%23py--ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23py-ipfs)
-[![Matrix #py-ipfs:ninetailed.ninja](https://img.shields.io/matrix/py-ipfs:ninetailed.ninja?color=blue&label=matrix+chat&style=flat-square)](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one)
+[![Matrix #py-ipfs:ninetailed.ninja](https://img.shields.io/matrix/py-ipfs:ninetailed.ninja?color=blue&label=matrix%20chat&server_fqdn=matrix.ninetailed.ninja&style=flat-square)](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=matrix.ninetailed.ninja&via=librem.one)
 [![Standard README Compliant](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![](https://img.shields.io/pypi/v/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
-[![Build Status](https://travis-ci.org/ipfs/py-ipfs-http-client.svg?branch=master)](https://travis-ci.org/ipfs/py-ipfs-http-client)
+[![PyPI Package ipfshttpclient](https://img.shields.io/pypi/dm/ipfshttpclient.svg?style=flat-square)](https://pypi.python.org/pypi/ipfshttpclient)
+[![Build Status](https://img.shields.io/travis/com/ipfs-shipyard/py-ipfs-http-client/master.svg?style=flat-square)](https://travis-ci.com/github/ipfs-shipyard/py-ipfs-http-client)
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
 Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
 
-**Important:** The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
-See the [relevant section of the README](#important-changes-from-ipfsapi-04x) for details.
+**Note**: The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
+See the [relevant section of the CHANGELOG](CHANGELOG.md#py-ipfs-http-client-0411-13052019) for details. There is also a `ipfsApi` library from which this library originated that is completely
+unmaintained and does not work with any recent go-IPFS version.
 
-**Note:** This library occasionally has to change to stay compatible with the IPFS HTTP API.
-Currently, this library is tested against [go-ipfs v0.5.0](https://github.com/ipfs/go-ipfs/releases/tag/v0.5.0-rc2).
-We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.21 therefore
-being to oldest supported version at this time (version 0.4.20 was never supported due to major
-issues in the daemon itself).
+**Note**: This library occasionally has to change to stay compatible with the IPFS HTTP API.
+Currently, this library is tested against [go-ipfs v0.8.0](https://github.com/ipfs/go-ipfs/releases/tag/v0.5.0).
+We strive to support the last 5 releases of go-IPFS at any given time; go-IPFS v0.4.23 therefore
+being to oldest supported version at this time.
 
 ## Table of Contents
 
 - [Install](#install)
 - [Usage](#usage)
 - [Documentation](#documentation)
-  - [Important changes from ipfsapi 0.4.x](#important-changes-from-ipfsapi-04x)
+  - [Migrating from 0.4.x to 0.6.0](#migrating-from-04x-to-060)
 - [Featured Projects](#featured-projects)
-- [Contribute](#contribute)
-  - [IRC](#irc)
+- [Contributing](#contributing)
   - [Bug reports](#bug-reports)
   - [Pull requests](#pull-requests)
+  - [Chat with Us (IRC/Matrix)](#chat-with-us-ircmatrix)
 - [License](#license)
 
 ## Install
@@ -42,7 +41,7 @@ Install with pip:
 pip install ipfshttpclient
 ```
 
-## Development install from Source
+### Development install from Source
 
 ```sh
 # Clone the source repository
@@ -59,7 +58,7 @@ Basic use-case (requires a running instance of IPFS daemon):
 
 ```py
 >>> import ipfshttpclient
->>> client = ipfshttpclient.connect('/ip4/127.0.0.1/tcp/5001/http')
+>>> client = ipfshttpclient.connect()  # Connects to: /dns/localhost/tcp/5001/http
 >>> res = client.add('test.txt')
 >>> res
 {'Hash': 'QmWxS5aNTFEc9XbMX1ASvLET1zrqEaTssqt33rVZQCQb22', 'Name': 'test.txt'}
@@ -155,14 +154,20 @@ Use an IPFS server with basic auth (replace username and password with real cred
 
 ```py
 >>> import ipfshttpclient
->>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', username="foo", password="bar")
+>>> client = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', auth=("username", "password"))
 ```
 
-Pass custom headers to your IPFS api with each request:
+Pass custom headers to the IPFS daemon with each request:
 ```py
 >>> import ipfshttpclient
 >>> headers = {"CustomHeader": "foobar"}
->>> api = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
+>>> client = ipfshttpclient.connect('/dns/ipfs-api.example.com/tcp/443/https', headers=headers)
+```
+
+Connect to the IPFS daemon using a Unix domain socket (plain HTTP only):
+```py
+>>> import ipfshttpclient
+>>> client = ipfshttpclient.connect("/unix/run/ipfs/ipfs.sock")
 ```
 
 
@@ -175,62 +180,69 @@ https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/
 
 The `ipfs` [command-line Client documentation](https://ipfs.io/docs/commands/) may also be useful in some cases.
 
-### Important changes from `ipfsapi 0.4.x`
+### Migrating from `0.4.x` to `0.6.0`
 
- * Tons of methods has been renamed, ensure that you code runs without warnings with the last version of `ipfsapi` before attempting to upgrade!
- * The Python package has been renamed from `ipfsapi` to `ipfshttpclient`
- * The PIP module has been renamed from `ipfsapi` to `ipfshttpclient` (please update your requirement files)
- * The `client.*_pyobj` family of functions has been dropped due to security concerns
- * The `client.bitswap.unwant` method has been dropped – it's endpoint has been removed by *go-ipfs*
- * The `client.files.file_ls` method has been dropped – deprecated for a long time, use `client.ls` instead
- * Passing a list of parameters to `client.add` will now fail, just pass several individual parameters instead
- * Some functions that may also return multiple items, will now also return a list when returning only a single item (don't worry about it unless it actually breaks for you)
- * The API deamon location is now described using Multiaddr, hence rather then doing `ipfshttpclient.connect(host, port)` to pass the network address parameters, use:
-    * `ipfshttpclient.connect("/dns/<host>/tcp/<port>/http")` (for hostnames such as `localhost`)
-    * `ipfshttpclient.connect("/ip4/<IP-address>/tcp/<port>/http")` (for IPv4 addresses)
-    * `ipfshttpclient.connect("/ip6/<IP-address>/tcp/<port>/http")` (for IPv6 addresses)
-    * Use `…/https` rather then `…/http` to connect to the API deamon using HTTPS
- * The client now supports [keeping session contexts around between API calls](#usage), you probably should make use of this facility in your code
-
-Thank you @AlibabasMerchant, @lordcirth and @radfish (in order of subjective contributions) for helping making this happen!
+Please see the CHANGELOG for [the minor breaking changes between these releases](CHANGELOG.md#py-ipfs-http-client-060-30062020).
 
 ## Featured Projects
 
 Projects that currently use py-ipfs-http-client. If your project isn't here, feel free to submit a PR to add it!
 
-- [git-remote-ipfs](https://github.com/larsks/git-remote-ipfs) allows users to push and pull git repositories from the IPFS network.
 - [InterPlanetary Wayback](https://github.com/oduwsdl/ipwb) interfaces web archive ([WARC](https://www.iso.org/standard/44717.html)) files for distributed indexing and replay using IPFS.
 
-## Contribute
+## Contributing
 
-### Chat (IRC/Matrix)
+### Easy Tasks
 
-You can find us on [#py-ipfs on chat.freenode.org](http://webchat.freenode.net/?channels=%23py-ipfs) or in our [Matrix chat room](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one). Oin us if you have any suggestions, questions or if you just want to discuss IPFS and Python in general.
-
-Please note that the channel is not monitored all the time and hence you may only receive a reply to your message later that day. Using Matrix makes it easier to stay connected in the background, so please prefer the Matrix option or use an IRC bouncer.
+Over time many smaller day-to-day tasks have piled up (mostly supporting some
+newer APIs). If want to help out without getting too involved picking up one
+of tasks of our [help wanted issue list](https://github.com/ipfs-shipyard/py-ipfs-http-client/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+would go a long way towards making this library more feature-complete. 👍
 
 ### Bug reports
 
-You can submit bug reports using the [GitHub issue tracker](https://github.com/ipfs/py-ipfs-http-client/issues).
+You can submit bug reports using the
+[GitHub issue tracker](https://github.com/ipfs/py-ipfs-http-client/issues).
 
 ### Pull requests
 
 Pull requests are welcome.  Before submitting a new pull request, please
-make sure that your code passes both the [code formatting](https://www.python.org/dev/peps/pep-0008/) check:
+make sure that your code passes both the
+[code formatting](https://www.python.org/dev/peps/pep-0008/)
+(PEP-8 with tab indentation) and
+[typing](https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html)
+(PEP-484 using mypy) checks:
 
-    $ tox -e codestyle
+    $ tox -e styleck -e typeck
 
-And the unit tests:
+As well as the unit tests:
 
-    $ tox
+    $ tox -e py3 -e py3-httpx
 
-You can arrange to run the code style tests automatically before each commit by
-installing a `pre-commit` hook:
+If you are unsure, don't hasitate to just submit your code and a human will
+take a look. 🙂
+
+If you can, Please make sure to include new unit tests for new features or
+changes in behavior. We aim to bring coverage to 100% at some point.
+
+#### Installing the pre-commit Hook
+
+You can arrange for the code style and typing tests to be run automatically
+before each commit by installing the GIT `pre-commit` hook:
 
     $ ./tools/pre-commit --install
 
-Please make sure to include new unit tests for new features or changes in
-behavior. We aim to bring coverage to 100% at some point.
+### Chat with Us (IRC/Matrix)
+
+You can find us on [#py-ipfs on chat.freenode.org](http://webchat.freenode.net/?channels=%23py-ipfs)
+or in our [Matrix chat room](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one).
+Join us if you have any suggestions, questions or if you just want to discuss
+IPFS and Python in general.
+
+Please note that the channel is not monitored all the time and hence you may
+only receive a reply to your message later that day. Using Matrix makes it
+easier to stay connected in the background, so please prefer the Matrix option
+or use an IRC bouncer.
 
 ## License
 

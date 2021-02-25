@@ -30,8 +30,8 @@ class Resources:
 
 	def __enter__(self):
 		self.key_self = get_key(self.client, "self")
-		self.key_test1 = self.client.key.gen("ipfshttpclient-test-name-1", "rsa")
-		self.key_test2 = self.client.key.gen("ipfshttpclient-test-name-2", "rsa")
+		self.key_test1 = self.client.key.gen("ipfshttpclient4ipwb-test-name-1", "rsa")
+		self.key_test2 = self.client.key.gen("ipfshttpclient4ipwb-test-name-2", "rsa")
 		self.msg1 = hash_to_ipfs_path(self.client.add_str("Mary had a little lamb"))
 		self.msg2 = hash_to_ipfs_path(self.client.add_str("Mary had a little alpaca"))
 		self.msg3 = hash_to_ipfs_path(self.client.add_str("Mary had a little goat"))

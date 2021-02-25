@@ -5,7 +5,7 @@ __dir__ = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(__dir__, ".."))
 
 import sphinx.cmd.build
-import ipfshttpclient
+import ipfshttpclient4ipwb
 
 # Ensure working directory is script directory
 os.chdir(__dir__)
@@ -24,7 +24,7 @@ def main(argv=sys.argv[1:], program=sys.argv[0]):
 	
 	print()
 	print("Exporting files to IPFS…")
-	client = ipfshttpclient.connect()
+	client = ipfshttpclient4ipwb.connect()
 	hash_docs = client.add("build/html", recursive=True, raw_leaves=True, pin=False)[-1]["Hash"]
 	hash_main = client.object.new("unixfs-dir")["Hash"]
 	hash_main = client.object.patch.add_link(hash_main, "docs", hash_docs)["Hash"]

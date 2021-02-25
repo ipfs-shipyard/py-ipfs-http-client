@@ -1,4 +1,4 @@
-import ipfshttpclient
+import ipfshttpclient4ipwb
 
 import conftest
 
@@ -10,7 +10,7 @@ def test_ipfs_node_available():
 	"""
 	assert conftest.is_available(), \
 	       "Functional tests require an IPFS node to be available at: {0}" \
-	       .format(ipfshttpclient.DEFAULT_ADDR)
+	       .format(ipfshttpclient4ipwb.DEFAULT_ADDR)
 
 
 def test_add_json(client, cleanup_pins):

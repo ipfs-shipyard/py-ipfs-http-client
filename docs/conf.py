@@ -21,14 +21,14 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 # Make current version number as `__version__` available
-with open(os.path.join(sys.path[0], 'ipfshttpclient', 'version.py')) as file:
+with open(os.path.join(sys.path[0], 'ipfshttpclient4ipwb', 'version.py')) as file:
 	exec(file.read())
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+needs_sphinx = '3.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -41,7 +41,8 @@ extensions = [
 	'sphinx.ext.napoleon',
 	'sphinx.ext.coverage',
 	'sphinx.ext.viewcode',
-	'recommonmark'
+	'recommonmark',
+	'sphinx_autodoc_typehints'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -309,7 +310,7 @@ autodoc_member_order = 'groupwise'
 # External documentation link mapping
 intersphinx_mapping = {
 	'python': ('https://docs.python.org/3', None),
-	'cid': ('https://py-cid.readthedocs.io/en/master/', None),
+	'cid': ('https://py-cid.readthedocs.io/en/master/', (None, "py-cid.inv")),
 	'multiaddr': ('https://multiaddr.readthedocs.io/en/latest/', None)
 }
 
@@ -353,6 +354,19 @@ napoleon_use_param = True
 napoleon_use_rtype = False
 
 
+# Add a list of custom sections to include, expanding the list of
+# parsed sections.
+#
+# The entries can either be strings or tuples, depending on the
+# intention:
+#   • To create a custom “generic” section, just pass a string.
+#   • To create an alias for an existing section, pass a tuple
+#     containing the alias name and the original, in that order.
+napoleon_custom_sections = [
+	"Directory uploads",  # Used in ipfshttpclient4ipwb/client/files.py
+]
+
+
 # -- AutoDoc extension for documenting our main `Client` object -----------
 
 import sphinx.ext.autodoc
@@ -373,7 +387,7 @@ class ClientClassDocumenterBase(sphinx.ext.autodoc.ClassDocumenter):
 	def import_object(self):
 		"""Prevent client class objects from being marked as “properties”."""
 		if super().import_object():
-			# Document the shadowed `ipfshttpclient.client.base.Section` type
+			# Document the shadowed `ipfshttpclient4ipwb.client.base.Section` type
 			# rather then its (uninteresting) property wrapper
 			self.doc_as_attr = False
 			return True
@@ -413,9 +427,12 @@ def section_property_attrgetter(object, name, default=None):
 	# Nothing found: Return default
 	return default
 
-
 # app setup hook for reCommonMark's AutoStructify and our own extension
 def setup(app):
+	# Import the CID library so that its types will be included in the
+	# analyzed typings (has `sys.modules` detection)
+	import cid
+	
 	# Ensure we are building with reCommonMark 0.5+
 	import recommonmark
 	assert tuple(int(v) for v in recommonmark.__version__.split(".", 2)[0:2]) >= (0, 5)

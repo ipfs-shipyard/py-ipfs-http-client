@@ -6,6 +6,7 @@ Classes:
 """
 
 import os
+import typing as ty
 import warnings
 
 import multiaddr
@@ -13,15 +14,16 @@ import multiaddr
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
-VERSION_MINIMUM   = "0.4.21"
+VERSION_MINIMUM   = "0.4.23"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.7.0"
+
+VERSION_MAXIMUM   = "0.8.0"
 
 from . import bitswap
 from . import block
 from . import bootstrap
 from . import config
-#TODO: `from . import dag`
+from . import dag
 from . import dht
 from . import files
 from . import key
@@ -35,25 +37,29 @@ from . import repo
 from . import swarm
 from . import unstable
 
-from .. import encoding, exceptions, multipart, utils
+from .. import encoding, exceptions, http, multipart, utils
 
 
-def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, blacklist=VERSION_BLACKLIST):
+def assert_version(version: str, minimum: str = VERSION_MINIMUM,
+                   maximum: str = VERSION_MAXIMUM,
+                   blacklist: ty.Iterable[str] = VERSION_BLACKLIST) -> None:
 	"""Make sure that the given daemon version is supported by this client
 	version.
 
 	Raises
 	------
-	~ipfshttpclient.exceptions.VersionMismatch
+	~ipfshttpclient4ipwb.exceptions.VersionMismatch
 
 	Parameters
 	----------
-	version : str
+	version
 		The actual version of an IPFS daemon
-	minimum : str
-		The minimal IPFS daemon version to allowed
-	maximum : str
-		The maximum IPFS daemon version to allowed
+	minimum
+		The minimal IPFS daemon version allowed (inclusive)
+	maximum
+		The maximum IPFS daemon version allowed (exclusive)
+	blacklist
+		Versions explicitly disallowed even if in range *minimum* – *maximum*
 	"""
 	# Convert version strings to integer tuples
 	version = list(map(int, version.split('-', 1)[0].split('.')))
@@ -69,44 +75,50 @@ def assert_version(version, minimum=VERSION_MINIMUM, maximum=VERSION_MAXIMUM, bl
 			raise exceptions.VersionMismatch(version, minimum, maximum)
 
 
-def connect(addr=DEFAULT_ADDR, base=DEFAULT_BASE, *,
-            chunk_size=multipart.default_chunk_size,
-            session=False, **defaults):
-	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
-	daemon to validate that its version is supported.
-
+def connect(
+		addr: http.addr_t = DEFAULT_ADDR,
+		base: str = DEFAULT_BASE, *,
+		
+		chunk_size: int = multipart.default_chunk_size,
+		offline: bool = False,
+		session: bool = False,
+		
+		auth: http.auth_t = None,
+		cookies: http.cookies_t = None,
+		headers: http.headers_t = {},
+		timeout: http.timeout_t = 120,
+		
+		# Backward-compat
+		username: ty.Optional[str] = None,
+		password: ty.Optional[str] = None
+):
+	"""Create a new :class:`~ipfshttpclient4ipwb.Client` instance and connect to the
+	daemon to validate that its version is supported as well as applying any
+	known workarounds for the given daemon version
+	
 	Raises
 	------
-	~ipfshttpclient.exceptions.VersionMismatch
-	~ipfshttpclient.exceptions.ErrorResponse
-	~ipfshttpclient.exceptions.ConnectionError
-	~ipfshttpclient.exceptions.ProtocolError
-	~ipfshttpclient.exceptions.StatusError
-	~ipfshttpclient.exceptions.TimeoutError
-
-
+		~ipfshttpclient4ipwb.exceptions.VersionMismatch
+		~ipfshttpclient4ipwb.exceptions.ErrorResponse
+		~ipfshttpclient4ipwb.exceptions.ConnectionError
+		~ipfshttpclient4ipwb.exceptions.ProtocolError
+		~ipfshttpclient4ipwb.exceptions.StatusError
+		~ipfshttpclient4ipwb.exceptions.TimeoutError
+	
 	All parameters are identical to those passed to the constructor of the
-	:class:`~ipfshttpclient.Client` class.
-
-	Returns
-	-------
-		:class:`~ipfshttpclient.Client`
+	:class:`~ipfshttpclient4ipwb.Client` class.
 	"""
 	# Create client instance
-	client = Client(addr, base, chunk_size=chunk_size, session=session, **defaults)
-
-	# Query version number from daemon and validate it
-	version_str = client.version()["Version"]
-	assert_version(version_str)
+	client = Client(
+		addr, base,
+		chunk_size=chunk_size, offline=offline, session=session,
+		auth=auth, cookies=cookies, headers=headers, timeout=timeout,
+		username=username, password=password,
+	)
 	
-	# Apply workarounds based on daemon version
-	version = tuple(map(int, version_str.split('-', 1)[0].split('.')))
-	if version < (0, 5):  # pragma: no cover (workaround)
-		# Not really a workaround, but make use of HEAD requests on versions that
-		# support them to speed things up if we are not interested in the response
-		# anyways
-		client._workarounds.add("use_http_head_for_no_result")
-
+	# Query version number from daemon and validate it
+	assert_version(client.apply_workarounds()["Version"])
+	
 	return client
 
 
@@ -130,13 +142,13 @@ class Client(files.Base, miscellaneous.Base):
 	The easiest way of using this “session management” facility is using a
 	context manager::
 	
-		with ipfshttpclient.connect() as client:
+		with ipfshttpclient4ipwb.connect() as client:
 			print(client.version())  # These calls…
 			print(client.version())  # …will reuse their TCP connection
 	
 	A client object may be re-opened several times::
 	
-		client = ipfshttpclient.connect()
+		client = ipfshttpclient4ipwb.connect()
 		print(client.version())  # Perform API call on separate TCP connection
 		with client:
 			print(client.version())  # These calls…
@@ -149,7 +161,7 @@ class Client(files.Base, miscellaneous.Base):
 	
 		class Consumer:
 			def __init__(self):
-				self._client = ipfshttpclient.connect(session=True)
+				self._client = ipfshttpclient4ipwb.connect(session=True)
 			
 			# … other code …
 			
@@ -157,12 +169,14 @@ class Client(files.Base, miscellaneous.Base):
 				self._client.close()
 	"""
 	
-	__doc__ += base.ClientBase.__doc__
+	# Fix up docstring so that Sphinx doesn't ignore the constructors parameter list
+	__doc__ += "\n\n" + "\n".join(l[1:] for l in base.ClientBase.__init__.__doc__.split("\n"))
 	
 	bitswap   = base.SectionProperty(bitswap.Section)
 	block     = base.SectionProperty(block.Section)
 	bootstrap = base.SectionProperty(bootstrap.Section)
 	config    = base.SectionProperty(config.Section)
+	dag       = base.SectionProperty(dag.Section)
 	dht       = base.SectionProperty(dht.Section)
 	key       = base.SectionProperty(key.Section)
 	name      = base.SectionProperty(name.Section)
@@ -190,7 +204,7 @@ class Client(files.Base, miscellaneous.Base):
 		resources.
 		
 		If there was no session currently open this method does nothing. An open
-		session is not a requirement for using a :class:`~ipfshttpclient.Client`
+		session is not a requirement for using a :class:`~ipfshttpclient4ipwb.Client`
 		object and as such all method defined on it will continue to work, but
 		a new TCP connection will be established for each and every API call
 		invoked. Such a usage should therefor be avoided and may cause a warning
@@ -202,10 +216,32 @@ class Client(files.Base, miscellaneous.Base):
 	###########
 	# HELPERS #
 	###########
-
+	
+	def apply_workarounds(self):
+		"""Query version information of the referenced daemon and enable any
+		   workarounds known for the corresponding version
+		
+		Returns
+		-------
+			dict
+				The version information returned by the daemon
+		"""
+		version_info = self.version()
+		
+		version = tuple(map(int, version_info["Version"].split('-', 1)[0].split('.')))
+		
+		self._workarounds.clear()
+		if version < (0, 5):  # pragma: no cover (workaround)
+			# Not really a workaround, but make use of HEAD requests on versions
+			# that support them to speed things up if we are not interested in the
+			# response anyways
+			self._workarounds.add("use_http_head_for_no_result")
+		
+		return version_info
+	
 	@utils.return_field('Hash')
-	@base.returns_single_item
-	def add_bytes(self, data, **kwargs):
+	@base.returns_single_item(dict)
+	def add_bytes(self, data: bytes, **kwargs):
 		"""Adds a set of bytes as a file to IPFS.
 
 		.. code-block:: python
@@ -217,7 +253,7 @@ class Client(files.Base, miscellaneous.Base):
 
 		Parameters
 		----------
-		data : bytes
+		data
 			Content to be added as a file
 
 		Returns
@@ -230,7 +266,7 @@ class Client(files.Base, miscellaneous.Base):
 		                            data=body, headers=headers, **kwargs)
 
 	@utils.return_field('Hash')
-	@base.returns_single_item
+	@base.returns_single_item(dict)
 	def add_str(self, string, **kwargs):
 		"""Adds a Python string as a file to IPFS.
 
@@ -276,7 +312,7 @@ class Client(files.Base, miscellaneous.Base):
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 	
 	
-	@base.returns_single_item
+	@base.returns_single_item()
 	def get_json(self, cid, **kwargs):
 		"""Loads a json object from IPFS.
 

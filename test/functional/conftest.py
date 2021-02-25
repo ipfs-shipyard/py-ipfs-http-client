@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-import ipfshttpclient
+import ipfshttpclient4ipwb
 
 
 TEST_DIR = pathlib.Path(__file__).parent
@@ -19,12 +19,12 @@ def is_available():  # noqa
 
 	if not isinstance(__is_available, bool):
 		try:
-			ipfshttpclient.connect()
-		except ipfshttpclient.exceptions.Error as error:
+			ipfshttpclient4ipwb.connect()
+		except ipfshttpclient4ipwb.exceptions.Error as error:
 			__is_available = False
 			
 			# Make sure version incompatibility is displayed to users
-			if isinstance(error, ipfshttpclient.exceptions.VersionMismatch):
+			if isinstance(error, ipfshttpclient4ipwb.exceptions.VersionMismatch):
 				raise
 		else:
 			__is_available = True
@@ -38,7 +38,7 @@ def sort_by_key(items, key="Name"):
 
 def get_client(offline=False):
 	if is_available():
-		return ipfshttpclient.Client(offline=offline)
+		return ipfshttpclient4ipwb.Client(offline=offline)
 	else:
 		pytest.skip("Running IPFS node required")
 

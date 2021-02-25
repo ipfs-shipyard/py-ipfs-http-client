@@ -1,4 +1,7 @@
 import conftest
+import pytest
+
+
 
 
 def test_new(client):
@@ -61,6 +64,14 @@ def test_data(client):
 	assert data == b"another"
 
 
+# Instead of writing our own test file generation just make a proxy to piggyback off test_files
+@pytest.mark.dependency(depends=["test/functional/test_files.py::test_add_recursive"],
+                        scope='session')
+def test_prepare_test_files(client):
+	pass
+
+
+@pytest.mark.dependency(depends=["test_prepare_test_files"])
 def test_patch_append_data(client):
 	"""Warning, this test depends on the contents of
 		test/functional/fake_dir/fsdfgh
@@ -72,6 +83,7 @@ def test_patch_append_data(client):
 	assert result == {"Hash": "QmcUsyoGVxWoQgYKgmLaDBGm8J3eHWfchMh3oDUD5FrrtN"}
 
 
+@pytest.mark.dependency(depends=["test_prepare_test_files"])
 def test_patch_add_link(client):
 	"""Warning, this test depends on the contents of
 		test/functional/fake_dir/fsdfgh
@@ -83,6 +95,7 @@ def test_patch_add_link(client):
 	assert result == {"Hash": "QmbWSr7YXBLcF23VVb7yPvUuogUPn46GD7gXftXC6mmsNM"}
 
 
+@pytest.mark.dependency(depends=["test_prepare_test_files"])
 def test_patch_rm_link(client):
 	"""Warning, this test depends on the contents of
 		test/functional/fake_dir/fsdfgh
@@ -93,6 +106,7 @@ def test_patch_rm_link(client):
 	assert result == {"Hash": "QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n"}
 
 
+@pytest.mark.dependency(depends=["test_prepare_test_files"])
 def test_patch_set_data(client):
 	"""Warning, this test depends on the contents of
 		test/functional/fake_dir/popoiopiu
@@ -102,3 +116,32 @@ def test_patch_set_data(client):
 		conftest.TEST_DIR / "fake_dir" / "popoiopiu"
 	)
 	assert result == {"Hash": "QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G"}
+
+
+@pytest.mark.dependency(depends=["test_prepare_test_files"])
+def test_diff_same(client):
+	"""Warning, this test depends on the contents of
+		test/functional/fake_dir/popoiopiu
+	"""
+	result = client.object.diff(
+		"QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n",
+		"QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n"
+	)
+	assert result == {'Changes': []}
+
+
+@pytest.mark.dependency(depends=["test_prepare_test_files"])
+def test_diff_different_files(client):
+	"""Warning, this test depends on the contents of
+		test/functional/fake_dir/fsdfgh
+		test/functional/fake_dir/popoiopiu
+	"""
+	result = client.object.diff(
+		"QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n",
+		"QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G"
+	)
+	assert result == {'Changes': [{
+		'Type': 2,
+		'Path': '',
+		'Before': {'/': 'QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n'},
+		'After': {'/': 'QmV4QR7MCBj5VTi6ddHmXPyjWGzbaKEtX2mx7axA5PA13G'}}]}

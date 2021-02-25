@@ -9,7 +9,7 @@ import os.path
 import sys
 import unittest
 
-import ipfshttpclient.utils as utils
+import ipfshttpclient4ipwb.utils as utils
 
 class TestUtils(unittest.TestCase):
 	"""Contains unit tests for utils.py.
