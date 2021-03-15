@@ -3,8 +3,13 @@ py-ipfs-http-client 0.X.X (XX.XX.20XX)
 
  * (None yet)
 
+py-ipfs-http-client 0.7.0 (15.03.2021)
+--------------------------------------
 
-py-ipfs-http-client 0.7.0b1 (14.10.2020)
+ * No changes compared to 0.7.0a1 – breaking changes delayed to the unknown future
+
+
+py-ipfs-http-client 0.7.0a1 (14.10.2020)
 --------------------------------------
 
  * Added support for optional arguments of the `.dag.*` APIs (by João Meyer)
