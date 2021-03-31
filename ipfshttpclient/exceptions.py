@@ -1,8 +1,10 @@
 """
 The class hierachy for exceptions is::
 
+	Warning
+	 └── VersionMismatch
+
 	Error
-	 ├── VersionMismatch
 	 ├── AddressError
 	 ├── EncoderError
 	 │    ├── EncoderMissingError
@@ -38,7 +40,7 @@ class AddressError(Error, multiaddr.exceptions.Error):  # type: ignore[no-any-un
 		Error.__init__(self, "Unsupported Multiaddr pattern: {0!r}".format(addr))
 
 
-class VersionMismatch(Error):
+class VersionMismatch(Warning):
 	"""Raised when daemon version is not supported by this client version."""
 	__slots__ = ("current", "minimum", "maximum")
 	#current: ty.Sequence[int]

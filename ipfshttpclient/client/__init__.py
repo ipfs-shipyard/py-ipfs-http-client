@@ -66,12 +66,12 @@ def assert_version(version: str, minimum: str = VERSION_MINIMUM,
 	maximum = list(map(int, maximum.split('-', 1)[0].split('.')))
 
 	if minimum > version or version >= maximum:
-		raise exceptions.VersionMismatch(version, minimum, maximum)
-	
+		warnings.warn(exceptions.VersionMismatch(version, minimum, maximum))
+
 	for blacklisted in blacklist:
 		blacklisted = list(map(int, blacklisted.split('-', 1)[0].split('.')))
 		if version == blacklisted:
-			raise exceptions.VersionMismatch(version, minimum, maximum)
+			warnings.warn(exceptions.VersionMismatch(version, minimum, maximum))
 
 
 def connect(
@@ -97,7 +97,6 @@ def connect(
 	
 	Raises
 	------
-		~ipfshttpclient.exceptions.VersionMismatch
 		~ipfshttpclient.exceptions.ErrorResponse
 		~ipfshttpclient.exceptions.ConnectionError
 		~ipfshttpclient.exceptions.ProtocolError
