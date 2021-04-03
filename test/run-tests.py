@@ -177,11 +177,11 @@ try:
 				"[run]",
 				"omit =",
 			), map(lambda s: "\t" + s, omitted_files),
-			(
-				"[report]",
-				"# Exclude lines specific to some other Python version from coverage",
-				"exclude_lines =",
-			), map(lambda s: "\t" + s, exclusions))))
+				(
+					"[report]",
+					"# Exclude lines specific to some other Python version from coverage",
+					"exclude_lines =",
+				), map(lambda s: "\t" + s, exclusions))))
 			coveragerc.file.flush()
 			
 			coverage_args = [

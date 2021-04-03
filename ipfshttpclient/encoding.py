@@ -105,8 +105,9 @@ class Json(Encoding[utils.json_value_t]):
 		self._decoder2  = json.JSONDecoder()
 		self._lasterror = None  # type: ty.Optional[ValueError]
 	
-	@ty.no_type_check  # It works just fine and I don't want to rewrite it just
-	                   # because mypy doesn't understand…  # noqa: E114, E116
+	# It works just fine and I don't want to rewrite it just because mypy doesn't understand…
+	# noqa: E114, E116
+	@ty.no_type_check
 	def parse_partial(self, data: bytes) -> ty.Generator[utils.json_value_t, ty.Any, ty.Any]:
 		"""Incrementally decodes JSON data sets into Python objects.
 		
