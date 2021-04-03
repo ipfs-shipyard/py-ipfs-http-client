@@ -11,6 +11,7 @@
 /.project
 /.settings
 /.vscode
+/venv
 
 # Stuff that never was meant to be public
 /+junk

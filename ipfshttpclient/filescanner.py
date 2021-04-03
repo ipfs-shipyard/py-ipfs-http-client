@@ -512,7 +512,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 			#
 			# Note: `os.fwalk` support for binary paths was only added in 3.7+.
 			directory_str_or_fd = directory_str  # type: ty.Union[ty.AnyStr, int]
-			if HAVE_FWALK and (not isinstance(directory_str, bytes) or HAVE_FWALK_BYTES):  # type: ignore[unreachable]  # noqa: E501
+			if HAVE_FWALK and (not isinstance(directory_str, bytes) or HAVE_FWALK_BYTES):  # noqa: E501
 				self._close_fd = directory_str_or_fd = os.open(directory_str, os.O_RDONLY | O_DIRECTORY)
 			
 			self._generator = self._walk(
@@ -583,7 +583,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 	) -> ty.Generator[FSNodeEntry, ty.Any, None]:
 		if directory_str is not None:
 			sep = utils.maybe_fsencode(os.path.sep, directory_str)
-		elif matcher is not None and matcher.is_binary:  # type: ignore[unreachable]
+		elif matcher is not None and matcher.is_binary:
 			sep = os.fsencode(os.path.sep)  # type: ignore[assignment]
 		else:
 			sep = os.path.sep  # type: ignore[assignment]
