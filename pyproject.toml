@@ -18,6 +18,8 @@ description-file = "README.md"
 #        `typing.NoReturn` function signature support. (Also, many other `typing` module
 #        items were only introduced post-release in 3.6 and version restrictions on these
 #	     versions ensure that those are all available as well.)
+#
+#        Maintain this concurrently with verify.sh
 requires-python = ">=3.6.2,!=3.7.0,!=3.7.1"
 requires = [
 	"multiaddr (>=0.0.7)",
