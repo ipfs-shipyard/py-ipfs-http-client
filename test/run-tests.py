@@ -158,7 +158,7 @@ try:
 			else:
 				# Exclude the past
 				exclusions.append(r"\#PY2")
-				# Exclude code only used for compatiblity with a previous Python version
+				# Exclude code only used for compatibility with a previous Python version
 				exclusions.append(r"\#PY3({0})([^\d+]|$)".format(
 					"|".join(map(str, range(0, sys.version_info.minor)))
 				))
