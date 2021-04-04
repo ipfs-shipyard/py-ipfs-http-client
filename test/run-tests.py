@@ -173,15 +173,21 @@ try:
 				exclusions.append(r"\# pragma: http-backend=httpx")
 			
 			# Create temporary file with extended *coverage.py* configuration data
-			coveragerc.file.writelines(map(lambda s: s + "\n", itertools.chain((
-				"[run]",
-				"omit =",
-			), map(lambda s: "\t" + s, omitted_files),
-				(
-					"[report]",
-					"# Exclude lines specific to some other Python version from coverage",
-					"exclude_lines =",
-				), map(lambda s: "\t" + s, exclusions))))
+			coveragerc.file.writelines(
+				map(
+					lambda s: s + "\n",
+					itertools.chain(
+						(
+							"[run]",
+							"omit =",
+						),
+						map(lambda s: "\t" + s, omitted_files),
+						(
+							"[report]",
+							"# Exclude lines specific to some other Python version from coverage",
+							"exclude_lines =",
+						),
+						map(lambda s: "\t" + s, exclusions))))
 			coveragerc.file.flush()
 			
 			coverage_args = [
