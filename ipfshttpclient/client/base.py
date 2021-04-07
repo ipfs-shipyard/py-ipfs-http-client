@@ -209,7 +209,7 @@ def returns_multiple_items(item_wrap_cb: wrap_cb_t[T, R] = ident, *, stream: boo
 				"when not streaming a response"
 			)
 			return ResponseWrapIterator(result, item_wrap_cb)
-		return wrapper2
+		return wrapper2  # type: ignore[return-value]
 	return wrapper1
 
 
@@ -256,7 +256,7 @@ def returns_single_item(item_wrap_cb: wrap_cb_t[T, R] = ident, *, stream: bool =
 				"with a single item, when not streaming a response"
 			)
 			return ResponseWrapIterator(result, item_wrap_cb)
-		return wrapper2
+		return wrapper2  # type: ignore[return-value]
 	return wrapper1
 
 
@@ -285,7 +285,7 @@ def returns_no_item(func: _inner_func_t[ty.NoReturn]) -> _returns_single_wrapper
 			"object, when not  streaming a response"
 		)
 		return ResponseWrapIterator(result, ident)
-	return wrapper
+	return wrapper  # type: ignore[return-value]
 
 
 S = ty.TypeVar("S", bound="SectionBase")
