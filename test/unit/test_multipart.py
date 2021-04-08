@@ -13,6 +13,7 @@ TestStreamHelpers -- unimplemented
 import io
 import os
 import re
+import typing as ty
 import unittest
 import urllib.parse
 
@@ -216,14 +217,17 @@ class TestStreamFileMixin(unittest.TestCase):
 	def test__gen_file(self):
 		self.do_test__gen_file("functional/fake_dir/fsdfgh",
 					file_location=None, abspath=False)
+
 	def test__gen_file_relative(self):
 		filepath = "functional/fake_dir/fsdfgh"
 		self.do_test__gen_file(filepath, filepath, abspath=False)
+
 	def test__gen_file_absolute(self):
 		filepath = "/functional/fake_dir/fsdfgh"
 		self.do_test__gen_file(filepath, filepath, abspath=True)
 
-	def do_test__gen_file_start(self, name, file_location, abspath):
+	@staticmethod
+	def do_test__gen_file_start(name: str, file_location: ty.Optional[str], abspath: bool):
 		"""Test the _gen_file_start function against sample output."""
 		generator = StreamFileMixinSub(name)
 
@@ -238,6 +242,7 @@ class TestStreamFileMixin(unittest.TestCase):
 
 	def test__gen_file_start(self):
 		self.do_test__gen_file_start("test_name", file_location=None, abspath=False)
+
 	def test__gen_file_start_with_filepath(self):
 		name = "test_name"
 		self.do_test__gen_file_start(name, os.path.join(os.path.sep, name), abspath=True)

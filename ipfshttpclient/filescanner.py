@@ -21,32 +21,26 @@ else:  #PY36-
 	re_pattern_t = re_pattern_type = type(re.compile(""))
 
 
-if hasattr(enum, "auto"):  #PY36+
-	enum_auto = enum.auto
-elif not ty.TYPE_CHECKING:  #PY35
-	_counter = 0
-	
-	def enum_auto() -> int:
-		global _counter
-		_counter += 1
-		return _counter
+enum_auto = enum.auto
 
 
 O_DIRECTORY = getattr(os, "O_DIRECTORY", 0)  # type: int
 
 
-HAVE_FWALK       = hasattr(os, "fwalk")  # type: bool
-HAVE_FWALK_BYTES = HAVE_FWALK and sys.version_info >= (3, 7)  # type: bool
+# Neither Windows nor MacOS have os.fwalk even through Python 3.9
+HAVE_FWALK: bool = hasattr(os, "fwalk")
+HAVE_FWALK_BYTES = HAVE_FWALK and sys.version_info >= (3, 7)
 
 
 class Matcher(ty.Generic[ty.AnyStr], metaclass=abc.ABCMeta):
 	"""Represents a type that can match on file paths and decide whether they
 	should be included in some file scanning/adding operation"""
 	__slots__ = ("is_binary",)
-	#is_binary: bool
-	
+
+	is_binary: bool
+
 	def __init__(self, is_binary: bool = False) -> None:
-		self.is_binary = is_binary  # type: bool
+		self.is_binary = is_binary
 	
 	@abc.abstractmethod
 	def should_descend(self, path: ty.AnyStr) -> bool:
@@ -111,8 +105,8 @@ class MatchNone(ty.Generic[ty.AnyStr], Matcher[ty.AnyStr]):
 		return False
 
 
-MATCH_ALL = MatchAll()  # type: MatchAll[str]
-MATCH_NONE = MatchNone()  # type: MatchNone[str]
+MATCH_ALL: MatchAll[str] = MatchAll()
+MATCH_NONE: MatchNone[str] = MatchNone()
 
 
 class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
@@ -136,11 +130,13 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 	pasting it into a real shell works this may be why.
 	"""
 	__slots__ = ("period_special", "_sep", "_pat", "_dir_only")
-	#period_special: bool
-	#_sep: ty.AnyStr
-	#_pat: ty.List[ty.Optional[re_pattern_t[ty.AnyStr]]]
-	#_dir_only: bool
-	
+
+	period_special: bool
+
+	_sep: ty.AnyStr
+	_pat: "ty.List[ty.Optional[re_pattern_t[ty.AnyStr]]]"
+	_dir_only: bool
+
 	def __init__(self, pat: ty.AnyStr, *, period_special: bool = True):
 		"""
 		Arguments
@@ -153,14 +149,14 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 			shells allow one to disable this behaviour
 		"""
 		super().__init__(isinstance(pat, bytes))
-		
-		self.period_special = period_special  # type: bool
-		
-		self._sep = utils.maybe_fsencode(os.path.sep, pat)  # type: ty.AnyStr
-		dblstar = utils.maybe_fsencode("**", pat)  # type: ty.AnyStr
-		dot = utils.maybe_fsencode(".", pat)  # type: ty.AnyStr
-		pat_ndot = utils.maybe_fsencode(r"(?![.])", pat)  # type: ty.AnyStr
-		
+
+		self.period_special = period_special
+
+		self._sep = utils.maybe_fsencode(os.path.sep, pat)
+		dblstar = utils.maybe_fsencode("**", pat)
+		dot = utils.maybe_fsencode(".", pat)
+		pat_ndot = utils.maybe_fsencode(r"(?![.])", pat)
+
 		# Normalize path separator
 		if os.path.altsep:
 			pat = pat.replace(utils.maybe_fsencode(os.path.altsep, pat), self._sep)
@@ -174,9 +170,9 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 		# (TBH, I find it hard to see how that is useful, but everybody does it
 		#  and it keeps things consistent overall – something to only match files
 		#  would be nice however.)
-		self._dir_only = pat.endswith(self._sep)  # type: bool
-		
-		self._pat = []  # type: ty.List[ty.Optional[re_pattern_t[ty.AnyStr]]]
+		self._dir_only = pat.endswith(self._sep)
+
+		self._pat = []
 		for label in pat.split(self._sep):
 			# Skip over useless path components
 			if len(label) < 1 or label == dot:
@@ -193,7 +189,6 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 					"an issue if you need this!".format(os.fsdecode(label))
 				)
 			else:
-				#re_expr: ty.AnyStr
 				if not isinstance(label, bytes):
 					re_expr = fnmatch.translate(label)
 				else:
@@ -202,8 +197,7 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 				if period_special and not label.startswith(dot):
 					re_expr = pat_ndot + re_expr
 				self._pat.append(re.compile(re_expr))
-	
-	
+
 	def should_descend(self, path: ty.AnyStr) -> bool:
 		for idx, label in enumerate(path.split(self._sep)):
 			# Always descend into any directory below a recursive pattern as we
@@ -227,8 +221,7 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 		# The given path matched part of this pattern, so we should include this
 		# directory to go further
 		return True
-	
-	
+
 	def should_report(self, path: ty.AnyStr, *, is_dir: bool) -> bool:
 		# A final slash means “only match directories”
 		if self._dir_only and not is_dir:
@@ -236,8 +229,7 @@ class GlobMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 		
 		labels = path.split(self._sep)  # type: ty.List[ty.AnyStr]
 		return self._match(labels, idx_pat=0, idx_path=0, is_dir=is_dir)
-	
-	
+
 	def _match(self, labels: ty.List[ty.AnyStr], *, idx_pat: int, idx_path: int,
 	           is_dir: bool) -> bool:
 		while idx_pat < len(self._pat):
@@ -308,32 +300,34 @@ class ReMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 	own matcher with a proper :meth:`Matcher.should_descend` method.
 	"""
 	__slots__ = ("_pat",)
-	#_pat: re_pattern_t[ty.AnyStr]
-	
+
+	_pat: "re_pattern_t[ty.AnyStr]"
+
 	def __init__(self, pat: ty.Union[ty.AnyStr, "re_pattern_t[ty.AnyStr]"]):
-		self._pat = re.compile(pat)  # type: re_pattern_t[ty.AnyStr]
-		
+		self._pat = re.compile(pat)
+
 		super().__init__(not (self._pat.flags & re.UNICODE))
 	
 	def should_descend(self, path: ty.AnyStr) -> bool:
 		return True
 	
 	def should_report(self, path: ty.AnyStr, *, is_dir: bool) -> bool:
-		suffix = utils.maybe_fsencode(os.path.sep, path) if is_dir else type(path)()  # type: ty.AnyStr
+		suffix: ty.AnyStr = utils.maybe_fsencode(os.path.sep, path) if is_dir else type(path)()
 		return bool(self._pat.match(path + suffix))
 
 
 class MetaMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 	"""Match files and directories by delegating to other matchers"""
 	__slots__ = ("_children",)
-	#_children: ty.List[Matcher[ty.AnyStr]]
-	
+
+	_children: ty.List[Matcher[ty.AnyStr]]
+
 	def __init__(self, children: ty.List[Matcher[ty.AnyStr]]):
 		assert len(children) > 0
 		super().__init__(children[0].is_binary)
-		
-		self._children = children  # type: ty.List[Matcher[ty.AnyStr]]
-	
+
+		self._children = children
+
 	def should_descend(self, path: ty.AnyStr) -> bool:
 		return any(m.should_descend(path) for m in self._children)
 	
@@ -342,7 +336,7 @@ class MetaMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 
 
 class NoRecusionAdapterMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
-	"""Matcher adapter that will prevent any recusion
+	"""Matcher adapter that will prevent any recursion
 	
 	Takes a subordinate matcher, but tells the scanner to never descend into any
 	child directory and to never store files from such a directory. This is an
@@ -350,13 +344,14 @@ class NoRecusionAdapterMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 	scanner and hence provides ``recursive=False`` semantics.
 	"""
 	__slots__ = ("_child",)
-	#_child: Matcher[ty.AnyStr]
-	
+
+	_child: Matcher[ty.AnyStr]
+
 	def __init__(self, child: Matcher[ty.AnyStr]):
 		super().__init__(child.is_binary)
-		
-		self._child = child  # type: Matcher[ty.AnyStr]
-	
+
+		self._child = child
+
 	def should_descend(self, path: ty.AnyStr) -> bool:
 		return False
 	
@@ -367,8 +362,9 @@ class NoRecusionAdapterMatcher(Matcher[ty.AnyStr], ty.Generic[ty.AnyStr]):
 
 if ty.TYPE_CHECKING:
 	_match_spec_t = ty.Union[ty.AnyStr, re_pattern_t[ty.AnyStr], Matcher[ty.AnyStr]]
-else:  # Using `re_pattern_t` here like in the type checking case makes
-       # sphinx_autodoc_typehints explode  # noqa: E114
+else:
+	# Using `re_pattern_t` here like in the type checking case makes
+	# sphinx_autodoc_typehints explode
 	_match_spec_t = ty.Union[ty.AnyStr, re_pattern_t, Matcher[ty.AnyStr]]
 match_spec_t = ty.Union[
 	ty.Iterable[_match_spec_t[ty.AnyStr]],
@@ -388,6 +384,7 @@ def matcher_from_spec(spec: None, *,
                       recursive: bool = ...) -> Matcher[str]:
 	...
 
+
 def matcher_from_spec(spec: match_spec_t[ty.AnyStr], *,  # type: ignore[misc]  # noqa: E302
                       period_special: bool = True,
                       recursive: bool = True) -> Matcher[ty.AnyStr]:
@@ -404,16 +401,20 @@ def matcher_from_spec(spec: match_spec_t[ty.AnyStr], *,  # type: ignore[misc]  #
 	elif isinstance(spec, (str, bytes)):
 		return GlobMatcher(spec, period_special=period_special)
 	elif isinstance(spec, collections.abc.Iterable) and not isinstance(spec, Matcher):
-		spec = ty.cast(ty.Iterable[_match_spec_t[ty.AnyStr]], spec)  # type: ignore[redundant-cast]
-		
-		matchers = [matcher_from_spec(s,  # type: ignore[arg-type]  # mypy bug
-		                              recursive=recursive, period_special=period_special) for s in spec]
+		matchers: ty.List[Matcher[ty.AnyStr]] = [
+			matcher_from_spec(
+				s,  # type: ignore[arg-type]
+				recursive=recursive,
+				period_special=period_special)
+			for s in spec
+		]
+
 		if len(matchers) == 0:  # Edge case: Empty list of matchers
-			return MATCH_NONE  # type: ignore[return-value]
+			return MatchNone()
 		elif len(matchers) == 1:  # Edge case: List of exactly one matcher
-			return matchers[0]  # type: ignore[return-value]  # same mypy bug
+			return matchers[0]
 		else:  # Actual list of matchers (plural)
-			return MetaMatcher(matchers)  # type: ignore[arg-type]  # same mypy bug
+			return MetaMatcher(matchers)
 	else:
 		return spec
 
@@ -436,10 +437,10 @@ else:
 
 class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 	__slots__ = ("_generator", "_close_fd")
-	#_generator: ty.Generator[FSNodeEntry, ty.Any, None]
-	#_close_fd: ty.Optional[int]
-	
-	
+
+	_generator: ty.Generator[FSNodeEntry, None, None]
+	_close_fd: ty.Optional[int]
+
 	def __init__(
 			self,
 			directory: ty.Union[ty.AnyStr, utils.PathLike[ty.AnyStr], int],
@@ -482,43 +483,50 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 			:class:`NoRecusionAdapterMatcher` and hence prevent the scanner from
 			doing any recursion.
 		"""
-		self._close_fd = None  # type: ty.Optional[int]
-		
+		self._close_fd = None
+
 		# Create matcher object
-		matcher = matcher_from_spec(
-			match_spec, recursive=recursive, period_special=period_special
-		)  # type: Matcher[ty.AnyStr]  # type: ignore[assignment]
-		
+		matcher = matcher_from_spec(  # type: ignore[type-var]
+			match_spec,  # type: ignore[arg-type]
+			recursive=recursive,
+			period_special=period_special
+		)
+
 		# Convert directory path to string …
 		if isinstance(directory, int):
 			if not HAVE_FWALK:
 				raise NotImplementedError("Passing a file descriptor as directory is "
 				                          "not supported on this platform")
-			
+
 			self._generator = self._walk(
-				directory, None, matcher, follow_symlinks, intermediate_dirs
-			)  # type: ty.Generator[FSNodeEntry, ty.Any, None]
+				directory,
+				None,
+				matcher,  # type: ignore[arg-type]
+				follow_symlinks,
+				intermediate_dirs
+			)
 		else:
-			#directory_str: ty.AnyStr
-			if hasattr(os, "fspath"):  #PY36+
-				directory_str = os.fspath(directory)
-			elif not ty.TYPE_CHECKING:  #PY35
-				directory_str = utils.convert_path(directory)
-			
+			directory_str = os.fspath(directory)
+
 			# Best-effort ensure that target directory exists if it is accessed by path
 			os.stat(directory_str)
 			
 			# … and possibly open it as a FD if this is supported by the platform
 			#
 			# Note: `os.fwalk` support for binary paths was only added in 3.7+.
-			directory_str_or_fd = directory_str  # type: ty.Union[ty.AnyStr, int]
+			directory_str_or_fd: ty.Union[ty.AnyStr, int] = directory_str
 			if HAVE_FWALK and (not isinstance(directory_str, bytes) or HAVE_FWALK_BYTES):
-				self._close_fd = directory_str_or_fd = os.open(directory_str, os.O_RDONLY | O_DIRECTORY)
-			
+				fd = os.open(directory_str, os.O_RDONLY | O_DIRECTORY)
+				self._close_fd = directory_str_or_fd = fd
+
 			self._generator = self._walk(
-				directory_str_or_fd, directory_str, matcher, follow_symlinks, intermediate_dirs
+				directory_str_or_fd,
+				directory_str,
+				matcher,  # type: ignore[arg-type]
+				follow_symlinks,
+				intermediate_dirs
 			)
-	
+
 	def __iter__(self) -> 'walk[ty.AnyStr]':
 		return self
 	
@@ -548,7 +556,8 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 	          tb: ty.Optional[types.TracebackType] = None) -> FSNodeEntry:
 		try:
 			if isinstance(typ, type):
-				return self._generator.throw(typ, val, tb)
+				bt = ty.cast(ty.Type[BaseException], typ)  # type: ignore[redundant-cast]
+				return self._generator.throw(bt, val, tb)
 			else:
 				assert val is None
 				return self._generator.throw(typ, val, tb)
@@ -595,8 +604,8 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 			while directory.endswith(sep):
 				directory = directory[:-len(sep)]
 		prefix = (directory if not isinstance(directory, int) else dot) + sep
-		
-		reported_directories = set()  # type: ty.Set[ty.AnyStr]
+
+		reported_directories: ty.Set[ty.AnyStr] = set()
 		
 		# Always report the top-level directory even if nothing therein is matched
 		reported_directories.add(utils.maybe_fsencode("", sep))
@@ -616,14 +625,19 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 		try:
 			for result in walk_iter:
 				dirpath, dirnames, filenames = result[0:3]
-				dirfd = result[3] if len(result) > 3 else None  # type:ty.Optional[int]  # type: ignore[misc]
-				
+
+				if len(result) <= 3:
+					dirfd: ty.Optional[int] = None
+				else:
+					# mypy wrongly believes this will produce an index-out-of-range exception.
+					dirfd = result[3]  # type: ignore[misc]
+
 				# Remove the directory prefix from the received path
 				_, _, dirpath = dirpath.partition(prefix)
 				
 				# Keep track of reported intermediaries, so that we only check for
 				# these at most once per directory base
-				intermediates_reported = False  # type: bool
+				intermediates_reported = False
 				
 				for filename, is_dir in self._join_dirs_and_files(list(dirnames), filenames):
 					filepath = os.path.join(dirpath, filename)
@@ -682,6 +696,6 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[ty.AnyStr]):
 
 
 if HAVE_FWALK:  # pragma: no cover
-	supports_fd = frozenset({walk})  # type: ty.FrozenSet[ty.Callable[..., ty.Any]]
+	supports_fd: ty.FrozenSet[ty.Callable[..., ty.Any]] = frozenset({walk})
 else:  # pragma: no cover
 	supports_fd = frozenset()

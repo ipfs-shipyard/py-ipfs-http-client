@@ -1,5 +1,5 @@
 """
-The class hierachy for exceptions is::
+The class hierarchy for exceptions is:
 
 	Error
 	 ├── VersionMismatch

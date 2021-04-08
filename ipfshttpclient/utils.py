@@ -2,7 +2,6 @@
 """
 import mimetypes
 import os
-import pathlib
 import sys
 import typing as ty
 from functools import wraps
@@ -27,78 +26,50 @@ else:  #PY37-
 	
 	Literal_True = Literal_False = bool
 
-if sys.version_info >= (3, 6):  #PY36+
-	# `os.PathLike` only has a type param while type checking
-	if ty.TYPE_CHECKING:
-		PathLike = os.PathLike
-		PathLike_str = os.PathLike[str]
-		PathLike_bytes = os.PathLike[bytes]
-	else:
-		class PathLike(Protocol, ty.Generic[ty.AnyStr]):
-			def __fspath__(self) -> ty.AnyStr:
-				...
-		
-		PathLike_str = PathLike_bytes = os.PathLike
-	
-	path_str_t = ty.Union[str, PathLike_str]
-	path_bytes_t = ty.Union[bytes, PathLike_bytes]
-	path_t = ty.Union[path_str_t, path_bytes_t]
-	AnyPath = ty.TypeVar("AnyPath", str, PathLike_str, bytes, PathLike_bytes)
-	
-	path_types = (str, bytes, os.PathLike,)
-	path_obj_types = (os.PathLike,)
-	
-	@ty.overload
-	def convert_path(path: ty.AnyStr) -> ty.AnyStr:
-		...
-	
-	@ty.overload
-	def convert_path(path: PathLike_str) -> PathLike_str:
-		...
-	
-	@ty.overload
-	def convert_path(path: PathLike_bytes) -> PathLike_bytes:
-		...
-	
-	@ty.overload
-	def convert_path(path: AnyPath) -> AnyPath:
-		...
-	
-	def convert_path(path: AnyPath) -> AnyPath:
-		# Not needed since all system APIs also accept an `os.PathLike`
-		return path
-else:  #PY35
-	class PathLike(pathlib.PurePath, ty.Generic[ty.AnyStr]):
-		...
-	
-	path_str_t = ty.Union[str, pathlib.PurePath]
-	path_bytes_t = ty.Union[bytes]
-	path_t = ty.Union[path_str_t, path_bytes_t]
-	AnyPath = ty.TypeVar("AnyPath", str, pathlib.PurePath, bytes)
-	
-	path_types = (str, bytes, pathlib.PurePath,)
-	path_obj_types = (pathlib.PurePath,)
-	
-	# Independently maintained forward-port of `pathlib` for Py27 and others
-	try:
-		import pathlib2
-		path_types += (pathlib2.PurePath,)
-		path_obj_types += (pathlib2.PurePath,)
-	except ImportError:
-		pass
-	
-	@ty.overload
-	def convert_path(path: path_str_t) -> str:
-		...
-	
-	@ty.overload
-	def convert_path(path: path_bytes_t) -> bytes:
-		...
-	
-	def convert_path(path: path_t) -> ty.Union[str, bytes]:
-		# `pathlib`'s PathLike objects need to be treated specially and
-		# converted to strings when interacting with system APIs
-		return str(path) if isinstance(path, path_obj_types) else path
+# `os.PathLike` only has a type param while type checking
+if ty.TYPE_CHECKING:
+	PathLike = os.PathLike
+	PathLike_str = os.PathLike[str]
+	PathLike_bytes = os.PathLike[bytes]
+else:
+	class PathLike(Protocol, ty.Generic[ty.AnyStr]):
+		def __fspath__(self) -> ty.AnyStr:
+			...
+
+	PathLike_str = PathLike_bytes = os.PathLike
+
+path_str_t = ty.Union[str, PathLike_str]
+path_bytes_t = ty.Union[bytes, PathLike_bytes]
+path_t = ty.Union[path_str_t, path_bytes_t]
+AnyPath = ty.TypeVar("AnyPath", str, PathLike_str, bytes, PathLike_bytes)
+
+path_types = (str, bytes, os.PathLike,)
+path_obj_types = (os.PathLike,)
+
+
+@ty.overload
+def convert_path(path: ty.AnyStr) -> ty.AnyStr:
+	...
+
+
+@ty.overload
+def convert_path(path: PathLike_str) -> PathLike_str:
+	...
+
+
+@ty.overload
+def convert_path(path: PathLike_bytes) -> PathLike_bytes:
+	...
+
+
+@ty.overload
+def convert_path(path: AnyPath) -> AnyPath:
+	...
+
+
+def convert_path(path: AnyPath) -> AnyPath:
+	# Not needed since all system APIs also accept an `os.PathLike`
+	return path
 
 
 # work around GH/mypy/mypy#731: no recursive structural types yet
@@ -202,7 +173,7 @@ def clean_files(files: ty.Union[clean_file_t, ty.Iterable[clean_file_t]]) \
 
 
 T = ty.TypeVar("T")
-F = ty.TypeVar("F", bound=ty.Callable[..., ty.Dict[str, T]])
+F = ty.TypeVar("F", bound=ty.Callable[..., ty.Dict[str, ty.Any]])
 
 
 class return_field(ty.Generic[T]):
