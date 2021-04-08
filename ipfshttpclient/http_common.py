@@ -245,10 +245,11 @@ class ReadableStreamWrapper:
 def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimported]
 ) -> ty.Tuple[str, ty.Optional[str], socket.AddressFamily, bool]:
 	try:
-		addr = multiaddr.Multiaddr(addr)
+		multi_addr = multiaddr.Multiaddr(addr)
 	except multiaddr.exceptions.ParseError as error:
 		raise exceptions.AddressError(addr) from error
-	addr_iter = iter(addr.items())
+
+	addr_iter = iter(multi_addr.items())
 	
 	# Parse the `host`, `family`, `port` & `secure` values from the given
 	# multiaddr, raising on unsupported `addr` values
@@ -258,7 +259,8 @@ def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimpor
 		family = socket.AF_UNSPEC
 		host_numeric = proto.code in (P_IP4, P_IP6)
 		
-		uds_path = None  # type: ty.Optional[str]
+		uds_path: ty.Optional[str] = None
+
 		if proto.code in (P_IP4, P_DNS4):
 			family = socket.AF_INET
 		elif proto.code in (P_IP6, P_DNS6):
@@ -578,7 +580,7 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		args
 			Positional parameters to be sent along with the HTTP request
 		opts
-			Query string paramters to be sent along with the HTTP request
+			Query string parameters to be sent along with the HTTP request
 		offline
 			Whether to request to daemon to handle this request in “offline-mode”
 		return_result
@@ -701,7 +703,7 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			
 			Set this to :py:`math.inf` to disable timeouts entirely.
 		"""
-		opts2 = dict(opts.items())  # type: ty.Dict[str, str]
+		opts2: ty.Dict[str, str] = dict(opts.items())
 		opts2["archive"] = "true"
 		opts2["compress"] = "true" if compress else "false"
 		

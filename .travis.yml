@@ -5,7 +5,6 @@ dist: bionic  # VirtualEnv is too old on xenial
 
 matrix:
    include:
-      - python: "3.5"
       - python: "3.6"
       - python: "3.7"
       - python: "3.8"
@@ -22,9 +21,6 @@ matrix:
         before_install: ":"
      
       # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
-      #
-      # Minimum testing version is 3.6, since the 3.5 binaries from python.org fail
-      # with TLS error when trying to install `tox`.
       #
       # When changing any version here also update the relevant checksum below with
       # the values found on the https://python.org/ website.

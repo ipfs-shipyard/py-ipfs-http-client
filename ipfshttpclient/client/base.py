@@ -9,11 +9,14 @@ from . import DEFAULT_ADDR, DEFAULT_BASE
 from .. import multipart, http, utils
 
 
+#XXX: Review if this is still necessary after requiring Python 3.8.
 if ty.TYPE_CHECKING:
 	import typing_extensions as ty_ext
 else:
 	ty_ext = utils
 
+# Ensure that proper types show up when generating documentation without hard-depending on
+# the cid package.
 if "cid" in sys.modules:
 	import cid  # type: ignore[import]
 	cid_t = ty.Union[str, cid.CIDv0, cid.CIDv1]
@@ -29,7 +32,7 @@ json_list_t = utils.json_list_t
 json_primitive_t = utils.json_primitive_t
 json_value_t = utils.json_value_t
 
-# The following would be much more useful once GH/python/mypy#4441 is implemented…
+#XXX: The following would be more useful with https://github.com/python/mypy/issues/4441
 if ty.TYPE_CHECKING:
 	# Lame workaround for type checkers
 	CommonArgs = ty.Union[bool, http.auth_t, http.cookies_t, http.reqdata_sync_t,
@@ -48,7 +51,7 @@ elif hasattr(ty, "TypedDict"):
 else:
 	CommonArgs = ty.Dict[str, ty.Any]
 
-# work around GH/mypy/mypy#731: no recursive structural types yet
+#XXX: work around https://github.com/python/mypy/issues/731: no recursive structural types yet
 response_item_t = ty.Union[
 	json_primitive_t,
 	"ResponseBase",

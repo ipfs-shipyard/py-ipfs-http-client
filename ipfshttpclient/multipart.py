@@ -122,10 +122,12 @@ class StreamBase(metaclass=abc.ABCMeta):
 		The maximum size that any single file chunk may have in bytes
 	"""
 	__slots__ = ("chunk_size", "name", "_boundary", "_headers")
-	#chunk_size: int
-	#name: str
-	#_boundry: str
-	#_headers: ty.Dict[str, str]
+
+	chunk_size: int
+	name: str
+
+	_boundry: str
+	_headers: ty.Dict[str, str]
 	
 	def __init__(self, name: str, chunk_size: int = default_chunk_size) -> None:
 		self.chunk_size = chunk_size
@@ -371,9 +373,10 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 		shells allow one to disable this behaviour
 	"""
 	__slots__ = ("abspath", "follow_symlinks", "scanner")
-	#abspath: ty.Optional[ty.AnyStr]
-	#follow_symlinks: bool
-	#scanner: filescanner.walk[ty.AnyStr]
+
+	abspath: ty.Optional[ty.AnyStr]
+	follow_symlinks: bool
+	scanner: filescanner.walk[ty.AnyStr]
 	
 	def __init__(self, directory: ty.Union[ty.AnyStr, utils.PathLike[ty.AnyStr], int], *,
 	             chunk_size: int = default_chunk_size,
@@ -388,18 +391,21 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 		
 		# Create file scanner from parameters
 		self.scanner = filescanner.walk(
-			directory, patterns, follow_symlinks=follow_symlinks,
-			period_special=period_special, recursive=recursive
-		)  # type: filescanner.walk[ty.AnyStr]
-		
+			directory,
+			patterns,
+			follow_symlinks=follow_symlinks,
+			period_special=period_special,
+			recursive=recursive
+		)
+
 		# Figure out the absolute path of the directory added
-		self.abspath = None  # type: ty.Optional[ty.AnyStr]
+		self.abspath = None
 		if not isinstance(directory, int):
 			self.abspath = os.path.abspath(utils.convert_path(directory))
 		
 		# Figure out basename of the containing directory
 		# (normpath is an acceptable approximation here)
-		basename = "_"  # type: ty.Union[str, bytes]
+		basename = "_"
 		if not isinstance(directory, int):
 			basename = os.fsdecode(os.path.basename(os.path.normpath(directory)))
 		super().__init__(os.fsdecode(basename), chunk_size=chunk_size)
@@ -420,13 +426,13 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 							stat_data = os.stat(path, follow_symlinks=self.follow_symlinks)
 						if not stat.S_ISREG(stat_data.st_mode):
 							continue
-						
-						absolute_path = None  # type: ty.Optional[str]
+
+						absolute_path: ty.Optional[str] = None
 						if self.abspath is not None:
 							absolute_path = os.fsdecode(os.path.join(self.abspath, relpath))
 						
 						if parentfd is None:
-							f_path_or_desc = path  # type: ty.Union[ty.AnyStr, int]
+							f_path_or_desc: ty.Union[ty.AnyStr, int] = path
 						else:
 							f_path_or_desc = os.open(name, os.O_RDONLY | os.O_CLOEXEC, dir_fd=parentfd)
 						# Stream file to client
@@ -459,14 +465,15 @@ class BytesFileStream(FilesStream):
 		The maximum size of a single data chunk
 	"""
 	__slots__ = ("data",)
-	#data: ty.Iterable[bytes]
+
+	data: ty.Iterable[bytes]
 	
 	def __init__(self, data: ty.Union[bytes, gen_bytes_t], name: str = "bytes", *,
 	             chunk_size: int = default_chunk_size) -> None:
 		super().__init__([], name=name, chunk_size=chunk_size)
 		
 		if not isinstance(data, bytes):
-			self.data = data  # type: ty.Iterable[bytes]
+			self.data = data
 		else:
 			self.data = (data,)
 	

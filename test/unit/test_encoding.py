@@ -2,10 +2,11 @@
 import json
 
 import pytest
+import typing as ty
 
 import ipfshttpclient.encoding
 import ipfshttpclient.exceptions
-
+import ipfshttpclient.utils
 
 
 @pytest.fixture
@@ -72,19 +73,35 @@ def test_json_parse_incomplete(json_encoder):
 
 def test_json_encode(json_encoder):
 	"""Tests serialization of an object into a JSON formatted UTF-8 string."""
-	data = {'key': 'value with Ünicøde characters ☺'}
+
+	data = ty.cast(
+		ipfshttpclient.utils.json_dict_t,
+		{'key': 'value with Ünicøde characters ☺'}
+	)
+
 	assert json_encoder.encode(data) == \
 	       b'{"key":"value with \xc3\x9cnic\xc3\xb8de characters \xe2\x98\xba"}'
 
+
 def test_json_encode_invalid_surrogate(json_encoder):
 	"""Tests serialization of an object into a JSON formatted UTF-8 string."""
-	data = {'key': 'value with Ünicøde characters and disallowed surrgate: \uDC00'}
+
+	data = ty.cast(
+		ipfshttpclient.utils.json_dict_t,
+		{'key': 'value with Ünicøde characters and disallowed surrgate: \uDC00'}
+	)
 	with pytest.raises(ipfshttpclient.exceptions.EncodingError):
 		json_encoder.encode(data)
 
+
 def test_json_encode_invalid_type(json_encoder):
 	"""Tests serialization of an object into a JSON formatted UTF-8 string."""
-	data = {'key': b'value that is not JSON encodable'}
+
+	data = ty.cast(
+		ipfshttpclient.utils.json_dict_t,
+		{'key': b'value that is not JSON encodable'}
+	)
+	
 	with pytest.raises(ipfshttpclient.exceptions.EncodingError):
 		json_encoder.encode(data)
 
