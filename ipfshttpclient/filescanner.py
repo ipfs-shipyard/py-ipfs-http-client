@@ -21,10 +21,8 @@ else:  #PY36-
 	re_pattern_t = re_pattern_type = type(re.compile(""))
 
 
-enum_auto = enum.auto
-
-
-O_DIRECTORY = getattr(os, "O_DIRECTORY", 0)  # type: int
+# Windows does not have os.O_DIRECTORY
+O_DIRECTORY: int = getattr(os, "O_DIRECTORY", 0)
 
 
 # Neither Windows nor MacOS have os.fwalk even through Python 3.9
@@ -423,8 +421,8 @@ if ty.TYPE_CHECKING:
 	from .filescanner_ty import FSNodeType, FSNodeEntry
 else:
 	class FSNodeType(enum.Enum):
-		FILE = enum_auto()
-		DIRECTORY = enum_auto()
+		FILE = enum.auto()
+		DIRECTORY = enum.auto()
 	
 	FSNodeEntry = ty.NamedTuple("FSNodeEntry", [
 		("type", FSNodeType),

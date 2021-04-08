@@ -12,7 +12,8 @@ import ipfshttpclient.filescanner
 import conftest
 
 
-O_DIRECTORY = getattr(os, "O_DIRECTORY", 0)  # type: int
+# Windows does not have os.O_DIRECTORY
+O_DIRECTORY: int = getattr(os, "O_DIRECTORY", 0)
 
 
 ### test_add_multiple_from_list
@@ -263,7 +264,7 @@ def test_add_filepattern_from_dirname(client, cleanup_pins):
                     reason="No point in disabling os.fwalk if it isn't actually supported")
 def test_add_filepattern_from_dirname_nofwalk(client, cleanup_pins, monkeypatch):
 	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
-	
+
 	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_HASH)
 
@@ -271,7 +272,7 @@ def test_add_filepattern_from_dirname_nofwalk(client, cleanup_pins, monkeypatch)
 @pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
                     reason="Passing directory as file descriptor requires os.fwalk")
 def test_add_filepattern_from_dirfd(client, cleanup_pins):
-	fd = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)  # type: int
+	fd: int = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)
 	try:
 		res = client.add(fd, pattern=FAKE_DIR_FNPATTERN1)
 	finally:
@@ -288,7 +289,7 @@ def test_add_filepattern_from_dirname_recursive(client, cleanup_pins):
                     reason="No point in disabling os.fwalk if it isn't actually supported")
 def test_add_filepattern_from_dirname_recursive_nofwalk(client, cleanup_pins, monkeypatch):
 	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
-	
+
 	res = client.add(FAKE_DIR_PATH, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
 
@@ -297,9 +298,9 @@ def test_add_filepattern_from_dirname_recursive_nofwalk(client, cleanup_pins, mo
                     reason="Opening directory FDs does not work on Windows")
 def test_add_filepattern_from_dirfd_recursive_nofwalk(client, cleanup_pins, monkeypatch):
 	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
-	
+
 	with pytest.raises(NotImplementedError):
-		fd = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)  # type: int
+		fd: int = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)
 		try:
 			client.add(fd, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
 		finally:
@@ -309,7 +310,7 @@ def test_add_filepattern_from_dirfd_recursive_nofwalk(client, cleanup_pins, monk
 @pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
                     reason="Passing directory as file descriptor requires os.fwalk")
 def test_add_filepattern_from_dirfd_recursive(client, cleanup_pins):
-	fd = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)  # type: int
+	fd: int = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)
 	try:
 		res = client.add(fd, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
 	finally:
@@ -327,7 +328,7 @@ def test_add_filepattern_from_dirname_recursive_binary(client, cleanup_pins):
                     reason="No point in disabling os.fwalk if it isn't actually supported")
 def test_add_filepattern_from_dirname_recursive_nofwalk_binary(client, cleanup_pins, monkeypatch):
 	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
-	
+
 	res = client.add(os.fsencode(str(FAKE_DIR_PATH)),
 	                 pattern=os.fsencode(FAKE_DIR_FNPATTERN1), recursive=True)
 	assert conftest.sort_by_key(res) == conftest.sort_by_key(FAKE_DIR_FNPATTERN1_RECURSIVE_HASH)
