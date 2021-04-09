@@ -299,12 +299,15 @@ def test_add_filepattern_from_dirname_recursive_nofwalk(client, cleanup_pins, mo
 def test_add_filepattern_from_dirfd_recursive_nofwalk(client, cleanup_pins, monkeypatch):
 	monkeypatch.setattr(ipfshttpclient.filescanner, "HAVE_FWALK", False)
 
-	with pytest.raises(NotImplementedError):
-		fd: int = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)
-		try:
+	assert os.path.isdir(FAKE_DIR_PATH)
+
+	# On Windows, this line will fail with PermissionError: [Errno 13] Permission denied
+	fd: int = os.open(str(FAKE_DIR_PATH), os.O_RDONLY | O_DIRECTORY)
+	try:
+		with pytest.raises(NotImplementedError):
 			client.add(fd, pattern=FAKE_DIR_FNPATTERN1, recursive=True)
-		finally:
-			os.close(fd)
+	finally:
+		os.close(fd)
 
 
 @pytest.mark.skipif(not ipfshttpclient.filescanner.HAVE_FWALK,
