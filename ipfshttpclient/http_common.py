@@ -605,11 +605,7 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		if not return_result:
 			decoder = "none"
 		
-		# HTTP method must always be "POST" since go-IPFS 0.5
 		method = "POST"
-		if "use_http_head_for_no_result" in self.workarounds and not return_result:  # pragma: no cover
-			method = "HEAD"
-		
 		parser = encoding.get_encoding(decoder)
 		
 		closables, res = self._request(

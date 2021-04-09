@@ -51,14 +51,14 @@ before_install:
       ### ==== MODIFY THIS WHEN CHANGING TARGET OR MINIMUM IPFS VERSION ==== ###
       case "${IPFS_VERSION:-latest}" in
          latest)  # Currently targeted version
-            VERSION=0.7.0
-            SHA512_LINUX=1d5910f27e8d7ea333145f15c6edcbacc1e8db3a99365f0847467bdfa7c73f4d7a05562e46be8e932056c8324ed0769ca1b6758dfb0ac4c2e1b6066b57c4a086
-            SHA512_DARWIN=d864b58e832ce49df7ef77c8012ce9e6e7585f693c03ba8e4ebf86f772eebf0d6a00dde279cdc0f16250ad20bac6f67db6b3966848c3e3bcbdc4b4d2dee1cd89
-            SHA512_WINDOWS=2262220e0502f00d6d429cfd16d2f0c55fa73cafb100bd72589fd1f7d97b3527dc7d49d60460650796d754f2aa4b03ba07753457691ef7d1a10d10857b819045
+            VERSION=0.8.0
+            SHA512_LINUX=64d5464e5b8636c4e4d76a285350de23e77b03199037fc79e4a6ed65569788586af6993b7faa0a826a2b5ffca3795e67c0c10386f98d1be1842d9c284d3fcf07
+            SHA512_DARWIN=38d2196c7bfde43661c323c862928eb183f75d9879550f2c0eafb2b9db0bdf1b577d3bb5a201b2287c4e753628affbbbb90d37d0f9d197d00256ebefb2ff7203
+            SHA512_WINDOWS=f9e260ea039c4d263fd5ef9d6d9829b98f88d524a206985169a89549fdb46b329d2fee2ac3196885726781dae247dd1fed00a9dba3d4ddd86a6423f2374b2276
          ;;
          compat)  # Earliest supported version
-            VERSION=0.4.23
-            SHA512_LINUX=5eebebd4d4628a01c3b6615d96123a5c744f64da18fc0950e00d99a36abb02eee694c1bb67549341a645ebb99f30de9198c33b556cdee2609013409a510d1d2b
+            VERSION=0.5.0
+            SHA512_LINUX=583ea6920226cf47cc3a2856a1f87273df9a5150b9f7e765280eec4b2d438f7e0a8b60a7283a3567b86165085b9b8b49ee867dffa83234c8cc46055d7ab98d90
          ;;
       esac
       ### ------------------------------ END ------------------------------- ###
