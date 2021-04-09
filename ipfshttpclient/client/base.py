@@ -41,7 +41,6 @@ elif hasattr(ty, "TypedDict"):
 	# This is what type checkers should actually use
 	CommonArgs = ty.TypedDict("CommonArgs", {
 		"offline": bool,
-		"return_result": bool,
 		"auth": http.auth_t,
 		"cookies": http.cookies_t,
 		"data": http.reqdata_sync_t,
@@ -167,25 +166,18 @@ class ResponseWrapIterator(ty.Generic[T, R]):
 
 class _inner_func_t(ty_ext.Protocol, ty.Generic[T]):
 	def __call__(self, *args: ty.Any, **kwargs: ty.Any) \
-	    -> ty.Union[ty.List[T], http.StreamDecodeIteratorSync[T], None]:
+	    -> ty.Union[ty.List[T], http.StreamDecodeIteratorSync[T]]:
 		...
 
 
 class _returns_multiple_wrapper2_t(ty_ext.Protocol, ty.Generic[T, R]):
 	@ty.overload
-	def __call__(self, *args: ty.Any, stream: bool = ...,
-	             return_result: utils.Literal_False, **kwargs: ty.Any) -> None:
+	def __call__(self, *args: ty.Any, stream: utils.Literal_True, **kwargs: ty.Any) -> ty.List[R]:
 		...
 	
 	@ty.overload
-	def __call__(self, *args: ty.Any, stream: utils.Literal_True,
-	             return_result: utils.Literal_True = ..., **kwargs: ty.Any) -> ty.List[R]:
-		...
-	
-	@ty.overload
-	def __call__(self, *args: ty.Any, stream: utils.Literal_False = ...,
-	             return_result: utils.Literal_True = ..., **kwargs: ty.Any
-	) -> ResponseWrapIterator[T, R]:
+	def __call__(self, *args: ty.Any, stream: utils.Literal_False = ..., **kwargs: ty.Any) \
+	    -> ResponseWrapIterator[T, R]:
 		...
 
 
@@ -199,14 +191,10 @@ def returns_multiple_items(item_wrap_cb: wrap_cb_t[T, R] = ident, *, stream: boo
 	def wrapper1(func: _inner_func_t[T]) -> _returns_multiple_wrapper2_t[T, R]:
 		@functools.wraps(func)
 		def wrapper2(*args: ty.Any, **kwargs: ty.Any) \
-		    -> ty.Union[None, ty.List[R], ResponseWrapIterator[T, R]]:
+		    -> ty.Union[ty.List[R], ResponseWrapIterator[T, R]]:
 			result = func(*args, **kwargs)
 			if isinstance(result, list):
 				return [item_wrap_cb(r) for r in result]
-			if result is None:
-				# WORKAROUND: Remove the `or …` part in 0.7.X
-				assert not kwargs.get("return_result", True) or kwargs.get("quiet", False)
-				return None
 			assert kwargs.get("stream", False) or stream, (
 				"Called IPFS HTTP-Client function should only ever return a list, "
 				"when not streaming a response"
@@ -218,19 +206,12 @@ def returns_multiple_items(item_wrap_cb: wrap_cb_t[T, R] = ident, *, stream: boo
 
 class _returns_single_wrapper2_t(ty_ext.Protocol, ty.Generic[T, R]):
 	@ty.overload
-	def __call__(self, *args: ty.Any, stream: bool = ...,
-	             return_result: utils.Literal_False, **kwargs: ty.Any) -> None:
+	def __call__(self, *args: ty.Any, stream: utils.Literal_True, **kwargs: ty.Any) -> R:
 		...
 	
 	@ty.overload
-	def __call__(self, *args: ty.Any, stream: utils.Literal_True,
-	             return_result: utils.Literal_True = ..., **kwargs: ty.Any) -> R:
-		...
-	
-	@ty.overload
-	def __call__(self, *args: ty.Any, stream: utils.Literal_False = ...,
-	             return_result: utils.Literal_True = ..., **kwargs: ty.Any
-	) -> ResponseWrapIterator[T, R]:
+	def __call__(self, *args: ty.Any, stream: utils.Literal_False = ..., **kwargs: ty.Any) \
+	    -> ResponseWrapIterator[T, R]:
 		...
 
 
@@ -243,16 +224,12 @@ def returns_single_item(item_wrap_cb: wrap_cb_t[T, R] = ident, *, stream: bool =
     -> _returns_single_wrapper1_t[T, R]:
 	def wrapper1(func: _inner_func_t[T]) -> _returns_single_wrapper2_t[T, R]:
 		@functools.wraps(func)
-		def wrapper2(*args: ty.Any, **kwargs: ty.Any) \
-		    -> ty.Union[None, R, ResponseWrapIterator[T, R]]:
+		def wrapper2(*args: ty.Any, **kwargs: ty.Any) -> ty.Union[R, ResponseWrapIterator[T, R]]:
 			result = func(*args, **kwargs)
 			if isinstance(result, list):
 				assert len(result) == 1, ("Called IPFS HTTP-Client function should "
 				                          "only ever return one item")
 				return item_wrap_cb(result[0])
-			if result is None:
-				assert not kwargs.get("return_result", True)
-				return None
 			
 			assert kwargs.get("stream", False) or stream, (
 				"Called IPFS HTTP-Client function should only ever return a list "

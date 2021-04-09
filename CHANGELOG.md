@@ -14,6 +14,7 @@ py-ipfs-http-client 0.8.0 (XX.XX.20XX)
 **Breaking changes in this release**:
 
  * Dropped support for the (previously deprecated) `return_result` parameter of `.repo.gc(…)`
+ * Dropped support for the previously deprecated and always undocumented `return_result` parameter everywhere else
 
 py-ipfs-http-client 0.7.0 (15.03.2021)
 --------------------------------------
