@@ -27,10 +27,8 @@ if sys.version_info >= (3, 7):  #PY37+
 else:  #PY36-
 	re_pattern_t = re_pattern_type = type(re.compile(""))
 
-
 # Windows does not have os.O_DIRECTORY
 O_DIRECTORY: int = getattr(os, "O_DIRECTORY", 0)
-
 
 # Neither Windows nor MacOS have os.fwalk even through Python 3.9
 HAVE_FWALK: bool = hasattr(os, "fwalk")
