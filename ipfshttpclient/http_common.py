@@ -639,7 +639,7 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		args
 			Positional parameters to be sent along with the HTTP request
 		opts
-			Query string paramters to be sent along with the HTTP request
+			Query string parameters to be sent along with the HTTP request
 		compress
 			Whether the downloaded file should be GZip compressed by the
 			daemon before being sent to the client

@@ -21,6 +21,7 @@ VERSION_MINIMUM   = "0.5.0"
 VERSION_BLACKLIST = []
 VERSION_MAXIMUM   = "0.9.0"
 
+from . import base
 from . import bitswap
 from . import block
 from . import bootstrap
@@ -90,7 +91,7 @@ def connect(
 		headers: http.headers_t = {},
 		timeout: http.timeout_t = 120,
 		
-		# Backward-compat
+		# Backward-compatibility
 		username: ty.Optional[str] = None,
 		password: ty.Optional[str] = None
 ):
@@ -109,6 +110,7 @@ def connect(
 	All parameters are identical to those passed to the constructor of the
 	:class:`~ipfshttpclient.Client` class.
 	"""
+
 	# Create client instance
 	client = Client(
 		addr, base,

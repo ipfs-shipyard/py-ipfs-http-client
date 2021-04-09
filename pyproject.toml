@@ -51,4 +51,3 @@ classifiers = [
 
 [tool.flit.metadata.urls]
 Documentation = "https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/"
-

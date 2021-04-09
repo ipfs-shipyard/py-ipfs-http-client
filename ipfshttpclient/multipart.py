@@ -397,6 +397,7 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 
 		# Figure out the absolute path of the directory added
 		self.abspath = None
+
 		if not isinstance(directory, int):
 			self.abspath = os.path.abspath(directory)
 		
