@@ -49,31 +49,6 @@ path_types = (str, bytes, os.PathLike,)
 path_obj_types = (os.PathLike,)
 
 
-@ty.overload
-def convert_path(path: ty.AnyStr) -> ty.AnyStr:
-	...
-
-
-@ty.overload
-def convert_path(path: PathLike_str) -> PathLike_str:
-	...
-
-
-@ty.overload
-def convert_path(path: PathLike_bytes) -> PathLike_bytes:
-	...
-
-
-@ty.overload
-def convert_path(path: AnyPath) -> AnyPath:
-	...
-
-
-def convert_path(path: AnyPath) -> AnyPath:
-	# Not needed since all system APIs also accept an `os.PathLike`
-	return path
-
-
 # work around GH/mypy/mypy#731: no recursive structural types yet
 json_primitive_t = ty.Union[bool, float, int, str]
 json_value_t = ty.Union[
@@ -143,7 +118,7 @@ def clean_file(file: clean_file_t) -> ty.Tuple[ty.IO[bytes], bool]:
 		return os.fdopen(file, 'rb', closefd=False), True
 	elif not hasattr(file, 'read'):
 		file = ty.cast(path_t, file)  # Cannot be ty.IO[bytes] without `.read()`
-		return open(convert_path(file), 'rb'), True
+		return open(file, 'rb'), True
 	else:
 		file = ty.cast(ty.IO[bytes], file)  # Must be ty.IO[bytes]
 		return file, False
@@ -186,10 +161,11 @@ class return_field(ty.Generic[T]):
 		The response field to be returned for all invocations
 	"""
 	__slots__ = ("field",)
-	#field: str
+
+	field: str
 	
 	def __init__(self, field: str) -> None:
-		self.field = field  # type: str
+		self.field = field
 	
 	def __call__(self, cmd: F) -> ty.Callable[..., T]:
 		"""Wraps a command so that only a specified field is returned.
