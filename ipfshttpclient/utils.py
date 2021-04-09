@@ -11,6 +11,8 @@ if ty.TYPE_CHECKING:
 else:
 	ty_ext = ty
 
+T = ty.TypeVar("T")
+
 if sys.version_info >= (3, 8):  #PY38+
 	Literal = ty_ext.Literal
 	Protocol = ty_ext.Protocol
@@ -18,7 +20,7 @@ if sys.version_info >= (3, 8):  #PY38+
 	Literal_True = ty.Literal[True]
 	Literal_False = ty.Literal[False]
 else:  #PY37-
-	class Literal(ty.Generic[ty.T]):
+	class Literal(ty.Generic[T]):
 		...
 	
 	class Protocol:
@@ -172,7 +174,6 @@ def clean_files(files: ty.Union[clean_file_t, ty.Iterable[clean_file_t]]) \
 		yield clean_file(ty.cast(clean_file_t, files))
 
 
-T = ty.TypeVar("T")
 F = ty.TypeVar("F", bound=ty.Callable[..., ty.Dict[str, ty.Any]])
 
 
