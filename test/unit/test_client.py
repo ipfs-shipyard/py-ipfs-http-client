@@ -1,51 +1,26 @@
-import warnings
-
 import pytest
 
 import ipfshttpclient
 
 
 def test_assert_version():
-	with warnings.catch_warnings(record=True) as w:
-		# Cause all warnings to always be triggered.
-		warnings.simplefilter("always")
-
+	with pytest.warns(None) as warnings:
 		# Minimum required version
 		ipfshttpclient.assert_version("0.1.0", "0.1.0", "0.2.0", ["0.1.2"])
 
-		assert len(w) == 0
+	assert len(warnings) == 0
 
 	# Too high version
-	with warnings.catch_warnings(record=True) as w:
-		# Cause all warnings to always be triggered.
-		warnings.simplefilter("always")
-
+	with pytest.warns(ipfshttpclient.exceptions.VersionMismatch):
 		ipfshttpclient.assert_version("0.2.0", "0.1.0", "0.2.0", ["0.1.2"])
 
-		assert len(w) == 1
-		assert issubclass(w[-1].category, ipfshttpclient.exceptions.VersionMismatch)
-
-
 	# Too low version
-	with warnings.catch_warnings(record=True) as w:
-		# Cause all warnings to always be triggered.
-		warnings.simplefilter("always")
-
+	with pytest.warns(ipfshttpclient.exceptions.VersionMismatch):
 		ipfshttpclient.assert_version("0.0.5", "0.1.0", "0.2.0", ["0.1.2"])
 
-		assert len(w) == 1
-		assert issubclass(w[-1].category, ipfshttpclient.exceptions.VersionMismatch)
-
-
 	# Blacklisted version
-	with warnings.catch_warnings(record=True) as w:
-		# Cause all warnings to always be triggered.
-		warnings.simplefilter("always")
-
+	with pytest.warns(ipfshttpclient.exceptions.VersionMismatch):
 		ipfshttpclient.assert_version("0.1.2-1", "0.1.0", "0.2.0", ["0.1.2"])
-
-		assert len(w) == 1
-		assert issubclass(w[-1].category, ipfshttpclient.exceptions.VersionMismatch)
 
 
 def test_client_session_param():

@@ -20,7 +20,7 @@ def is_available():  # noqa
 	if not isinstance(__is_available, bool):
 		try:
 			ipfshttpclient.connect()
-		except ipfshttpclient.exceptions.Error as error:
+		except ipfshttpclient.exceptions.Error:
 			__is_available = False
 		else:
 			__is_available = True
