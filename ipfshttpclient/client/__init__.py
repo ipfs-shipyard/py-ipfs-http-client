@@ -14,9 +14,12 @@ import multiaddr
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
 
-VERSION_MINIMUM   = "0.4.23"
+# This range inclusive-exclusive, so the daemon version must match
+#   `VERSION_MINIMUM <= version < VERSION_MAXIMUM`
+# for it to be considered compatible.
+VERSION_MINIMUM   = "0.5.0"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.8.0"
+VERSION_MAXIMUM   = "0.9.0"
 
 from . import bitswap
 from . import block
@@ -229,11 +232,6 @@ class Client(files.Base, miscellaneous.Base):
 		version = tuple(map(int, version_info["Version"].split('-', 1)[0].split('.')))
 		
 		self._workarounds.clear()
-		if version < (0, 5):  # pragma: no cover (workaround)
-			# Not really a workaround, but make use of HEAD requests on versions
-			# that support them to speed things up if we are not interested in the
-			# response anyways
-			self._workarounds.add("use_http_head_for_no_result")
 		
 		return version_info
 	

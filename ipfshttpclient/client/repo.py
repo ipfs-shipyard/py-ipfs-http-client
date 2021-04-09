@@ -1,11 +1,9 @@
-import warnings
-
 from . import base
 
 
 class Section(base.SectionBase):
 	@base.returns_multiple_items(base.ResponseBase)
-	def gc(self, *, quiet: bool = False, return_result: bool = True, **kwargs: base.CommonArgs):
+	def gc(self, *, quiet: bool = False, **kwargs: base.CommonArgs):
 		"""Removes stored objects that are not pinned from the repo
 		
 		.. code-block:: python
@@ -30,27 +28,13 @@ class Section(base.SectionBase):
 			Passing ``True`` to this parameter often causing the GC process to
 			speed up tremendously as it will also avoid generating the list of
 			removed objects in the connected daemon at all.
-		return_result
-			If ``False`` this is a legacy alias for ``quiet=True``.
-			
-			(Will be dropped in py-ipfs-api-client 0.7.x!)
 		
 		Returns
 		-------
 			dict
 				List of IPFS objects that have been removed
 		"""
-		if not return_result:
-			warnings.warn("Parameter `return_result` of `.repo.gc(…)` is deprecated "
-			              "in favour of the newer `quiet` parameter", DeprecationWarning)
-		
-		quiet = quiet or not return_result
-		
-		if "use_http_head_for_no_result" not in self._client.workarounds:
-			# go-ipfs 0.4.22- does not support the quiet option yet
-			kwargs.setdefault("opts", {})["quiet"] = quiet
-		
-		kwargs.setdefault("return_result", not quiet)
+		kwargs.setdefault("opts", {})["quiet"] = quiet
 		
 		return self._client.request('/repo/gc', decoder='json', **kwargs)
 	

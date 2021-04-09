@@ -3,6 +3,18 @@ py-ipfs-http-client 0.X.X (XX.XX.20XX)
 
  * (None yet)
 
+py-ipfs-http-client 0.8.0 (XX.XX.20XX)
+--------------------------------------
+
+ * py-ipfs-api-client will now only warn when detecting an unsupported daemon version
+   * Rationale: During the 0.4.x series the library required many changes to stay compatible
+     with the respective daemon version, but since 0.5.0 appears to be no longer the case
+ * Compatiblity bumped to go-IPFS 0.8.x (by Jan Rydzewski and other community members bugging me)
+
+**Breaking changes in this release**:
+
+ * Dropped support for the (previously deprecated) `return_result` parameter of `.repo.gc(…)`
+
 py-ipfs-http-client 0.7.0 (15.03.2021)
 --------------------------------------
 
