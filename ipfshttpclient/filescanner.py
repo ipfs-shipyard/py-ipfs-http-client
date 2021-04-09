@@ -228,7 +228,8 @@ class GlobMatcher(Matcher[AnyStr], ty.Generic[AnyStr]):
 		if self._dir_only and not is_dir:
 			return False
 		
-		labels = path.split(self._sep)  # type: ty.List[AnyStr]
+		labels = path.split(self._sep)
+
 		return self._match(labels, idx_pat=0, idx_path=0, is_dir=is_dir)
 
 	def _match(self, labels: ty.List[AnyStr], *, idx_pat: int, idx_path: int,
@@ -250,7 +251,7 @@ class GlobMatcher(Matcher[AnyStr], ty.Generic[AnyStr]):
 			idx_pat += 1
 			idx_path += 1
 		
-		dot = utils.maybe_fsencode(".", labels[0])  # type: AnyStr
+		dot = utils.maybe_fsencode(".", labels[0])
 		
 		# We reached the end of the matching labels or the start of recursion
 		if idx_pat == len(self._pat):
@@ -373,10 +374,24 @@ match_spec_t = ty.Union[
 ]
 
 
+class MatcherSpecInvalidError(TypeError):
+	def __init__(self, invalid_spec: ty.Any) -> None:
+		super().__init__(
+			f"Don't know how to create a {Matcher.__name__} from spec {invalid_spec!r}"
+		)
+
+
 @ty.overload
-def matcher_from_spec(spec: match_spec_t[AnyStr], *,
+def matcher_from_spec(spec: match_spec_t[bytes], *,
                       period_special: bool = ...,
-                      recursive: bool = ...) -> Matcher[AnyStr]:
+                      recursive: bool = ...) -> Matcher[bytes]:
+	...
+
+
+@ty.overload
+def matcher_from_spec(spec: match_spec_t[str], *,
+                      period_special: bool = ...,
+                      recursive: bool = ...) -> Matcher[str]:
 	...
 
 @ty.overload  # noqa: E302
@@ -386,13 +401,19 @@ def matcher_from_spec(spec: None, *,
 	...
 
 
-def matcher_from_spec(spec: match_spec_t[AnyStr], *,  # type: ignore[misc]  # noqa: E302
+def matcher_from_spec(spec: ty.Optional[match_spec_t[AnyStr]], *,  # noqa: E302
                       period_special: bool = True,
                       recursive: bool = True) -> Matcher[AnyStr]:
 	"""Processes the given simplified matching spec, creating an equivalent :type:`Matcher` object"""
 	if not recursive:
+		guarded = matcher_from_spec(
+			spec,
+			recursive=True,
+			period_special=period_special
+		)
+
 		return NoRecusionAdapterMatcher(
-			matcher_from_spec(spec, recursive=True, period_special=period_special)
+			guarded  # type: ignore[arg-type]
 		)
 	
 	if spec is None:
@@ -401,7 +422,9 @@ def matcher_from_spec(spec: match_spec_t[AnyStr], *,  # type: ignore[misc]  # no
 		return ReMatcher(spec)
 	elif isinstance(spec, (str, bytes)):
 		return GlobMatcher(spec, period_special=period_special)
-	elif isinstance(spec, collections.abc.Iterable) and not isinstance(spec, Matcher):
+	elif isinstance(spec, Matcher):
+		return spec
+	elif isinstance(spec, collections.abc.Iterable):
 		matchers: ty.List[Matcher[AnyStr]] = [
 			matcher_from_spec(
 				s,  # type: ignore[arg-type]
@@ -417,7 +440,7 @@ def matcher_from_spec(spec: match_spec_t[AnyStr], *,  # type: ignore[misc]  # no
 		else:  # Actual list of matchers (plural)
 			return MetaMatcher(matchers)
 	else:
-		return spec
+		raise MatcherSpecInvalidError(spec)
 
 
 if ty.TYPE_CHECKING:
@@ -487,8 +510,8 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 		self._close_fd = None
 
 		# Create matcher object
-		matcher = matcher_from_spec(  # type: ignore[type-var]
-			match_spec,  # type: ignore[arg-type]
+		matcher = matcher_from_spec(
+			match_spec,
 			recursive=recursive,
 			period_special=period_special
 		)
@@ -597,7 +620,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			sep = os.fsencode(os.path.sep)  # type: ignore[assignment]
 		else:
 			sep = os.path.sep  # type: ignore[assignment]
-		dot = utils.maybe_fsencode(".", sep)  # type: AnyStr
+		dot = utils.maybe_fsencode(".", sep)
 		
 		# Identify the leading portion of the `dirpath` returned by `os.walk`
 		# that should be dropped

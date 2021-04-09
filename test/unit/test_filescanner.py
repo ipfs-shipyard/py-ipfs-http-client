@@ -5,6 +5,7 @@ import typing as ty
 
 import pytest
 
+from datetime import datetime
 from ipfshttpclient import filescanner
 
 
@@ -140,6 +141,22 @@ def test_glob_matching(
 	matcher = filescanner.matcher_from_spec(pattern, **kwargs)
 	assert matcher.should_descend(path)               is descend
 	assert matcher.should_report(path, is_dir=is_dir) is report
+
+
+@pytest.mark.parametrize('spec', [123, datetime.now()])
+def test_matcher_from_spec_rejects_invalid_spec_type(spec: ty.Any) -> None:
+	with pytest.raises(filescanner.MatcherSpecInvalidError):
+		filescanner.matcher_from_spec(spec)
+
+
+def test_matcher_from_spec_builds_recursive_open_matcher():
+	actual = filescanner.matcher_from_spec(None)
+	assert isinstance(actual, filescanner.MatchAll)
+
+
+def test_matcher_from_spec_builds_non_recursive_open_matcher():
+	actual = filescanner.matcher_from_spec(None, recursive=False)
+	assert isinstance(actual, filescanner.NoRecusionAdapterMatcher)
 
 
 def test_walk_fd_unsupported(monkeypatch):
