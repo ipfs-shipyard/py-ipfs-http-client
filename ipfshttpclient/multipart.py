@@ -386,9 +386,6 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 	             recursive: bool = False) -> None:
 		self.follow_symlinks = follow_symlinks
 		
-		if not isinstance(directory, int):
-			directory = utils.convert_path(directory)
-		
 		# Create file scanner from parameters
 		self.scanner = filescanner.walk(
 			directory,
@@ -401,7 +398,7 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 		# Figure out the absolute path of the directory added
 		self.abspath = None
 		if not isinstance(directory, int):
-			self.abspath = os.path.abspath(utils.convert_path(directory))
+			self.abspath = os.path.abspath(directory)
 		
 		# Figure out basename of the containing directory
 		# (normpath is an acceptable approximation here)
@@ -570,7 +567,7 @@ def stream_filesystem_node(
 	"""
 	is_dir = False
 	if isinstance(filepaths, utils.path_types):
-		is_dir = os.path.isdir(utils.convert_path(filepaths))
+		is_dir = os.path.isdir(filepaths)
 	elif isinstance(filepaths, int):
 		import stat
 		is_dir = stat.S_ISDIR(os.fstat(filepaths).st_mode)

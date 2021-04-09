@@ -718,7 +718,7 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			
 			fileobj = ReadableStreamWrapper(res)  # type: ty.IO[bytes]  # type: ignore[assignment]
 			with tarfile.open(fileobj=fileobj, mode=mode) as tf:
-				tf.extractall(path=utils.convert_path(target))
+				tf.extractall(path=target)
 		finally:
 			for closable in closables:
 				closable.close()
