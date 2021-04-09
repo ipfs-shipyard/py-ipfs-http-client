@@ -454,27 +454,9 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			self, path: str,
 			args: ty.Sequence[str] = [], *,
 			opts: ty.Mapping[str, str] = {},
-			decoder: str = "none",
-			stream: bool = False,
-			offline: bool = False,
-			return_result: utils.Literal_False,
-			auth: auth_t = None,
-			cookies: cookies_t = None,
-			data: reqdata_sync_t = None,
-			headers: headers_t = None,
-			timeout: timeout_t = None
-	) -> None:
-		...
-	
-	@ty.overload
-	def request(
-			self, path: str,
-			args: ty.Sequence[str] = [], *,
-			opts: ty.Mapping[str, str] = {},
 			decoder: ty_Literal_none = "none",
 			stream: utils.Literal_False = False,
 			offline: bool = False,
-			return_result: utils.Literal_True = True,
 			auth: auth_t = None,
 			cookies: cookies_t = None,
 			data: reqdata_sync_t = None,
@@ -491,7 +473,6 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			decoder: ty_Literal_none = "none",
 			stream: utils.Literal_True,
 			offline: bool = False,
-			return_result: utils.Literal_True = True,
 			auth: auth_t = None,
 			cookies: cookies_t = None,
 			data: reqdata_sync_t = None,
@@ -508,7 +489,6 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			decoder: ty_Literal_json,
 			stream: utils.Literal_False = False,
 			offline: bool = False,
-			return_result: utils.Literal_True = True,
 			auth: auth_t = None,
 			cookies: cookies_t = None,
 			data: reqdata_sync_t = None,
@@ -525,7 +505,6 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			decoder: ty_Literal_json,
 			stream: utils.Literal_True,
 			offline: bool = False,
-			return_result: utils.Literal_True = True,
 			auth: auth_t = None,
 			cookies: cookies_t = None,
 			data: reqdata_sync_t = None,
@@ -535,20 +514,19 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		...
 	
 	
-	def request(  # type: ignore[misc]
+	def request(
 			self, path: str,
 			args: ty.Sequence[str] = [], *,
 			opts: ty.Mapping[str, str] = {},
 			decoder: ty.Union[ty_Literal_json, ty_Literal_none] = "none",
 			stream: bool = False,
 			offline: bool = False,
-			return_result: bool = True,
 			auth: auth_t = None,
 			cookies: cookies_t = None,
 			data: reqdata_sync_t = None,
 			headers: headers_t = None,
 			timeout: timeout_t = None
-	) -> ty.Optional[ty.Union[  # noqa: ET122 (checker bug)
+	) -> ty.Optional[ty.Union[
 		StreamDecodeIteratorSync[bytes],
 		StreamDecodeIteratorSync[utils.json_dict_t],
 		bytes,
@@ -583,8 +561,6 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			Query string parameters to be sent along with the HTTP request
 		offline
 			Whether to request to daemon to handle this request in “offline-mode”
-		return_result
-			Whether to decode the values received from the daemon
 		auth
 			Authentication data to send along with this request as
 			``(username, password)`` tuple
@@ -600,11 +576,6 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			
 			Set this to :py:`math.inf` to disable timeouts entirely.
 		"""
-		# Don't attempt to decode response or stream
-		# (which would keep an iterator open that will then never be waited for)
-		if not return_result:
-			decoder = "none"
-		
 		method = "POST"
 		parser = encoding.get_encoding(decoder)
 		
@@ -614,11 +585,7 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			chunk_size=None,
 		)  # type: ty.Tuple[ty.List[Closable], ty.Generator[bytes, ty.Any, ty.Any]]
 		try:
-			if not return_result:
-				for closable in closables:
-					closable.close()
-				return None
-			elif stream:
+			if stream:
 				# Decode each item as it is read
 				return StreamDecodeIteratorSync(closables, res, parser)  # type: ignore[misc]
 			else:
@@ -682,8 +649,6 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 			daemon on ``localhost``.
 		offline
 			Whether to request to daemon to handle this request in “offline-mode”
-		return_result
-			Whether to decode the values received from the daemon
 		auth
 			Authentication data to send along with this request as
 			``(username, password)`` tuple
