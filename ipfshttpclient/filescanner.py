@@ -104,10 +104,6 @@ class MatchNone(ty.Generic[AnyStr], Matcher[AnyStr]):
 		return False
 
 
-MATCH_ALL: MatchAll[str] = MatchAll()
-MATCH_NONE: MatchNone[str] = MatchNone()
-
-
 class GlobMatcher(Matcher[AnyStr], ty.Generic[AnyStr]):
 	"""Matches files and directories according to the shell glob conventions
 	
@@ -394,7 +390,7 @@ def matcher_from_spec(spec: match_spec_t[AnyStr], *,  # type: ignore[misc]  # no
 		)
 	
 	if spec is None:
-		return MATCH_ALL  # mypy bug: This should cause a type error but does not?
+		return MatchAll()
 	elif isinstance(spec, re_pattern_type):
 		return ReMatcher(spec)
 	elif isinstance(spec, (str, bytes)):
