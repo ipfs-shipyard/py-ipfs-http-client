@@ -204,6 +204,24 @@ would go a long way towards making this library more feature-complete. 👍
 You can submit bug reports using the
 [GitHub issue tracker](https://github.com/ipfs/py-ipfs-http-client/issues).
 
+### Setting up a local development environment
+
+ 1. Follow the instructions in the IPFS documentation to install go-IPFS into your `${PATH}`:  
+    https://docs.ipfs.io/install/command-line/
+ 2. Follow the instructions in the (Python) tox documentation to install the `tox` Python environment runner:  
+    https://tox.readthedocs.io/en/latest/install.html
+ 3. Clone the GIT repository if you haven't already:  
+    `git clone https://github.com/ipfs-shipyard/py-ipfs-http-client.git`
+
+If you want to you can also make your local development version of
+*py-ipfs-http-client* available to your Python environment by
+[installing `flit`](https://flit.readthedocs.io/en/latest/#install)
+and running `flit install --pth-file` from the repository root.
+
+Please see the next section for how to run tests and contribute code
+back into the project.
+
+
 ### Pull requests
 
 Pull requests are welcome.  Before submitting a new pull request, please
