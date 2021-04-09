@@ -1,22 +1,23 @@
 # Config file for automatic testing at travis-ci.com
 
 language: python
-dist: bionic  # VirtualEnv is too old on xenial
+dist: bionic
 
 matrix:
    include:
       - python: "3.6"
       - python: "3.7"
       - python: "3.8"
-      - python: "pypy3"
-      - python: "3.8"
+      - python: "3.9"
+      - python: "pypy3"  # Python 3.6.12-7.3.3 as of April 2021
+      - python: "3.9"
         env: IPFS_VERSION=compat
-      - python: "3.8"
+      - python: "3.9"
         env: TOXENV=py3-httpx
-      - python: "3.8"
+      - python: "3.9"
         env: TOXENV=styleck
         before_install: ":"
-      - python: "3.8"
+      - python: "3.9"
         env: TOXENV=typeck
         before_install: ":"
      
@@ -29,7 +30,7 @@ matrix:
         env: PYTHON_VERSION=3.6.8-macosx10.9
       - os: osx
         language: shell
-        env: PYTHON_VERSION=3.8.2-macosx10.9
+        env: PYTHON_VERSION=3.9.0-macosx10.9
      
       # Minimum testing version for Windows is 3.7 due to `-X utf8` flag support
       # being a life-saver for unbreaking the stupid INI parser used by all the
@@ -110,7 +111,7 @@ install:
       ### ====== MODIFY THIS WHEN CHANGING MACOS PYTHON TEST VERSIONS ====== ###
       case "${PYTHON_VERSION}" in
          3.6.8-macosx10.9) MD5_MACOS="786c4d9183c754f58751d52f509bc971" ;;
-         3.8.2-macosx10.9) MD5_MACOS="f12203128b5c639dc08e5a43a2812cc7" ;;
+         3.9.0-macosx10.9) MD5_MACOS="16ca86fa3467e75bade26b8a9703c27f" ;;
       esac
       ### ------------------------------ END ------------------------------- ###
       
