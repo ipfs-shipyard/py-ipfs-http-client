@@ -33,11 +33,11 @@ class FSNodeEntry(ty.Generic[AnyStr]):
 	def __repr__(self) -> str:
 		return (
 			f'FSNodeEntry('
-			f'type={repr(self.type)}, '
-			f'path={repr(self.path)}, '
-			f'relpath={repr(self.relpath)}, '
-			f'name={repr(self.name)}, '
-			f'parentfd={repr(self.parentfd)}'
+			f'type={self.type!r}, '
+			f'path={self.path!r}, '
+			f'relpath={self.relpath!r}, '
+			f'name={self.name!r}, '
+			f'parentfd={self.parentfd!r}'
 			f')'
 		)
 

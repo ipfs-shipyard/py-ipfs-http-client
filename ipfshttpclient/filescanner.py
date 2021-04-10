@@ -371,7 +371,7 @@ match_spec_t = ty.Union[
 class MatcherSpecInvalidError(TypeError):
 	def __init__(self, invalid_spec: ty.Any) -> None:
 		super().__init__(
-			f"Don't know how to create a {Matcher.__name__} from spec {repr(invalid_spec)}"
+			f"Don't know how to create a {Matcher.__name__} from spec {invalid_spec!r}"
 		)
 
 
@@ -631,7 +631,11 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], None, None], ty.Generic[AnyStr]):
 			dot: AnyStr,
 			directory: ty.Union[AnyStr, int],
 			follow_symlinks: bool
-	) -> ty.Iterator[ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], ty.Optional[int]]]:
+	) -> ty.Generator[
+			ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], ty.Optional[int]],
+			None,
+			None
+	]:
 		"""
 		Return a four-part tuple just like os.fwalk does, even if we won't use os.fwalk.
 
