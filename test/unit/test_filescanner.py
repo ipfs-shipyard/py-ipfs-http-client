@@ -7,10 +7,28 @@ import pytest
 
 from datetime import datetime
 from ipfshttpclient import filescanner
-from ipfshttpclient.filescanner_ty import FSNodeType
+
+from ipfshttpclient.filescanner import FSNodeEntry
+from ipfshttpclient.filescanner import FSNodeType
 
 
 TEST_FILE_DIR: str = os.path.join(os.path.dirname(__file__), "..", "functional")
+
+
+def test_fs_node_entry_as_repr() -> None:
+	entry = FSNodeEntry(type=FSNodeType.FILE, path='b', relpath='c', name='d', parentfd=123)
+
+	assert (
+		repr(entry)
+		==
+		"FSNodeEntry(type=<FSNodeType.FILE: 1>, path='b', relpath='c', name='d', parentfd=123)"
+	)
+
+
+def test_fs_node_entry_as_str() -> None:
+	entry = FSNodeEntry(type=FSNodeType.FILE, path='b', relpath='c', name='d', parentfd=123)
+
+	assert str(entry) == 'b'
 
 
 @pytest.mark.parametrize("pattern,expected,kwargs", [

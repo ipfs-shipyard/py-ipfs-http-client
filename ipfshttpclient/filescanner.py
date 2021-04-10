@@ -1,5 +1,6 @@
 import abc
 import collections.abc
+import enum
 import fnmatch
 import os
 import re
@@ -8,7 +9,6 @@ import types
 import typing as ty
 
 from . import utils
-from .filescanner_ty import FSNodeEntry, FSNodeType
 
 # PyCharm rejects typing.AnyStr and will flag all usages of an error,
 # effectively breaking PyCharm's ability to provide typing assistance.
@@ -35,6 +35,46 @@ O_DIRECTORY: int = getattr(os, "O_DIRECTORY", 0)
 # Neither Windows nor MacOS have os.fwalk even through Python 3.9
 HAVE_FWALK: bool = hasattr(os, "fwalk")
 HAVE_FWALK_BYTES = HAVE_FWALK and sys.version_info >= (3, 7)
+
+
+class FSNodeType(enum.Enum):
+	FILE = enum.auto()
+	DIRECTORY = enum.auto()
+
+
+class FSNodeEntry(ty.Generic[AnyStr]):
+	type: FSNodeType
+	path: AnyStr
+	relpath: AnyStr
+	name: AnyStr
+	parentfd: ty.Optional[int]
+
+	def __init__(
+			self,
+			type: FSNodeType,
+			path: AnyStr,
+			relpath: AnyStr,
+			name: AnyStr,
+			parentfd: ty.Optional[int]) -> None:
+		self.type = type
+		self.path = path
+		self.relpath = relpath
+		self.name = name
+		self.parentfd = parentfd
+
+	def __repr__(self) -> str:
+		return (
+			f'FSNodeEntry('
+			f'type={self.type!r}, '
+			f'path={self.path!r}, '
+			f'relpath={self.relpath!r}, '
+			f'name={self.name!r}, '
+			f'parentfd={self.parentfd!r}'
+			f')'
+		)
+
+	def __str__(self) -> str:
+		return str(self.path)
 
 
 class Matcher(ty.Generic[AnyStr], metaclass=abc.ABCMeta):
