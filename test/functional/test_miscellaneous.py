@@ -38,7 +38,9 @@ def test_daemon_stop(daemon, client):
 	client.stop()
 	
 	# Wait for daemon process to disappear
-	for _ in range(10000):
+	#
+	#XXX: 10s is apparently not enough for slow Travis CI on Windows.
+	for _ in range(20000):
 		if not daemon_is_running():
 			break
 		time.sleep(0.001)
