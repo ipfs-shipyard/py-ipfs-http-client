@@ -381,6 +381,17 @@ class MatcherSpecInvalidError(TypeError):
 		)
 
 
+def _require_spec(spec: ty.Optional[match_spec_t[AnyStr]]) -> match_spec_t[AnyStr]:
+	"""
+	Assist the type checker by narrowing the number of places accepting Optional.
+	"""
+
+	if spec is None:
+		return MatchAll()
+	else:
+		return spec
+
+
 @ty.overload
 def matcher_from_spec(spec: match_spec_t[bytes], *,
                       period_special: bool = ...,
@@ -394,6 +405,7 @@ def matcher_from_spec(spec: match_spec_t[str], *,
                       recursive: bool = ...) -> Matcher[str]:
 	...
 
+
 @ty.overload  # noqa: E302
 def matcher_from_spec(spec: None, *,
                       period_special: bool = ...,
@@ -405,20 +417,32 @@ def matcher_from_spec(spec: ty.Optional[match_spec_t[AnyStr]], *,  # noqa: E302
                       period_special: bool = True,
                       recursive: bool = True) -> Matcher[AnyStr]:
 	"""Processes the given simplified matching spec, creating an equivalent :type:`Matcher` object"""
-	if not recursive:
+
+	return _matcher_from_spec(
+		_require_spec(spec),
+		period_special=period_special,
+		recursive=recursive
+	)
+
+
+def _matcher_from_spec(spec: match_spec_t[AnyStr], *,  # noqa: E302
+                       period_special: bool = True,
+                       recursive: bool = True) -> Matcher[AnyStr]:
+	if recursive:
+		return _recursive_matcher_from_spec(spec, period_special=period_special)
+	else:
 		guarded = matcher_from_spec(
 			spec,
 			recursive=True,
 			period_special=period_special
 		)
 
-		return NoRecusionAdapterMatcher(
-			guarded  # type: ignore[arg-type]
-		)
-	
-	if spec is None:
-		return MatchAll()
-	elif isinstance(spec, re_pattern_type):
+		return NoRecusionAdapterMatcher(guarded)
+
+
+def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,  # noqa: E302
+                                 period_special: bool = True) -> Matcher[AnyStr]:
+	if isinstance(spec, re_pattern_type):
 		return ReMatcher(spec)
 	elif isinstance(spec, (str, bytes)):
 		return GlobMatcher(spec, period_special=period_special)
@@ -426,9 +450,8 @@ def matcher_from_spec(spec: ty.Optional[match_spec_t[AnyStr]], *,  # noqa: E302
 		return spec
 	elif isinstance(spec, collections.abc.Iterable):
 		matchers: ty.List[Matcher[AnyStr]] = [
-			matcher_from_spec(
-				s,  # type: ignore[arg-type]
-				recursive=recursive,
+			_recursive_matcher_from_spec(
+				ty.cast(match_spec_t[AnyStr], s),
 				period_special=period_special)
 			for s in spec
 		]
@@ -510,8 +533,8 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 		self._close_fd = None
 
 		# Create matcher object
-		matcher = matcher_from_spec(
-			match_spec,
+		matcher: Matcher[AnyStr] = _matcher_from_spec(
+			_require_spec(match_spec),
 			recursive=recursive,
 			period_special=period_special
 		)

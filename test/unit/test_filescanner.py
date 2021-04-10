@@ -149,14 +149,30 @@ def test_matcher_from_spec_rejects_invalid_spec_type(spec: ty.Any) -> None:
 		filescanner.matcher_from_spec(spec)
 
 
+def test_matcher_from_spec_builds_recursive_glob_matcher():
+	actual = filescanner.matcher_from_spec('*.py')
+
+	assert isinstance(actual, filescanner.GlobMatcher)
+
+
 def test_matcher_from_spec_builds_recursive_open_matcher():
 	actual = filescanner.matcher_from_spec(None)
+
 	assert isinstance(actual, filescanner.MatchAll)
+
+
+def test_matcher_from_spec_builds_non_recursive_glob_matcher():
+	actual = filescanner.matcher_from_spec('*.py', recursive=False)
+
+	assert isinstance(actual, filescanner.NoRecusionAdapterMatcher)
+	assert isinstance(actual._child, filescanner.GlobMatcher)
 
 
 def test_matcher_from_spec_builds_non_recursive_open_matcher():
 	actual = filescanner.matcher_from_spec(None, recursive=False)
+
 	assert isinstance(actual, filescanner.NoRecusionAdapterMatcher)
+	assert isinstance(actual._child, filescanner.MatchAll)
 
 
 def test_walk_fd_unsupported(monkeypatch):
