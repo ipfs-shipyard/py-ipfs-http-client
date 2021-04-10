@@ -618,11 +618,29 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 	def _join_dirs_and_files(dirnames: ty.List[AnyStr], filenames: ty.List[AnyStr]) \
 	    -> ty.Iterator[ty.Tuple[AnyStr, bool]]:
 		for dirname in dirnames:
-			yield (dirname, True)
+			yield dirname, True
 		
 		for filename in filenames:
-			yield (filename, False)
-	
+			yield filename, False
+
+	@staticmethod
+	def _walk_wide(
+			dot: AnyStr,
+			directory: ty.Union[AnyStr, int],
+			follow_symlinks: bool
+	) -> ty.Iterator[ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], ty.Optional[int]]]:
+		"""
+		Return a four-part tuple just like os.fwalk does, even if we won't use os.fwalk.
+
+		The directory file descriptor will be None when os.fwalk is not used.
+		"""
+
+		if isinstance(directory, int):
+			yield from os.fwalk(dot, dir_fd=directory, follow_symlinks=follow_symlinks)
+		else:
+			for dir_path, dir_names, file_names in os.walk(directory, followlinks=follow_symlinks):
+				yield dir_path, dir_names, file_names, None
+
 	def _walk(
 			self,
 			directory: ty.Union[AnyStr, int],
@@ -657,22 +675,10 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			name     = dot,  # type: ignore[arg-type]
 			parentfd = None
 		)
-		
-		if not isinstance(directory, int):
-			walk_iter = os.walk(directory, followlinks=follow_symlinks
-			)  # type: ty.Union[ty.Iterator[ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], int]], ty.Iterator[ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr]]]]  # noqa: E501
-		else:
-			walk_iter = os.fwalk(dot, dir_fd=directory, follow_symlinks=follow_symlinks)
+
+		walk_iter = self._walk_wide(dot=dot, directory=directory, follow_symlinks=follow_symlinks)
 		try:
-			for result in walk_iter:
-				dirpath, dirnames, filenames = result[0:3]
-
-				if len(result) <= 3:
-					dirfd: ty.Optional[int] = None
-				else:
-					# mypy wrongly believes this will produce an index-out-of-range exception.
-					dirfd = result[3]  # type: ignore[misc]
-
+			for dirpath, dirnames, filenames, dirfd in walk_iter:
 				# Remove the directory prefix from the received path
 				_, _, dirpath = dirpath.partition(prefix)
 				
@@ -728,12 +734,8 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 						)
 		finally:
 			# Make sure the file descriptors bound by `os.fwalk` are freed on error
-			walk_iter.close()  # type: ignore[union-attr]  # typeshed bug
-			
-			# Close root file descriptor of `os.fwalk` as well
-			if self._close_fd is not None:
-				os.close(self._close_fd)
-				self._close_fd = None
+			for _ in walk_iter:
+				pass
 
 
 if HAVE_FWALK:  # pragma: no cover

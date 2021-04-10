@@ -184,10 +184,10 @@ def test_walk_fd_unsupported(monkeypatch):
 
 def test_walk_instaclose(mocker):
 	close_spy = mocker.spy(filescanner.walk, "close")
-	
+
 	with filescanner.walk("."):
 		pass
-	
+
 	close_spy.assert_called_once()
 
 
