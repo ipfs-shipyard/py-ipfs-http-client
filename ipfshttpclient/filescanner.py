@@ -599,6 +599,11 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 				intermediate_dirs
 			)
 
+	def _close_file_descriptor(self) -> None:
+		if self._close_fd is not None:
+			os.close(self._close_fd)
+			self._close_fd = None
+
 	def __iter__(self) -> 'walk[AnyStr]':
 		return self
 	
@@ -634,9 +639,7 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 				assert val is None
 				return self._generator.throw(typ, val, tb)
 		except:
-			if self._close_fd is not None:
-				os.close(self._close_fd)
-				self._close_fd = None
+			self._close_file_descriptor()
 			raise
 	
 	def close(self) -> None:
@@ -788,11 +791,7 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 		finally:
 			# Make sure the file descriptors bound by `os.fwalk` are freed on error
 			walk_iter.close()
-			
-			# Close root file descriptor of `os.fwalk` as well
-			if self._close_fd is not None:
-				os.close(self._close_fd)
-				self._close_fd = None
+			self._close_file_descriptor()
 
 
 if HAVE_FWALK:  # pragma: no cover
