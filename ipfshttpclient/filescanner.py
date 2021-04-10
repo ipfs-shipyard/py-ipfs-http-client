@@ -400,14 +400,14 @@ def matcher_from_spec(spec: match_spec_t[str], *,
 	...
 
 
-@ty.overload  # noqa: E302
+@ty.overload
 def matcher_from_spec(spec: None, *,
                       period_special: bool = ...,
                       recursive: bool = ...) -> Matcher[str]:
 	...
 
 
-def matcher_from_spec(spec: ty.Optional[match_spec_t[AnyStr]], *,  # noqa: E302
+def matcher_from_spec(spec: ty.Optional[match_spec_t[AnyStr]], *,
                       period_special: bool = True,
                       recursive: bool = True) -> Matcher[AnyStr]:
 	"""Processes the given simplified matching spec, creating an equivalent :type:`Matcher` object"""
@@ -419,7 +419,7 @@ def matcher_from_spec(spec: ty.Optional[match_spec_t[AnyStr]], *,  # noqa: E302
 	)
 
 
-def _matcher_from_spec(spec: match_spec_t[AnyStr], *,  # noqa: E302
+def _matcher_from_spec(spec: match_spec_t[AnyStr], *,
                        period_special: bool = True,
                        recursive: bool = True) -> Matcher[AnyStr]:
 	if recursive:
@@ -434,7 +434,7 @@ def _matcher_from_spec(spec: match_spec_t[AnyStr], *,  # noqa: E302
 		return NoRecusionAdapterMatcher(guarded)
 
 
-def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,  # noqa: E302
+def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,
                                  period_special: bool = True) -> Matcher[AnyStr]:
 	if isinstance(spec, re_pattern_type):
 		return ReMatcher(spec)
