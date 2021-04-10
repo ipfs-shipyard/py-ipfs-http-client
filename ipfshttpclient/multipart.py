@@ -410,28 +410,28 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 	def _body(self) -> gen_bytes_t:
 		"""Streams the contents of the selected directory as binary chunks."""
 		try:
-			for type, path, relpath, name, parentfd in self.scanner:
-				relpath_unicode = os.fsdecode(relpath).replace(os.path.sep, "/")
+			for item in self.scanner:
+				relpath_unicode = os.fsdecode(item.relpath).replace(os.path.sep, "/")
 				short_path = self.name + (("/" + relpath_unicode) if relpath_unicode != "." else "")
 				
-				if type is filescanner.FSNodeType.FILE:
+				if item.type is filescanner.FSNodeType.FILE:
 					try:
 						# Only regular files and directories can be uploaded
-						if parentfd is not None:
-							stat_data = os.stat(name, dir_fd=parentfd, follow_symlinks=self.follow_symlinks)
+						if item.parentfd is not None:
+							stat_data = os.stat(item.name, dir_fd=item.parentfd, follow_symlinks=self.follow_symlinks)
 						else:
-							stat_data = os.stat(path, follow_symlinks=self.follow_symlinks)
+							stat_data = os.stat(item.path, follow_symlinks=self.follow_symlinks)
 						if not stat.S_ISREG(stat_data.st_mode):
 							continue
 
 						absolute_path: ty.Optional[str] = None
 						if self.abspath is not None:
-							absolute_path = os.fsdecode(os.path.join(self.abspath, relpath))
+							absolute_path = os.fsdecode(os.path.join(self.abspath, item.relpath))
 						
-						if parentfd is None:
-							f_path_or_desc: ty.Union[ty.AnyStr, int] = path
+						if item.parentfd is None:
+							f_path_or_desc: ty.Union[ty.AnyStr, int] = item.path
 						else:
-							f_path_or_desc = os.open(name, os.O_RDONLY | os.O_CLOEXEC, dir_fd=parentfd)
+							f_path_or_desc = os.open(item.name, os.O_RDONLY | os.O_CLOEXEC, dir_fd=item.parentfd)
 						# Stream file to client
 						with open(f_path_or_desc, "rb") as file:
 							yield from self._gen_file(short_path, absolute_path, file)
@@ -439,10 +439,10 @@ class DirectoryStream(StreamBase, StreamFileMixin, ty.Generic[ty.AnyStr]):
 						print(e)
 						# File might have disappeared between `os.walk()` and `open()`
 						pass
-				elif type is filescanner.FSNodeType.DIRECTORY:
+				elif item.type is filescanner.FSNodeType.DIRECTORY:
 					# Generate directory as special empty file
 					yield from self._gen_file(short_path, content_type="application/x-directory")
-			
+
 			yield from self._gen_end()
 		finally:
 			self.scanner.close()
