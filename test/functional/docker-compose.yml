@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  ipfs:
+    build:
+      dockerfile: ../../tools/ipfs/Dockerfile
+      context: ../../tools/ipfs
+
+    ports: [5001:5001]

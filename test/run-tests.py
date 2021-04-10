@@ -1,30 +1,13 @@
 #!/usr/bin/python
 
-import contextlib
 import itertools
-import locale
 import os
 import pathlib
-import random
 import shutil
-import subprocess
 import sys
 import tempfile
 
 import pytest
-
-
-if not hasattr(contextlib, "suppress"):
-	"""
-	Polyfill for ``contextlib.suppress``
-	"""
-	@contextlib.contextmanager
-	def _contextlib_suppress(*exceptions):
-		try:
-			yield
-		except exceptions:
-			pass
-	contextlib.suppress = _contextlib_suppress
 
 
 ######################
@@ -37,9 +20,6 @@ ENVNAME = "py{}{}".format(sys.version_info.major, sys.version_info.minor)
 # Determine project base directory and testing path
 BASE_PATH = pathlib.Path(__file__).parent.parent
 TEST_PATH = BASE_PATH / "build" / "test-{}".format(ENVNAME)
-IPFS_PATH = TEST_PATH / "ipfs-path"
-
-ADDR = "/ip4/127.0.0.1/tcp/{0}".format(random.randrange(40000, 65535))
 
 
 ###########################
@@ -51,62 +31,6 @@ sys.path.insert(0, str(BASE_PATH))
 
 # Switch working directory to project directory
 os.chdir(str(BASE_PATH))
-
-# Export environment variables required for testing
-os.environ["IPFS_PATH"] = str(IPFS_PATH)
-os.environ["PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR"] = str(ADDR)
-
-# Make sure the IPFS data directory exists and is empty
-with contextlib.suppress(FileNotFoundError):
-	shutil.rmtree(str(IPFS_PATH))
-
-with contextlib.suppress(FileExistsError):
-	os.makedirs(str(IPFS_PATH))
-
-# Initialize the IPFS data directory
-subprocess.call(["ipfs", "init"])
-subprocess.call(["ipfs", "config", "Addresses.Gateway", ""])
-subprocess.call(["ipfs", "config", "Addresses.API",     ADDR])
-subprocess.call(["ipfs", "config", "--bool", "Experimental.FilestoreEnabled", "true"])
-
-
-################
-# Start daemon #
-################
-
-extra_args = {}
-if sys.version_info >= (3, 6, 0):
-	extra_args["encoding"] = locale.getpreferredencoding()
-else:  #PY35: `subprocess.Popen` encoding parameter missing
-	extra_args["universal_newlines"] = True
-
-# Spawn IPFS daemon in data directory
-print("Starting IPFS daemon on {0}…".format(ADDR), file=sys.stderr)
-DAEMON = subprocess.Popen(
-	["ipfs", "daemon", "--enable-pubsub-experiment"],
-	stdout=subprocess.PIPE,
-	stderr=subprocess.STDOUT,
-	**extra_args
-)
-
-
-class DaemonProcessPlugin:
-	"""Tiny pytest plugin to inject daemon object reference as test “fixture” value."""
-	@pytest.hookimpl(hookwrapper=True)
-	def pytest_pyfunc_call(self, pyfuncitem):
-		if "daemon" in pyfuncitem.funcargs:
-			pyfuncitem.funcargs["daemon"] = DAEMON
-		yield
-
-
-# Wait for daemon to start up
-for line in DAEMON.stdout:
-	print("\t{0}".format(line), end="", file=sys.stderr)
-	if line.strip() == "Daemon is ready":
-		break
-
-#XXX: This design could deadlock the test run if the daemon were to produce more
-#     output than fits into its output pipe before shutdown
 
 
 ##################
@@ -135,9 +59,9 @@ try:
 			omitted_files = [
 				"ipfshttpclient/requests_wrapper.py",
 			]
-			if PREFER_HTTPX and sys.version_info >= (3, 6):
+			if PREFER_HTTPX:
 				omitted_files.append("ipfshttpclient/http_requests.py")
-			else:  #PY35: Fallback to old requests-based code instead of HTTPX
+			else:
 				omitted_files.append("ipfshttpclient/http_httpx.py")
 			
 			# Assemble list of coverage data exclusion patterns (also escape the
@@ -204,7 +128,7 @@ try:
 		# Launch pytest in-process
 		PYTEST_CODE = pytest.main([
 			"--verbose",
-		] + coverage_args + sys.argv[1:], plugins=[DaemonProcessPlugin()])
+		] + coverage_args + sys.argv[1:])
 finally:
 	try:
 		# Move coverage file to test directory (so that the coverage files of different
@@ -212,17 +136,5 @@ finally:
 		shutil.move(str(BASE_PATH / ".coverage"), str(TEST_PATH / "cov_raw"))
 	except FileNotFoundError:
 		pass  # Early crash in pytest or Windows – no coverage data generated
-	
-	# Make sure daemon was terminated during the tests
-	if DAEMON.poll() is None:  # "if DAEMON is running"
-		DAEMON.kill()
-		
-		print("IPFS daemon was still running after test!", file=sys.stderr)
-	
-	output = list(DAEMON.stdout)
-	if output:
-		print("IPFS daemon printed extra messages:", file=sys.stderr)
-		for line in output:
-			print("\t{0}".format(line), end="", file=sys.stderr)
 
 sys.exit(PYTEST_CODE)
