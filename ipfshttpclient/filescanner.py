@@ -630,6 +630,25 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			yield filename, False
 
 	@staticmethod
+	def _walk_separator(
+			matcher: Matcher[AnyStr],
+			directory_str: ty.Optional[AnyStr]
+	) -> ty.Union[bytes, str]:
+		"""
+		Determine which separator to use.
+
+		Because os.fsencode can return a byte array, we must allow returning a byte array,
+		regardless of AnyType.
+		"""
+
+		if directory_str is not None:
+			return utils.maybe_fsencode(os.path.sep, directory_str)
+		elif matcher is not None and matcher.is_binary:
+			return os.fsencode(os.path.sep)
+		else:
+			return os.path.sep
+
+	@staticmethod
 	def _walk_wide(
 			dot: AnyStr,
 			directory: ty.Union[AnyStr, int],
@@ -655,12 +674,11 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			follow_symlinks: bool,
 			intermediate_dirs: bool
 	) -> ty.Generator[FSNodeEntry, ty.Any, None]:
-		if directory_str is not None:
-			sep = utils.maybe_fsencode(os.path.sep, directory_str)
-		elif matcher is not None and matcher.is_binary:
-			sep = os.fsencode(os.path.sep)  # type: ignore[assignment]
-		else:
-			sep = os.path.sep  # type: ignore[assignment]
+		separator = self._walk_separator(matcher=matcher, directory_str=directory_str)
+
+		# TODO: Because os.fsencode can return a byte array, we need to refactor how we use 'sep'
+		sep: AnyStr = separator  # type: ignore[assignment]
+
 		dot = utils.maybe_fsencode(".", sep)
 		
 		# Identify the leading portion of the `dirpath` returned by `os.walk`
