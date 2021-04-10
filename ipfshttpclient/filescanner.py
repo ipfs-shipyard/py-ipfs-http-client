@@ -10,6 +10,12 @@ import typing as ty
 from . import utils
 from .filescanner_ty import FSNodeEntry, FSNodeType
 
+# PyCharm rejects typing.AnyStr and will flag all usages of an error,
+# effectively breaking PyCharm's ability to provide typing assistance.
+#
+# To encourage contributions from PyCharm users, we redefine AnyStr.
+#
+# This will get inlined if/when PyCharm no longer flags typing.AnyStr.
 AnyStr = ty.TypeVar('AnyStr', bytes, str)
 
 if sys.version_info >= (3, 7):  #PY37+
@@ -460,10 +466,10 @@ def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,
 		raise MatcherSpecInvalidError(spec)
 
 
-class walk(ty.Generator[FSNodeEntry[AnyStr], None, None], ty.Generic[AnyStr]):
+class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 	__slots__ = ("_generator", "_close_fd")
 
-	_generator: ty.Generator[FSNodeEntry[AnyStr], None, None]
+	_generator: ty.Generator[FSNodeEntry[AnyStr], ty.Any, None]
 	_close_fd: ty.Optional[int]
 
 	def __init__(
@@ -633,7 +639,7 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], None, None], ty.Generic[AnyStr]):
 			follow_symlinks: bool
 	) -> ty.Generator[
 			ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], ty.Optional[int]],
-			None,
+			ty.Any,
 			None
 	]:
 		"""
@@ -655,11 +661,10 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], None, None], ty.Generic[AnyStr]):
 			matcher: Matcher[AnyStr],
 			follow_symlinks: bool,
 			intermediate_dirs: bool
-	) -> ty.Generator[FSNodeEntry[AnyStr], None, None]:
+	) -> ty.Generator[FSNodeEntry[AnyStr], ty.Any, None]:
 		separator = self._walk_separator(matcher=matcher, directory_str=directory_str)
 
 		# TODO: Because os.fsencode can return a byte array, we need to refactor how we use 'sep'
-		# noinspection PyTypeHints
 		sep: AnyStr = separator  # type: ignore[assignment]
 
 		dot = utils.maybe_fsencode(".", sep)
