@@ -37,6 +37,47 @@ HAVE_FWALK: bool = hasattr(os, "fwalk")
 HAVE_FWALK_BYTES = HAVE_FWALK and sys.version_info >= (3, 7)
 
 
+class FSNodeType(enum.Enum):
+	FILE = enum.auto()
+	DIRECTORY = enum.auto()
+
+
+#XXX: This should be a generic `ty.NamedTuple` subclass, but GH/python/mypy#685 …
+class FSNodeEntry(ty.Generic[AnyStr]):
+	type: FSNodeType
+	path: AnyStr
+	relpath: AnyStr
+	name: AnyStr
+	parentfd: ty.Optional[int]
+
+	def __init__(
+			self,
+			type: FSNodeType,
+			path: AnyStr,
+			relpath: AnyStr,
+			name: AnyStr,
+			parentfd: ty.Optional[int]) -> None:
+		self.type = type
+		self.path = path
+		self.relpath = relpath
+		self.name = name
+		self.parentfd = parentfd
+
+	def __repr__(self) -> str:
+		return (
+			f'FSNodeEntry('
+			f'type={self.type!r}, '
+			f'path={self.path!r}, '
+			f'relpath={self.relpath!r}, '
+			f'name={self.name!r}, '
+			f'parentfd={self.parentfd!r}'
+			f')'
+		)
+
+	def __str__(self) -> str:
+		return str(self.path)
+
+
 class Matcher(ty.Generic[AnyStr], metaclass=abc.ABCMeta):
 	"""Represents a type that can match on file paths and decide whether they
 	should be included in some file scanning/adding operation"""
@@ -466,26 +507,10 @@ def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,
 		raise MatcherSpecInvalidError(spec)
 
 
-if ty.TYPE_CHECKING:
-	from .filescanner_ty import FSNodeType, FSNodeEntry
-else:
-	class FSNodeType(enum.Enum):
-		FILE = enum.auto()
-		DIRECTORY = enum.auto()
-	
-	FSNodeEntry = ty.NamedTuple("FSNodeEntry", [
-		("type", FSNodeType),
-		("path", AnyStr),
-		("relpath", AnyStr),
-		("name", AnyStr),
-		("parentfd", ty.Optional[int])
-	])
-
-
-class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
+class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 	__slots__ = ("_generator", "_close_fd")
 
-	_generator: ty.Generator[FSNodeEntry, None, None]
+	_generator: ty.Generator[FSNodeEntry[AnyStr], ty.Any, None]
 	_close_fd: ty.Optional[int]
 
 	def __init__(
@@ -577,7 +602,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 	def __iter__(self) -> 'walk[AnyStr]':
 		return self
 	
-	def __next__(self) -> FSNodeEntry:
+	def __next__(self) -> FSNodeEntry[AnyStr]:
 		return next(self._generator)
 	
 	def __enter__(self) -> 'walk[AnyStr]':
@@ -586,21 +611,21 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 	def __exit__(self, *a: ty.Any) -> None:
 		self.close()
 	
-	def send(self, value: ty.Any) -> FSNodeEntry:
+	def send(self, value: ty.Any) -> FSNodeEntry[AnyStr]:
 		return self._generator.send(value)
 	
 	@ty.overload
 	def throw(self, typ: ty.Type[BaseException],  # noqa: E704
 	          val: ty.Union[BaseException, object] = ...,
-	          tb: ty.Optional[types.TracebackType] = ...) -> FSNodeEntry: ...
+	          tb: ty.Optional[types.TracebackType] = ...) -> FSNodeEntry[AnyStr]: ...
 	
 	@ty.overload
 	def throw(self, typ: BaseException, val: None = ...,  # noqa: E704
-	          tb: ty.Optional[types.TracebackType] = ...) -> FSNodeEntry: ...
+	          tb: ty.Optional[types.TracebackType] = ...) -> FSNodeEntry[AnyStr]: ...
 	
 	def throw(self, typ: ty.Union[ty.Type[BaseException], BaseException],
 	          val: ty.Union[BaseException, object] = None,
-	          tb: ty.Optional[types.TracebackType] = None) -> FSNodeEntry:
+	          tb: ty.Optional[types.TracebackType] = None) -> FSNodeEntry[AnyStr]:
 		try:
 			if isinstance(typ, type):
 				bt = ty.cast(ty.Type[BaseException], typ)  # type: ignore[redundant-cast]
@@ -653,7 +678,11 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			dot: AnyStr,
 			directory: ty.Union[AnyStr, int],
 			follow_symlinks: bool
-	) -> ty.Iterator[ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], ty.Optional[int]]]:
+	) -> ty.Generator[
+			ty.Tuple[AnyStr, ty.List[AnyStr], ty.List[AnyStr], ty.Optional[int]],
+			ty.Any,
+			None
+	]:
 		"""
 		Return a four-part tuple just like os.fwalk does, even if we won't use os.fwalk.
 
@@ -673,7 +702,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			matcher: Matcher[AnyStr],
 			follow_symlinks: bool,
 			intermediate_dirs: bool
-	) -> ty.Generator[FSNodeEntry, ty.Any, None]:
+	) -> ty.Generator[FSNodeEntry[AnyStr], ty.Any, None]:
 		separator = self._walk_separator(matcher=matcher, directory_str=directory_str)
 
 		# TODO: Because os.fsencode can return a byte array, we need to refactor how we use 'sep'
@@ -692,12 +721,12 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 		
 		# Always report the top-level directory even if nothing therein is matched
 		reported_directories.add(utils.maybe_fsencode("", sep))
-		yield FSNodeEntry(  # type: ignore[misc]  # mypy bug: gh/python/mypy#685
-			type     = FSNodeType.DIRECTORY,
-			path     = prefix[:-len(sep)],  # type: ignore[arg-type]
-			relpath  = dot,  # type: ignore[arg-type]
-			name     = dot,  # type: ignore[arg-type]
-			parentfd = None
+		yield FSNodeEntry(
+			type=FSNodeType.DIRECTORY,
+			path=prefix[:-len(sep)],
+			relpath=dot,
+			name=dot,
+			parentfd=None
 		)
 
 		walk_iter = self._walk_wide(dot=dot, directory=directory, follow_symlinks=follow_symlinks)
@@ -729,32 +758,32 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 							parent_dirpath = sep.join(parts[0:(end_offset + 1)])
 							if parent_dirpath not in reported_directories:
 								reported_directories.add(parent_dirpath)
-								yield FSNodeEntry(  # type: ignore[misc]  # mypy bug: gh/python/mypy#685
-									type     = FSNodeType.DIRECTORY,
-									path     = (prefix + parent_dirpath),  # type: ignore[arg-type]
-									relpath  = parent_dirpath,  # type: ignore[arg-type]
-									name     = parts[end_offset],  # type: ignore[arg-type]
-									parentfd = None
+								yield FSNodeEntry(
+									type=FSNodeType.DIRECTORY,
+									path=(prefix + parent_dirpath),
+									relpath=parent_dirpath,
+									name=parts[end_offset],
+									parentfd=None
 								)
 						intermediates_reported = True
 					
 					# Report the target file or directory
 					if is_dir:
 						reported_directories.add(filepath)
-						yield FSNodeEntry(  # type: ignore[misc]  # mypy bug: gh/python/mypy#685
-							type     = FSNodeType.DIRECTORY,
-							path     = (prefix + filepath),  # type: ignore[arg-type]
-							relpath  = filepath,  # type: ignore[arg-type]
-							name     = filename,  # type: ignore[arg-type]
-							parentfd = dirfd
+						yield FSNodeEntry(
+							type=FSNodeType.DIRECTORY,
+							path=(prefix + filepath),
+							relpath=filepath,
+							name=filename,
+							parentfd=dirfd
 						)
 					else:
-						yield FSNodeEntry(  # type: ignore[misc]  # mypy bug: gh/python/mypy#685
-							type     = FSNodeType.FILE,
-							path     = (prefix + filepath),  # type: ignore[arg-type]
-							relpath  = filepath,  # type: ignore[arg-type]
-							name     = filename,  # type: ignore[arg-type]
-							parentfd = dirfd
+						yield FSNodeEntry(
+							type=FSNodeType.FILE,
+							path=(prefix + filepath),
+							relpath=filepath,
+							name=filename,
+							parentfd=dirfd
 						)
 		finally:
 			# Make sure the file descriptors bound by `os.fwalk` are freed on error

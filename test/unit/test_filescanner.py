@@ -8,8 +8,27 @@ import pytest
 from datetime import datetime
 from ipfshttpclient import filescanner
 
+from ipfshttpclient.filescanner import FSNodeEntry
+from ipfshttpclient.filescanner import FSNodeType
+
 
 TEST_FILE_DIR: str = os.path.join(os.path.dirname(__file__), "..", "functional")
+
+
+def test_fs_node_entry_as_repr() -> None:
+	entry = FSNodeEntry(type=FSNodeType.FILE, path='b', relpath='c', name='d', parentfd=123)
+
+	assert (
+		repr(entry)
+		==
+		"FSNodeEntry(type=<FSNodeType.FILE: 1>, path='b', relpath='c', name='d', parentfd=123)"
+	)
+
+
+def test_fs_node_entry_as_str() -> None:
+	entry = FSNodeEntry(type=FSNodeType.FILE, path='b', relpath='c', name='d', parentfd=123)
+
+	assert str(entry) == 'b'
 
 
 @pytest.mark.parametrize("pattern,expected,kwargs", [
@@ -191,27 +210,34 @@ def test_walk_instaclose(mocker):
 	close_spy.assert_called_once()
 
 
-@pytest.mark.parametrize("path,pattern,kwargs,expected", [
-	(TEST_FILE_DIR + os.path.sep + "fake_dir_almost_empty" + os.path.sep, None, {}, [
-		(filescanner.FSNodeType.DIRECTORY, ".", "."),
-		(filescanner.FSNodeType.FILE, ".gitignore", ".gitignore"),
+@pytest.mark.parametrize("path,pattern,expected", [
+	(TEST_FILE_DIR + os.path.sep + "fake_dir_almost_empty" + os.path.sep, None, [
+		(FSNodeType.DIRECTORY, ".", "."),
+		(FSNodeType.FILE, ".gitignore", ".gitignore"),
 	]),
-	(TEST_FILE_DIR + os.path.sep + "fake_dir", ["test2", "test3"], {}, [
-		(filescanner.FSNodeType.DIRECTORY, ".", "."),
-		(filescanner.FSNodeType.DIRECTORY, "test2", "test2"),
-		(filescanner.FSNodeType.DIRECTORY, "test3", "test3"),
+	(TEST_FILE_DIR + os.path.sep + "fake_dir", ["test2", "test3"], [
+		(FSNodeType.DIRECTORY, ".", "."),
+		(FSNodeType.DIRECTORY, "test2", "test2"),
+		(FSNodeType.DIRECTORY, "test3", "test3"),
 	]),
 ])
-def test_walk(monkeypatch, path: str, pattern: None, kwargs: ty.Dict[str, bool], expected: ty.List[filescanner.FSNodeEntry]):
-	result = [(e.type, e.relpath, e.name) for e in filescanner.walk(path, pattern, **kwargs)]
-	assert sorted(result, key=lambda r: r[1]) == expected
+def test_walk(
+		monkeypatch,
+		path: str,
+		pattern: ty.Optional[filescanner.match_spec_t[str]],
+		expected: ty.List[filescanner.FSNodeEntry[str]]
+) -> None:
+	def assert_results() -> None:
+		result = [(e.type, e.relpath, e.name) for e in filescanner.walk(path, pattern)]
+		assert sorted(result, key=lambda r: r[1]) == expected
+
+	assert_results()
 	
 	# Check again with plain `os.walk` if the current platform supports `os.fwalk`
 	if filescanner.HAVE_FWALK:
 		monkeypatch.setattr(filescanner, "HAVE_FWALK", False)
-		
-		result = [(e.type, e.relpath, e.name) for e in filescanner.walk(path, pattern, **kwargs)]
-		assert sorted(result, key=lambda r: r[1]) == expected
+
+		assert_results()
 
 
 def test_supports_fd():
