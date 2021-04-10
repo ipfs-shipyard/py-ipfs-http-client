@@ -8,10 +8,9 @@ import pytest
 from ipfshttpclient import filescanner
 
 
-TEST_FILE_DIR = os.path.join(os.path.dirname(__file__), "..", "functional")  # type: str
+TEST_FILE_DIR: str = os.path.join(os.path.dirname(__file__), "..", "functional")
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6), reason="fnmatch.translate output changed in Python 3.6+")
 @pytest.mark.parametrize("pattern,expected,kwargs", [
 	("literal",                  [r"(?![.])(?s:literal)\Z"], {}),
 	(b"literal",                 [br"(?![.])(?s:literal)\Z"], {}),
