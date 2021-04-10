@@ -7,7 +7,12 @@ import pytest
 import ipfshttpclient
 
 
-TEST_DIR = pathlib.Path(__file__).parent
+TEST_DIR: pathlib.Path = pathlib.Path(__file__).parent
+
+
+@pytest.fixture(scope='session')
+def fake_dir() -> pathlib.Path:
+	return TEST_DIR.joinpath('fake_dir')
 
 
 __is_available = None

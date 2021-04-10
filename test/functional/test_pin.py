@@ -1,13 +1,15 @@
 import pytest
 
+from pathlib import Path
+
 import ipfshttpclient.exceptions
 
 
 class Resources:
-	def __init__(self, client):
+	def __init__(self, client, source_folder: Path) -> None:
 		self.msg = client.add_str("Mary had a little lamb")
 		self.msg2 = client.add_str("Mary had a little alpaca")
-		resp_add = client.add("test/functional/fake_dir", recursive=True)
+		resp_add = client.add(str(source_folder), recursive=True)
 		self.fake_dir_hashes = [el["Hash"] for el in resp_add if "Hash" in el]
 		for resp in resp_add:
 			if resp["Name"] == "fake_dir":
@@ -15,13 +17,13 @@ class Resources:
 			elif resp["Name"] == "fake_dir/test2":
 				self.fake_dir_test2_hash = resp["Hash"]
 
-@pytest.fixture  # noqa
-def resources(client):
-	return Resources(client)
+
+@pytest.fixture
+def resources(client, fake_dir):
+	return Resources(client, source_folder=fake_dir)
 
 
 def is_pinned(client, path):
-	error_msg = None
 	try:
 		resp = client.pin.ls(path)
 		assert path.split("/")[-1] in resp["Keys"]
