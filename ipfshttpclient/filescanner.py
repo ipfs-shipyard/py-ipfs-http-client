@@ -786,8 +786,7 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 						)
 		finally:
 			# Make sure the file descriptors bound by `os.fwalk` are freed on error
-			for _ in walk_iter:
-				pass
+			walk_iter.close()
 
 
 if HAVE_FWALK:  # pragma: no cover
