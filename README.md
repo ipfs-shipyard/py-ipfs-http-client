@@ -239,7 +239,7 @@ As well as the unit tests:
 
     $ tox -e py3 -e py3-httpx
 
-If you are unsure, don't hasitate to just submit your code and a human will
+If you are unsure, don't hesitate to just submit your code, and a human will
 take a look. 🙂
 
 If you can, Please make sure to include new unit tests for new features or
