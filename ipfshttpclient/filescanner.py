@@ -527,8 +527,8 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 		self._close_fd = None
 
 		# Create matcher object
-		matcher = matcher_from_spec(
-			match_spec,
+		matcher: Matcher[AnyStr] = _matcher_from_spec(
+			_require_spec(match_spec),
 			recursive=recursive,
 			period_special=period_special
 		)
@@ -542,7 +542,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			self._generator = self._walk(
 				directory,
 				None,
-				matcher,  # type: ignore[arg-type]
+				matcher,
 				follow_symlinks,
 				intermediate_dirs
 			)
@@ -563,7 +563,7 @@ class walk(ty.Generator[FSNodeEntry, ty.Any, None], ty.Generic[AnyStr]):
 			self._generator = self._walk(
 				directory_str_or_fd,
 				directory_str,
-				matcher,  # type: ignore[arg-type]
+				matcher,
 				follow_symlinks,
 				intermediate_dirs
 			)
