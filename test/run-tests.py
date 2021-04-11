@@ -74,11 +74,9 @@ subprocess.call(["ipfs", "config", "--bool", "Experimental.FilestoreEnabled", "t
 # Start daemon #
 ################
 
-extra_args = {}
-if sys.version_info >= (3, 6, 0):
-	extra_args["encoding"] = locale.getpreferredencoding()
-else:  #PY35: `subprocess.Popen` encoding parameter missing
-	extra_args["universal_newlines"] = True
+extra_args = {
+	"encoding": locale.getpreferredencoding()
+}
 
 # Spawn IPFS daemon in data directory
 print("Starting IPFS daemon on {0}…".format(ADDR), file=sys.stderr)
