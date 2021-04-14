@@ -1,3 +1,4 @@
+import platform
 import time
 
 import pytest
@@ -39,8 +40,8 @@ def test_daemon_stop(daemon, client):
 	
 	# Wait for daemon process to disappear
 	#
-	#XXX: 10s is apparently not enough for slow Travis CI on Windows.
-	for _ in range(20000):
+	#XXX: Wait up to 2mins for slow go-IPFS in Travis CI Windows to shut down
+	for _ in range(10000 if not platform.win32_ver()[0] else 120000):
 		if not daemon_is_running():
 			break
 		time.sleep(0.001)
