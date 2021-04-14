@@ -13,6 +13,7 @@ if [ -z "$1" ]; then
     validate 3.6.2
     validate 3.7.2
     validate 3.8.0
+    validate 3.9.0
 else
     echo "Validating only $1..."
     validate "$1"
