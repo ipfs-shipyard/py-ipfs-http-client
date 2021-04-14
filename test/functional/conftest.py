@@ -51,22 +51,17 @@ def _generate_client(
 
 
 @pytest.fixture(scope="function")
-def client(ipfs_is_available):
+def client(ipfs_is_available: bool):
 	yield from _generate_client(ipfs_is_available, False)
 
 
 @pytest.fixture(scope="function")
-def offline_client():
+def offline_client(ipfs_is_available: bool):
 	yield from _generate_client(ipfs_is_available, True)
 
 
 @pytest.fixture(scope="module")
-def module_client():
-	yield from _generate_client(ipfs_is_available, False)
-
-
-@pytest.fixture(scope="module")
-def module_offline_client():
+def module_offline_client(ipfs_is_available: bool):
 	yield from _generate_client(ipfs_is_available, True)
 
 
