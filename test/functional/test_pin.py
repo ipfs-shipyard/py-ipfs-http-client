@@ -1,15 +1,15 @@
-import pytest
+import pathlib
 
-from pathlib import Path
+import pytest
 
 import ipfshttpclient.exceptions
 
 
 class Resources:
-	def __init__(self, client, source_folder: Path) -> None:
+	def __init__(self, client, source_folder: pathlib.Path) -> None:
 		self.msg = client.add_str("Mary had a little lamb")
 		self.msg2 = client.add_str("Mary had a little alpaca")
-		resp_add = client.add(str(source_folder), recursive=True)
+		resp_add = client.add(source_folder, recursive=True)
 		self.fake_dir_hashes = [el["Hash"] for el in resp_add if "Hash" in el]
 		for resp in resp_add:
 			if resp["Name"] == "fake_dir":
