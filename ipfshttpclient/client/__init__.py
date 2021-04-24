@@ -69,7 +69,7 @@ def assert_version(version: str, minimum: str = VERSION_MINIMUM,
 	minimum = list(map(int, minimum.split('-', 1)[0].split('.')))
 	maximum = list(map(int, maximum.split('-', 1)[0].split('.')))
 
-	if minimum > version or version >= maximum:
+	if minimum > version or version > maximum:
 		warnings.warn(exceptions.VersionMismatch(version, minimum, maximum))
 
 	for blacklisted in blacklist:
