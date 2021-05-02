@@ -10,13 +10,14 @@ The class hierarchy for exceptions is:
 	 │    ├── EncoderMissingError
 	 │    ├── EncodingError
 	 │    └── DecodingError
-	 └── CommunicationError
-	      ├── ProtocolError
-	      ├── StatusError
-	      ├── ErrorResponse
-	      │    └── PartialErrorResponse
-	      ├── ConnectionError
-	      └── TimeoutError
+	 ├── CommunicationError
+	 │    ├── ProtocolError
+	 │    ├── StatusError
+	 │    ├── ErrorResponse
+	 │    │    └── PartialErrorResponse
+	 │    ├── ConnectionError
+	 │    └── TimeoutError
+	 └── MatcherSpecInvalidError
 
 """
 import typing as ty
@@ -103,6 +104,22 @@ class DecodingError(EncoderError):
 		self.original = original  # type: Exception
 		
 		super().__init__("Object decoding error: {}".format(original), encoder_name)
+
+
+##################
+# filescanner.py #
+##################
+
+class MatcherSpecInvalidError(TypeError):
+	"""
+	An attempt was made to build a matcher using matcher_from_spec, but an invalid
+	specification was provided.
+	"""
+
+	def __init__(self, matcher_class: type, invalid_spec: ty.Any) -> None:
+		super().__init__(
+			f"Don't know how to create a {matcher_class.__name__} from spec {invalid_spec!r}"
+		)
 
 
 ###########

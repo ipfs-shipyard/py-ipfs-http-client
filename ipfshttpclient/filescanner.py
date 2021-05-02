@@ -16,6 +16,8 @@ from . import utils
 # To encourage contributions from PyCharm users, we redefine AnyStr.
 #
 # This will get inlined if/when PyCharm no longer flags typing.AnyStr.
+from .exceptions import MatcherSpecInvalidError
+
 AnyStr = ty.TypeVar('AnyStr', bytes, str)
 
 if sys.version_info >= (3, 7):  #PY37+
@@ -413,13 +415,6 @@ match_spec_t = ty.Union[
 ]
 
 
-class MatcherSpecInvalidError(TypeError):
-	def __init__(self, invalid_spec: ty.Any) -> None:
-		super().__init__(
-			f"Don't know how to create a {Matcher.__name__} from spec {invalid_spec!r}"
-		)
-
-
 def _require_spec(spec: ty.Optional[match_spec_t[AnyStr]]) -> match_spec_t[AnyStr]:
 	"""
 	Assist the type checker by narrowing the number of places accepting Optional.
@@ -502,7 +497,7 @@ def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,
 		else:  # Actual list of matchers (plural)
 			return MetaMatcher(matchers)
 	else:
-		raise MatcherSpecInvalidError(spec)
+		raise MatcherSpecInvalidError(Matcher, spec)
 
 
 class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
