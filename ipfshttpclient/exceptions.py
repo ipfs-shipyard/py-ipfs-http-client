@@ -34,25 +34,27 @@ class AddressError(Error, multiaddr.exceptions.Error):  # type: ignore[no-any-un
 	"""Raised when the provided daemon location Multiaddr does not match any
 	of the supported patterns."""
 	__slots__ = ("addr",)
-	#addr: ty.Union[str, bytes]
+
+	addr: ty.Union[str, bytes]
 	
 	def __init__(self, addr: ty.Union[str, bytes]) -> None:
-		self.addr = addr  # type: ty.Union[str, bytes]
+		self.addr = addr
 		Error.__init__(self, "Unsupported Multiaddr pattern: {0!r}".format(addr))
 
 
 class VersionMismatch(Warning):
 	"""Raised when daemon version is not supported by this client version."""
 	__slots__ = ("current", "minimum", "maximum")
-	#current: ty.Sequence[int]
-	#minimum: ty.Sequence[int]
-	#maximum: ty.Sequence[int]
+
+	current: ty.Sequence[int]
+	minimum: ty.Sequence[int]
+	maximum: ty.Sequence[int]
 	
 	def __init__(self, current: ty.Sequence[int], minimum: ty.Sequence[int],
 	             maximum: ty.Sequence[int]) -> None:
-		self.current = current  # type: ty.Sequence[int]
-		self.minimum = minimum  # type: ty.Sequence[int]
-		self.maximum = maximum  # type: ty.Sequence[int]
+		self.current = current
+		self.minimum = minimum
+		self.maximum = maximum
 		
 		msg = "Unsupported daemon version '{}' (not in range: {} ≤ … < {})".format(
 			".".join(map(str, current)), ".".join(map(str, minimum)), ".".join(map(str, maximum))
@@ -66,10 +68,11 @@ class VersionMismatch(Warning):
 class EncoderError(Error):
 	"""Base class for all encoding and decoding related errors."""
 	__slots__ = ("encoder_name",)
-	#encoder_name: str
+
+	encoder_name: str
 	
 	def __init__(self, message: str, encoder_name: str) -> None:
-		self.encoder_name = encoder_name  # type: str
+		self.encoder_name = encoder_name
 		
 		super().__init__(message)
 
@@ -86,10 +89,11 @@ class EncodingError(EncoderError):
 	"""Raised when encoding a Python object into a byte string has failed
 	due to some problem with the input data."""
 	__slots__ = ("original",)
-	#original: Exception
+
+	original: Exception
 	
 	def __init__(self, encoder_name: str, original: Exception) -> None:
-		self.original = original  # type: Exception
+		self.original = original
 		
 		super().__init__("Object encoding error: {}".format(original), encoder_name)
 
@@ -98,10 +102,11 @@ class DecodingError(EncoderError):
 	"""Raised when decoding a byte string to a Python object has failed due to
 	some problem with the input data."""
 	__slots__ = ("original",)
-	#original: Exception
+
+	original: Exception
 	
 	def __init__(self, encoder_name: str, original: Exception) -> None:
-		self.original = original  # type: Exception
+		self.original = original
 		
 		super().__init__("Object decoding error: {}".format(original), encoder_name)
 
@@ -128,13 +133,13 @@ class MatcherSpecInvalidError(TypeError):
 class CommunicationError(Error):
 	"""Base class for all network communication related errors."""
 	__slots__ = ("original",)
-	#original: ty.Optional[Exception]
+
+	original: ty.Optional[Exception]
 	
 	def __init__(self, original: ty.Optional[Exception],
 	             _message: ty.Optional[str] = None) -> None:
-		self.original = original  # type: ty.Optional[Exception]
+		self.original = original
 		
-		msg = ""  # type: str
 		if _message:
 			msg = _message
 		else:
