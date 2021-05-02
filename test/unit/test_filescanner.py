@@ -6,8 +6,10 @@ import typing as ty
 import pytest
 
 from datetime import datetime
+
 from ipfshttpclient import filescanner
 
+from ipfshttpclient.exceptions import MatcherSpecInvalidError
 from ipfshttpclient.filescanner import FSNodeEntry
 from ipfshttpclient.filescanner import FSNodeType
 
@@ -164,7 +166,7 @@ def test_glob_matching(
 
 @pytest.mark.parametrize('spec', [123, datetime.now()])
 def test_matcher_from_spec_rejects_invalid_spec_type(spec: ty.Any) -> None:
-	with pytest.raises(filescanner.MatcherSpecInvalidError):
+	with pytest.raises(MatcherSpecInvalidError):
 		filescanner.matcher_from_spec(spec)
 
 
