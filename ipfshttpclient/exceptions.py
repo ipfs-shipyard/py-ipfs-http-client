@@ -115,15 +115,15 @@ class DecodingError(EncoderError):
 # filescanner.py #
 ##################
 
-class MatcherSpecInvalidError(TypeError):
+class MatcherSpecInvalidError(Error, TypeError):
 	"""
 	An attempt was made to build a matcher using matcher_from_spec, but an invalid
 	specification was provided.
 	"""
 
-	def __init__(self, matcher_class: type, invalid_spec: ty.Any) -> None:
+	def __init__(self, invalid_spec: ty.Any) -> None:
 		super().__init__(
-			f"Don't know how to create a {matcher_class.__name__} from spec {invalid_spec!r}"
+			f"Don't know how to create a Matcher from spec {invalid_spec!r}"
 		)
 
 

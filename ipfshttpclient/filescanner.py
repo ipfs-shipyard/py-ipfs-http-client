@@ -497,7 +497,7 @@ def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,
 		else:  # Actual list of matchers (plural)
 			return MetaMatcher(matchers)
 	else:
-		raise MatcherSpecInvalidError(Matcher, spec)
+		raise MatcherSpecInvalidError(spec)
 
 
 class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
