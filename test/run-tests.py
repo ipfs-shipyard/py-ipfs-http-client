@@ -14,19 +14,6 @@ import tempfile
 import pytest
 
 
-if not hasattr(contextlib, "suppress"):
-	"""
-	Polyfill for ``contextlib.suppress``
-	"""
-	@contextlib.contextmanager
-	def _contextlib_suppress(*exceptions):
-		try:
-			yield
-		except exceptions:
-			pass
-	contextlib.suppress = _contextlib_suppress
-
-
 ######################
 # Test configuration #
 ######################
