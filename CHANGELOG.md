@@ -3,18 +3,21 @@ py-ipfs-http-client 0.X.X (XX.XX.20XX)
 
  * (None yet)
 
-py-ipfs-http-client 0.8.0 (XX.XX.20XX)
---------------------------------------
+
+py-ipfs-http-client 0.8.0a1 (11.05.2021)
+----------------------------------------
 
  * py-ipfs-api-client will now only warn when detecting an unsupported daemon version
    * Rationale: During the 0.4.x series the library required many changes to stay compatible
      with the respective daemon version, but since 0.5.0 appears to be no longer the case
- * Compatiblity bumped to go-IPFS 0.8.x (by Jan Rydzewski and other community members bugging me)
-
+ * Compatibility bumped to go-IPFS 0.8.x (by Jan Rydzewski and other community members bugging me)
+ 
 **Breaking changes in this release**:
 
  * Dropped support for the (previously deprecated) `return_result` parameter of `.repo.gc(…)`
  * Dropped support for the previously deprecated and always undocumented `return_result` parameter everywhere else
+ * Dropped support for go-IPFS 0.4.x; minimum supported version now 0.5.0
+
 
 py-ipfs-http-client 0.7.0 (15.03.2021)
 --------------------------------------
@@ -26,7 +29,7 @@ py-ipfs-http-client 0.7.0a1 (14.10.2020)
 --------------------------------------
 
  * Added support for optional arguments of the `.dag.*` APIs (by João Meyer)
- * Compatiblity bumped to go-IPFS 0.7.x (by Jan Rydzewski and other community members bugging me)
+ * Compatibility bumped to go-IPFS 0.7.x (by Jan Rydzewski and other community members bugging me)
  * The 0.7 series is not stable yet, expect some breaking changes before the final release!
 
 
@@ -51,7 +54,7 @@ py-ipfs-http-client 0.6.0 (30.06.2020)
 
 **Breaking changes in this release**:
 
- * The *recursive* parameter of `.add()` is no longer ignored and now enforces its default value of `False` (explicitely set it to `True` for the previous behaviour)
+ * The *recursive* parameter of `.add()` is no longer ignored and now enforces its default value of `False` (explicitly set it to `True` for the previous behaviour)
  * The glob pattern strings that may be passed to the `.add()` pattern parameter now actually behave like recursive glob patterns (see [the Python documentation](https://docs.python.org/3/library/glob.html) for how exactly)
  * Most functions previously returning a dict with the raw JSON response, now return a custom mapping type instead
     * This mapping type supports the original getitem syntax (`result["ItemName"]`) unchanged, but if you need an actual dictionary object you need to call `.as_json()` on it
@@ -62,9 +65,9 @@ Other changes:
 
  * Added support for go-IPFS 0.5.x
  * Adding directories with `.add()` has been greatly reworked:
-    * Its now possible to specify arbitrary rules on which objects to include a directory tree by passing a custom matcher object to the *pattern* parameter
-    * The new *period_special* parameter allows toggling whether glob patterns match dot-files implicietly and defaults to `True` (previously it was effectively `False`)
-    * The new *follow_symlinks* parameter similarily determines whether symbolic links will be followed when scanning directory trees and defaults to `False` (the previous default on Unix, albeit this likely wasn't intentional)
+    * It's now possible to specify arbitrary rules on which objects to include a directory tree by passing a custom matcher object to the *pattern* parameter
+    * The new *period_special* parameter allows toggling whether glob patterns match dot-files implicitly and defaults to `True` (previously it was effectively `False`)
+    * The new *follow_symlinks* parameter similarly determines whether symbolic links will be followed when scanning directory trees and defaults to `False` (the previous default on Unix, albeit this likely wasn't intentional)
     * `.add()` will now limit its scan to the directories required to match the given glob patterns (passing in regular expression objects will still scan the tree unconditionally however) – custom matchers have full control over which directories are visited
  * The requests-based HTTP backend has been supplemented by another backend based on [HTTPx](https://www.python-httpx.org/) for Python 3.6+
     * Due to a minor limitation within the library (no ability to apply address family restrictions during name resolution) this currently included as a preview and must be manually enabled, to do this ensure that the `httpx` library is installed in your Python environment and run your program with the environment variable *PY_IPFS_HTTP_CLIENT_PREFER_HTTPX* set to *yes*.
@@ -86,7 +89,7 @@ This release features several breaking changes, as compared to the previous *py-
 
  * A new import name: `ipfsapi` → `ipfshttpclient` (thanks to @AlibabasMerchant)
  * The client API is now structured according to the [IPFS interface core specification](https://github.com/ipfs/interface-ipfs-core/tree/master/SPEC)
- * Deamon location is now described using [Multiaddr](https://github.com/multiformats/multiaddr)
+ * Daemon location is now described using [Multiaddr](https://github.com/multiformats/multiaddr)
  * Some deprecated methods have been dropped:
     * `bitswap_unwant`: API endpoint dropped by *go-ipfs*
     * `{get,set}_pyobj`: Can too easily be abused for abitrary code execution, use `pickle.{loads,dumps}` if you really need this
@@ -94,14 +97,14 @@ This release features several breaking changes, as compared to the previous *py-
 
 Some new features added in this release:
 
- * Adding large directories doesn't read them all into memory anymore before sending them to the daemon
+ * Adding large directories doesn't read them all into memory any more before sending them to the daemon
  * API documentation has been improved
  * TCP connections may now be reused between API requests
- * `.add_json` now adds data as UTF-8 rather than using Unicode-escapes for shorter/more-canoncial data representation (thanks to @emmnx)
+ * `.add_json` now adds data as UTF-8 rather than using Unicode-escapes for shorter/more canonical data representation (thanks to @emmnx)
  * Several parameters have been added to existing methods:
     * Using [filestore](https://github.com/ipfs-filestore/go-ipfs/tree/master/filestore) is now possible (thanks to @radfish)
     * Universal per-call `offline` parameter added (thanks to @radfish)
-    * Universal per-call `return_result` parameter added to issue `HEAD` requests and surpress results for speeds (thanks to @loardcirth)
+    * Universal per-call `return_result` parameter added to issue `HEAD` requests and suppress results for speeds (thanks to @loardcirth)
     * Universal per-call `timeout` parameter added (thanks to @AlibabasMerchant)
     * `.add`: `nocopy` & `raw_leaves` (thanks to @radfish)
     * `.ls`: `paths` (thanks to @radfish)
