@@ -27,8 +27,8 @@ def test_daemon_stop(daemon, client):
 	# with access to the created daemon subprocess object defined directly
 	# in the `test/run-test.py` file
 	if not daemon:
-		pytest.skip("Not started using `test/run-test.py`")
-	
+		return
+
 	def daemon_is_running():
 		return daemon.poll() is None
 	
