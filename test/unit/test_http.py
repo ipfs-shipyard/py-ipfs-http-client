@@ -24,7 +24,6 @@ import ipfshttpclient.http
 import ipfshttpclient.exceptions
 
 
-
 @pytest.fixture(scope="module")
 def http_server(request):
 	"""
@@ -112,6 +111,7 @@ def broken_http_server_app(environ, start_response):
 	
 	yield b""
 
+
 @pytest.fixture(scope="module")
 def broken_http_server(request):
 	server = pytest_localserver.http.WSGIServer(application=broken_http_server_app)
@@ -132,6 +132,7 @@ def slow_http_server_app(environ, start_response):
 		"Message": "Timeout was not triggered"
 	}).encode("utf-8")
 
+
 @pytest.fixture(scope="module")
 def slow_http_server(request):
 	server = pytest_localserver.http.WSGIServer(application=slow_http_server_app)
@@ -147,12 +148,14 @@ def test_successful_request(http_client, http_server):
 	res = http_client.request("/okay")
 	assert res == b"okay"
 
+
 def test_successful_request_uds(http_client_uds, http_server_uds):
 	"""Tests that a successful http request returns the proper message."""
 	http_server_uds.serve_content("okay", 200)
 	
 	res = http_client_uds.request("/okay")
 	assert res == b"okay"
+
 
 def test_generic_failure(http_client, http_server):
 	"""Tests that a failed http request raises an HTTPError."""
@@ -161,12 +164,14 @@ def test_generic_failure(http_client, http_server):
 	with pytest.raises(ipfshttpclient.exceptions.StatusError):
 		http_client.request("/fail")
 
+
 def test_generic_failure_uds(http_client_uds, http_server_uds):
 	"""Tests that a failed http request raises an HTTPError."""
 	http_server_uds.serve_content("fail", 500)
 	
 	with pytest.raises(ipfshttpclient.exceptions.StatusError):
 		http_client_uds.request("/fail")
+
 
 def test_http_client_failure(http_client, http_server):
 	"""Tests that an http client failure raises an ipfsHTTPClientError."""
@@ -177,12 +182,14 @@ def test_http_client_failure(http_client, http_server):
 	with pytest.raises(ipfshttpclient.exceptions.ErrorResponse):
 		http_client.request("/http_client_fail")
 
+
 def test_http_client_failure_broken_msg(http_client, http_server):
 	"""Tests that an http client failure raises an ipfsHTTPClientError."""
 	http_server.serve_content("Message: This isn't JSON", 500)
 	
 	with pytest.raises(ipfshttpclient.exceptions.StatusError):
 		http_client.request("/http_client_fail")
+
 
 def test_http_client_late_failure(http_client, http_server):
 	"""Tests that an http client failure raises an ipfsHTTPClientError."""
@@ -195,6 +202,7 @@ def test_http_client_late_failure(http_client, http_server):
 	
 	with pytest.raises(ipfshttpclient.exceptions.PartialErrorResponse):
 		http_client.request("/http_client_fail_late", decoder="json")
+
 
 def test_stream(http_client, http_server):
 	"""Tests that the stream flag being set returns the raw response."""
@@ -211,6 +219,7 @@ def test_stream(http_client, http_server):
 	with pytest.raises(StopIteration):
 		next(res)
 
+
 def test_cat(http_client, http_server):
 	"""Tests that paths ending in /cat are not parsed."""
 	http_server.serve_content(json.dumps({
@@ -219,6 +228,7 @@ def test_cat(http_client, http_server):
 	
 	res = http_client.request("/cat")
 	assert res == b'{"Message": "do not parse"}'
+
 
 def test_default_decoder(http_client, http_server):
 	"""Tests that the default encoding is set to json."""
@@ -229,6 +239,7 @@ def test_default_decoder(http_client, http_server):
 	res = http_client.request("/http_client_okay")
 	assert res == b'{"Message": "okay"}'
 
+
 def test_explicit_decoder(http_client, http_server):
 	"""Tests that an explicit decoder is handled correctly."""
 	http_server.serve_content(json.dumps({
@@ -238,6 +249,7 @@ def test_explicit_decoder(http_client, http_server):
 	res = http_client.request("/http_client_okay", decoder="json")
 	assert res[0]["Message"] == "okay"
 
+
 def test_unsupported_decoder(http_client, http_server):
 	"""Tests that unsupported encodings raise an exception."""
 	http_server.serve_content(json.dumps({
@@ -246,6 +258,7 @@ def test_unsupported_decoder(http_client, http_server):
 	
 	with pytest.raises(ipfshttpclient.exceptions.EncoderMissingError):
 		http_client.request("/http_client_fail", decoder="xyz")
+
 
 def test_failed_decoder(http_client, http_server):
 	"""Tests that a failed encoding parse raises an exception."""
@@ -260,12 +273,14 @@ file. tarfile.open expects the tar to be in the form of an octal escaped
 string, but internal functionality keeps resulting in hexadecimal.
 """
 
+
 def test_failed_download(http_client, http_server):
 	"""Tests that a failed download raises an HTTPError."""
 	http_server.serve_content("fail", 500)
 	
 	with pytest.raises(ipfshttpclient.exceptions.StatusError):
 		http_client.download("/fail")
+
 
 def test_download_connect_error():
 	"""Tests that a download from a non-existing server raises a ConnectionError."""
@@ -277,6 +292,7 @@ def test_download_connect_error():
 	with pytest.raises(ipfshttpclient.exceptions.ConnectionError):
 		http_client.download('/any')
 
+
 def test_download_protocol_error(broken_http_server):
 	"""Tests that a download from a server violating the HTTP protocol raises a ProtocolError."""
 	http_client = ipfshttpclient.http.ClientSync(
@@ -287,6 +303,7 @@ def test_download_protocol_error(broken_http_server):
 	with pytest.raises(ipfshttpclient.exceptions.ProtocolError):
 		http_client.download('/any')
 
+
 def test_download_timeout(slow_http_server):
 	"""Tests that a timed-out download raises a TimeoutError."""
 	http_client = ipfshttpclient.http.ClientSync(
@@ -296,6 +313,7 @@ def test_download_timeout(slow_http_server):
 	
 	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
 		http_client.download('/timeout', timeout=0.1)
+
 
 def test_download_timeout_session(slow_http_server):
 	"""Tests that a timed-out download raises a TimeoutError."""
