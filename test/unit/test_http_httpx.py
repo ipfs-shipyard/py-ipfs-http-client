@@ -3,17 +3,14 @@
 # `test_http.py` instead.
 import http.cookiejar
 import math
-import sys
-
 import pytest
 
-if sys.version_info <= (3, 6):
-	pytest.skip("HTTPx requires Python 3.6+", allow_module_level=True)
 pytest.importorskip("ipfshttpclient.http_httpx")
 import ipfshttpclient.http_httpx
 
 
 cookiejar = http.cookiejar.CookieJar()
+
 
 @pytest.mark.parametrize("kwargs,expected", [
 	({}, {}),
@@ -46,6 +43,7 @@ cookiejar = http.cookiejar.CookieJar()
 ])
 def test_map_args_to_httpx(kwargs, expected):
 	assert ipfshttpclient.http_httpx.map_args_to_httpx(**kwargs) == expected
+
 
 @pytest.mark.parametrize("args,kwargs,expected_kwargs,expected_base,expected_laddr", [
 	(("/dns/localhost/tcp/5001/http", "api/v0"), {}, {
