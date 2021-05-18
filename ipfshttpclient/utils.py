@@ -72,8 +72,9 @@ json_value_t = ty.Union[
 
 
 def maybe_fsencode(val: str, ref: AnyStr) -> AnyStr:
-	"""Encodes the string *val* using the system filesystem encoding if *ref* is
-	   of type :type:`bytes`"""
+	"""Encodes the string *val* using the system filesystem encoding if *ref*
+	is of type :any:`bytes`"""
+
 	if isinstance(ref, bytes):
 		return os.fsencode(val)
 	else:
