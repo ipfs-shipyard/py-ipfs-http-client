@@ -11,6 +11,7 @@ if ty.TYPE_CHECKING:
 else:
 	ty_ext = ty
 
+AnyStr = ty.TypeVar('AnyStr', bytes, str)
 T = ty.TypeVar("T")
 
 if sys.version_info >= (3, 8):  #PY38+
@@ -34,8 +35,8 @@ if ty.TYPE_CHECKING:
 	PathLike_str = os.PathLike[str]
 	PathLike_bytes = os.PathLike[bytes]
 else:
-	class PathLike(Protocol, ty.Generic[ty.AnyStr]):
-		def __fspath__(self) -> ty.AnyStr:
+	class PathLike(Protocol, ty.Generic[AnyStr]):
+		def __fspath__(self) -> AnyStr:
 			...
 
 	PathLike_str = PathLike_bytes = os.PathLike
@@ -70,7 +71,7 @@ json_value_t = ty.Union[
 ]
 
 
-def maybe_fsencode(val: str, ref: ty.AnyStr) -> ty.AnyStr:
+def maybe_fsencode(val: str, ref: AnyStr) -> AnyStr:
 	"""Encodes the string *val* using the system filesystem encoding if *ref* is
 	   of type :type:`bytes`"""
 	if isinstance(ref, bytes):

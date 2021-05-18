@@ -9,6 +9,7 @@ import types
 import typing as ty
 
 from . import utils
+from .exceptions import MatcherSpecInvalidError
 
 # PyCharm rejects typing.AnyStr and will flag all usages of an error,
 # effectively breaking PyCharm's ability to provide typing assistance.
@@ -16,8 +17,6 @@ from . import utils
 # To encourage contributions from PyCharm users, we redefine AnyStr.
 #
 # This will get inlined if/when PyCharm no longer flags typing.AnyStr.
-from .exceptions import MatcherSpecInvalidError
-
 AnyStr = ty.TypeVar('AnyStr', bytes, str)
 
 if sys.version_info >= (3, 7):  #PY37+
