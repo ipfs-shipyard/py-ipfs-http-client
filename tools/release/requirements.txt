@@ -1,0 +1,5 @@
+flit>=3.0
+Sphinx~=3.0
+sphinx_autodoc_typehints
+recommonmark~=0.5.0
+

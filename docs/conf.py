@@ -371,6 +371,7 @@ napoleon_custom_sections = [
 
 import sphinx.ext.autodoc
 
+
 class ClientClassDocumenterBase(sphinx.ext.autodoc.ClassDocumenter):
 	directivetype = "class"
 
@@ -398,9 +399,11 @@ class ClientClassDocumenterBase(sphinx.ext.autodoc.ClassDocumenter):
 		these classes."""
 		return "({0})".format(self.args) if self.args is not None else ""
 
+
 class ClientClassDocumenter(ClientClassDocumenterBase):
 	objtype = "clientclass"
 	priority = -100
+
 
 class ClientSubClassDocumenter(ClientClassDocumenterBase):
 	objtype = "clientsubclass"
@@ -408,6 +411,7 @@ class ClientSubClassDocumenter(ClientClassDocumenterBase):
 
 
 import sphinx.util.inspect
+
 
 def section_property_attrgetter(object, name, default=None):
 	try:
@@ -426,6 +430,7 @@ def section_property_attrgetter(object, name, default=None):
 	
 	# Nothing found: Return default
 	return default
+
 
 # app setup hook for reCommonMark's AutoStructify and our own extension
 def setup(app):
