@@ -369,8 +369,9 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		phases; if the value is ``None`` then all timeouts will be disabled
 	"""
 	__slots__ = ("_session", "workarounds")
-	#_session: ty.Optional[S]
-	#workarounds: ty.Set[str]
+
+	_session: ty.Optional[S]
+	workarounds: ty.Set[str]
 	
 	def __init__(self, addr: addr_t, base: str, *,  # type: ignore[no-any-unimported]
 	             offline: bool = False,
@@ -379,8 +380,8 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 	             cookies: cookies_t = None,
 	             headers: headers_t = None,
 	             timeout: timeout_t = None) -> None:
-		self._session = None  # type: ty.Optional[S]
-		self.workarounds = workarounds if workarounds else set()  # type: ty.Set[str]
+		self._session = None
+		self.workarounds = workarounds if workarounds else set()
 		
 		#XXX: Figure out what stream-channels is and if we still need it
 		params = map_args_to_params((), {

@@ -7,6 +7,7 @@ import multiaddr  # type: ignore[import]
 from . import DEFAULT_ADDR, DEFAULT_BASE
 
 from .. import multipart, http, utils
+from ..http_common import ClientSyncBase
 
 
 #XXX: Review if this is still necessary after requiring Python 3.8.
@@ -309,7 +310,7 @@ class SectionBase:
 
 	# Proxy the parent's properties
 	@property
-	def _client(self) -> http.ClientSync:
+	def _client(self) -> ClientSyncBase[ty.Any]:
 		return self.__parent._client
 
 	@property
