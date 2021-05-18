@@ -4,7 +4,14 @@ py-ipfs-http-client 0.X.X (XX.XX.20XX)
  * (None yet)
 
 
-py-ipfs-http-client 0.8.0a1 (11.05.2021)
+py-ipfs-http-client 0.8.0a2 (18.05.2021)
+----------------------------------------
+
+ * Fix presentation of exception tree in documentation
+ * Support publishing documentation to a non-local IPFS server
+
+
+py-ipfs-http-client 0.8.0a1 (18.05.2021)
 ----------------------------------------
 
  * py-ipfs-api-client will now only warn when detecting an unsupported daemon version
