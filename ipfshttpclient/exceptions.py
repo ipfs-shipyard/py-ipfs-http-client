@@ -1,25 +1,26 @@
 """
-The class hierarchy for exceptions is:
+The class hierarchy for exceptions is::
 
-	Warning
-	 └── VersionMismatch
-
-	Error
-	 ├── AddressError
-	 ├── EncoderError
-	 │    ├── EncoderMissingError
-	 │    ├── EncodingError
-	 │    └── DecodingError
-	 ├── CommunicationError
-	 │    ├── ProtocolError
-	 │    ├── StatusError
-	 │    ├── ErrorResponse
-	 │    │    └── PartialErrorResponse
-	 │    ├── ConnectionError
-	 │    └── TimeoutError
-	 └── MatcherSpecInvalidError
+    Exception
+     ├── Warning
+     │    └── VersionMismatch
+     └── Error
+          ├── AddressError
+          ├── EncoderError
+          │    ├── EncoderMissingError
+          │    ├── EncodingError
+          │    └── DecodingError
+          ├── CommunicationError
+          │    ├── ProtocolError
+          │    ├── StatusError
+          │    ├── ErrorResponse
+          │    │    └── PartialErrorResponse
+          │    ├── ConnectionError
+          │    └── TimeoutError
+          └── MatcherSpecInvalidError
 
 """
+
 import typing as ty
 
 import multiaddr.exceptions  # type: ignore[import]
