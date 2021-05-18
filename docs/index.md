@@ -1,5 +1,5 @@
-Python IPFS HTTP Client's documentation!
-================================
+Python IPFS HTTP Client
+=======================
 
 Contents
 --------
