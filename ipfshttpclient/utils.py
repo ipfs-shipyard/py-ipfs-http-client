@@ -51,19 +51,23 @@ path_obj_types = (os.PathLike,)
 
 # work around GH/mypy/mypy#731: no recursive structural types yet
 json_primitive_t = ty.Union[bool, float, int, str]
+
+
+# noinspection PyPep8Naming
+class json_list_t(ty.List["json_value_t"]):
+	pass
+
+
+# noinspection PyPep8Naming
+class json_dict_t(ty.Dict[str, "json_value_t"]):
+	pass
+
+
 json_value_t = ty.Union[
 	json_primitive_t,
-	"json_list_t",
-	"json_dict_t"
+	json_list_t,
+	json_dict_t
 ]
-
-
-class json_list_t(ty.List[json_value_t]):
-	pass
-
-
-class json_dict_t(ty.Dict[str, json_value_t]):
-	pass
 
 
 def maybe_fsencode(val: str, ref: ty.AnyStr) -> ty.AnyStr:
