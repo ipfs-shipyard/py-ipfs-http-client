@@ -1,8 +1,8 @@
 """
 The class hierarchy for exceptions is::
 
-    Exception
-     ├── Warning
+    builtins.Exception
+     ├── builtins.Warning
      │    └── VersionMismatch
      └── Error
           ├── AddressError
