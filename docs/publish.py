@@ -42,14 +42,10 @@ def publish(
 		ipns_key: ty.Optional[str]) -> int:
 	# Invoke Sphinx like the Makefile does
 	result = sphinx.cmd.build.build_main([
-		"-b",
-		"html",
-		"-d",
-		"build/doctrees",
-		".",
-		"build/html",
-		"-W",
-		"--keep-going"
+		"-b", "html",
+		"-d", "build/doctrees",
+		".", "build/html",
+		"-W", "--keep-going"
 	])
 
 	if result != 0:

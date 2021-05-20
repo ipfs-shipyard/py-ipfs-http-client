@@ -54,12 +54,12 @@ path_obj_types = (os.PathLike,)
 json_primitive_t = ty.Union[bool, float, int, str]
 
 
-# noinspection PyPep8Naming
+# noqa: N802
 class json_list_t(ty.List["json_value_t"]):
 	pass
 
 
-# noinspection PyPep8Naming
+# noqa: N802
 class json_dict_t(ty.Dict[str, "json_value_t"]):
 	pass
 
