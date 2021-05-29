@@ -4,7 +4,7 @@ import typing as ty
 
 import multiaddr  # type: ignore[import]
 
-from . import DEFAULT_ADDR, DEFAULT_BASE
+from . import DEFAULT_ADDR, DEFAULT_BASE, DEFAULT_USERNAME, DEFAULT_PASSWORD
 
 from .. import multipart, http, utils
 from ..http_common import ClientSyncBase
@@ -337,9 +337,8 @@ class ClientBase:
 			headers: http.headers_t = {},  # type: ignore[assignment]  # False positive
 			timeout: http.timeout_t = 120,
 			
-			# Backward-compat
-			username: ty.Optional[str] = None,
-			password: ty.Optional[str] = None
+			username: ty.Optional[str] = DEFAULT_USERNAME,
+			password: ty.Optional[str] = DEFAULT_PASSWORD
 	):
 		"""
 		Arguments
