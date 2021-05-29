@@ -49,9 +49,13 @@ def publish(ipns_key: ty.Optional[str]) -> int:
 	print()
 	print(f"Exporting files to IPFS server at {ipfshttpclient.DEFAULT_ADDR}…")
 	client = ipfshttpclient.connect()
+	print('Adding files…')
 	hash_docs = client.add("build/html", recursive=True, raw_leaves=True, pin=False)[-1]["Hash"]
+	print('Getting directory hash…')
 	hash_main = client.object.new("unixfs-dir")["Hash"]
+	print('Getting docs hash…')
 	hash_main = client.object.patch.add_link(hash_main, "docs", hash_docs)["Hash"]
+	print(f'Pinning docs hash {hash_main}…')
 	client.pin.add(hash_main)
 
 	print("Final IPFS path:")
