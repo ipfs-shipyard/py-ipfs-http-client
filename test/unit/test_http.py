@@ -76,6 +76,7 @@ def http_server_uds(request):
 		pytest.skip("Platform does not support Unix domain sockets")
 	
 	uds_path = make_temp_maxlen_socket_path()
+
 	def remove_uds_path():
 		try:
 			os.remove(uds_path)
@@ -91,7 +92,7 @@ def http_server_uds(request):
 
 @pytest.fixture
 def http_client(http_server):
-	return ipfshttpclient.http.ClientSync(
+	return ipfshttpclient.http.build_client_sync(
 		"/ip4/{0}/tcp/{1}/http".format(*http_server.server_address),
 		ipfshttpclient.DEFAULT_BASE,
 	)
@@ -99,7 +100,7 @@ def http_client(http_server):
 
 @pytest.fixture
 def http_client_uds(http_server_uds):
-	return ipfshttpclient.http.ClientSync(
+	return ipfshttpclient.http.build_client_sync(
 		"/unix/{0}".format(http_server_uds.server_address.lstrip("/")),
 		ipfshttpclient.DEFAULT_BASE,
 	)
@@ -284,7 +285,7 @@ def test_failed_download(http_client, http_server):
 
 def test_download_connect_error():
 	"""Tests that a download from a non-existing server raises a ConnectionError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/127.4.5.6/tcp/12393/http",
 		ipfshttpclient.DEFAULT_BASE
 	)
@@ -295,7 +296,7 @@ def test_download_connect_error():
 
 def test_download_protocol_error(broken_http_server):
 	"""Tests that a download from a server violating the HTTP protocol raises a ProtocolError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/{0}/tcp/{1}/http".format(*broken_http_server.server_address),
 		ipfshttpclient.DEFAULT_BASE
 	)
@@ -306,7 +307,7 @@ def test_download_protocol_error(broken_http_server):
 
 def test_download_timeout(slow_http_server):
 	"""Tests that a timed-out download raises a TimeoutError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/{0}/tcp/{1}/http".format(*slow_http_server.server_address),
 		ipfshttpclient.DEFAULT_BASE
 	)
@@ -317,7 +318,7 @@ def test_download_timeout(slow_http_server):
 
 def test_download_timeout_session(slow_http_server):
 	"""Tests that a timed-out download raises a TimeoutError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/{0}/tcp/{1}/http".format(*slow_http_server.server_address),
 		ipfshttpclient.DEFAULT_BASE,
 		timeout=0.1
@@ -329,7 +330,7 @@ def test_download_timeout_session(slow_http_server):
 
 def test_request_connect_error():
 	"""Tests that a request to a non-existing server raises a ConnectionError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/127.99.99.99/tcp/12393/http",
 		ipfshttpclient.DEFAULT_BASE
 	)
@@ -337,9 +338,10 @@ def test_request_connect_error():
 	with pytest.raises(ipfshttpclient.exceptions.ConnectionError):
 		http_client.download('/any')
 
+
 def test_request_protocol_error(broken_http_server):
 	"""Tests that a download from a server violating the HTTP protocol raises a ProtocolError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/{0}/tcp/{1}/http".format(*broken_http_server.server_address),
 		ipfshttpclient.DEFAULT_BASE
 	)
@@ -347,15 +349,17 @@ def test_request_protocol_error(broken_http_server):
 	with pytest.raises(ipfshttpclient.exceptions.ProtocolError):
 		http_client.request('/any')
 
+
 def test_request_timeout(slow_http_server):
 	"""Tests that a timed-out request raises a TimeoutError."""
-	http_client = ipfshttpclient.http.ClientSync(
+	http_client = ipfshttpclient.http.build_client_sync(
 		"/ip4/{0}/tcp/{1}/http".format(*slow_http_server.server_address),
 		ipfshttpclient.DEFAULT_BASE
 	)
 	
 	with pytest.raises(ipfshttpclient.exceptions.TimeoutError):
 		http_client.request('/timeout', timeout=0.1)
+
 
 def test_session(http_client, http_server):
 	"""Tests that a session is established and then closed."""
