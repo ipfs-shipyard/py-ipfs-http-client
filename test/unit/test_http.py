@@ -368,7 +368,8 @@ def test_session(http_client, http_server):
 	assert http_client._session is None
 	try:
 		http_client.open_session()
-		http_client._session is not None
+		assert http_client._session is not None
+
 		res = http_client.request("/okay")
 		assert res == b"okay"
 	finally:

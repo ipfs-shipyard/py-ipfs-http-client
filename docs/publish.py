@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 import os
+import sphinx.cmd.build
 import sys
 import typing as ty
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(script_dir, ".."))
 
-import sphinx.cmd.build
 import ipfshttpclient
 
 os.chdir(script_dir)
@@ -20,26 +20,21 @@ def main(argv: ty.List[str]) -> int:
 
 		print("Usage: {0} [IPNS-key]".format(os.path.basename(__file__)))
 		print()
+		print('To connect to a remote IPFS daemon, set environment variables:')
+		print()
+		print('    PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR')
+		print('    PY_IPFS_HTTP_CLIENT_DEFAULT_USERNAME')
+		print('    PY_IPFS_HTTP_CLIENT_DEFAULT_PASSWORD')
+		print()
 		print("!! Continuing without publishing to IPNS !!")
 		print()
 
-	ipfs_api_address: str = os.getenv('IPFS_API_MULTI_ADDR', str(ipfshttpclient.DEFAULT_ADDR))
-	ipfs_api_username: ty.Optional[str] = os.getenv('IPFS_API_USERNAME', None)
-	ipfs_api_password: ty.Optional[str] = os.getenv('IPFS_API_PASSWORD', None)
-
 	return publish(
-		ipfs_api_address=ipfs_api_address,
-		ipfs_api_username=ipfs_api_username,
-		ipfs_api_password=ipfs_api_password,
 		ipns_key=ipns_key
 	)
 
 
-def publish(
-		ipfs_api_address: str,
-		ipfs_api_username: ty.Optional[str],
-		ipfs_api_password: ty.Optional[str],
-		ipns_key: ty.Optional[str]) -> int:
+def publish(ipns_key: ty.Optional[str]) -> int:
 	# Invoke Sphinx like the Makefile does
 	result = sphinx.cmd.build.build_main([
 		"-b", "html",
@@ -52,8 +47,8 @@ def publish(
 		return result
 	
 	print()
-	print(f"Exporting files to IPFS server at {ipfs_api_address}…")
-	client = ipfshttpclient.connect(addr=ipfs_api_address, username=ipfs_api_username, password=ipfs_api_password)
+	print(f"Exporting files to IPFS server at {ipfshttpclient.DEFAULT_ADDR}…")
+	client = ipfshttpclient.connect()
 	hash_docs = client.add("build/html", recursive=True, raw_leaves=True, pin=False)[-1]["Hash"]
 	hash_main = client.object.new("unixfs-dir")["Hash"]
 	hash_main = client.object.patch.add_link(hash_main, "docs", hash_docs)["Hash"]

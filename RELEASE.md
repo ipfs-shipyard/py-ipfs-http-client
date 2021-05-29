@@ -87,5 +87,5 @@ generation and publish process:
 If you are publishing to an IPFS server that is remote, and protected by an HTTP reverse proxy
 with TLS and basic authentication, run this instead:
 
-    $ IPFS_API_MULTI_ADDR=/dns/yourserver.tld/tcp/5001/https IPFS_API_USERNAME=basicauthuser IPFS_API_PASSWORD=basicauthpassword python publish.py ipns-key-id
+    $ PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR=/dns/yourserver.tld/tcp/5001/https PY_IPFS_HTTP_CLIENT_DEFAULT_USERNAME=basicauthuser PY_IPFS_HTTP_CLIENT_DEFAULT_PASSWORD=basicauthpassword python publish.py ipns-key-id
 

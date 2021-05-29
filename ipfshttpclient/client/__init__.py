@@ -13,6 +13,8 @@ import multiaddr
 
 DEFAULT_ADDR = multiaddr.Multiaddr(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_ADDR", '/dns/localhost/tcp/5001/http'))
 DEFAULT_BASE = str(os.environ.get("PY_IPFS_HTTP_CLIENT_DEFAULT_BASE", 'api/v0'))
+DEFAULT_USERNAME: ty.Optional[str] = os.getenv('PY_IPFS_HTTP_CLIENT_DEFAULT_USERNAME', None)
+DEFAULT_PASSWORD: ty.Optional[str] = os.getenv('PY_IPFS_HTTP_CLIENT_DEFAULT_PASSWORD', None)
 
 # This range inclusive-exclusive, so the daemon version must match
 #   `VERSION_MINIMUM <= version < VERSION_MAXIMUM`
@@ -91,9 +93,8 @@ def connect(
 		headers: http.headers_t = {},
 		timeout: http.timeout_t = 120,
 		
-		# Backward-compatibility
-		username: ty.Optional[str] = None,
-		password: ty.Optional[str] = None
+		username: ty.Optional[str] = DEFAULT_USERNAME,
+		password: ty.Optional[str] = DEFAULT_PASSWORD
 ):
 	"""Create a new :class:`~ipfshttpclient.Client` instance and connect to the
 	daemon to validate that its version is supported as well as applying any
