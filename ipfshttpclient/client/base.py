@@ -393,10 +393,16 @@ class ClientBase:
 			assert username and password
 			auth = (username, password)
 		
-		self._client = http.ClientSync(
-			addr, base, offline=offline,
-			auth=auth, cookies=cookies, headers=headers, timeout=timeout,
+		self._client = http.build_client_sync(
+			addr=addr,
+			base=base,
+			offline=offline,
+			auth=auth,
+			cookies=cookies,
+			headers=headers,
+			timeout=timeout
 		)
+
 		if session:
 			self._client.open_session()
 		

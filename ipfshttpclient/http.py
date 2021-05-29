@@ -15,7 +15,7 @@ __all__ = (
 	"addr_t", "auth_t", "cookies_t", "headers_t", "params_t", "reqdata_sync_t",
 	"timeout_t", "workarounds_t",
 	
-	"ClientSync",
+	"build_client_sync",
 	"StreamDecodeIteratorSync",
 )
 
@@ -34,6 +34,22 @@ else:  # pragma: http-backend=requests
 		from . import http_httpx as _backend
 
 
-# noinspection PyPep8Naming
-def ClientSync(*args, **kwargs) -> ClientSyncBase[ty.Any]:  # type: ignore[no-untyped-def]
-	return _backend.ClientSync(*args, **kwargs)
+def build_client_sync(  # type: ignore[no-any-unimported]
+		addr: addr_t,
+		base: str,
+		offline: bool = False,
+		auth: auth_t = None,
+		cookies: cookies_t = None,
+		headers: headers_t = None,
+		timeout: timeout_t = 120
+) -> ClientSyncBase[ty.Any]:
+
+	return _backend.ClientSync(
+		addr=addr,
+		base=base,
+		offline=offline,
+		auth=auth,
+		cookies=cookies,
+		headers=headers or ty.cast(ty.Dict[str, str], {}),
+		timeout=timeout
+	)
