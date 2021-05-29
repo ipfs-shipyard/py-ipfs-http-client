@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 import os
+from pathlib import Path
+
 import sphinx.cmd.build
 import sys
 import typing as ty
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
-sys.path.insert(0, os.path.join(script_dir, ".."))
+script_dir = Path(__file__).absolute().parent
+sys.path.insert(0, str(script_dir.parent))
 
 import ipfshttpclient
 
