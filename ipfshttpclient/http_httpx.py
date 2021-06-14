@@ -179,7 +179,7 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 					url=path,
 					**map_args_to_httpx(
 						params=params,
-						auth=auth,
+						auth=auth or session.auth,  # type: ignore[arg-type]
 						headers=headers,
 						timeout=timeout,
 					),
