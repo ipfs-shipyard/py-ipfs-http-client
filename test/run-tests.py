@@ -107,7 +107,7 @@ try:
 		"localserver",
 		"pytest_cov",
 		"pytest_mock",
-		"pytest_ordering",
+		"pytest_order",
 	])
 	
 	with tempfile.NamedTemporaryFile("r+") as coveragerc:

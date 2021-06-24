@@ -21,7 +21,7 @@ def test_id(client):
 # Shutdown test #
 #################
 
-@pytest.mark.last
+@pytest.mark.order("last")
 def test_daemon_stop(daemon, client):
 	# The value for the `daemon` “fixture” is injected using a pytest plugin
 	# with access to the created daemon subprocess object defined directly
