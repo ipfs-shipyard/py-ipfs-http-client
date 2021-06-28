@@ -240,7 +240,13 @@ class Client(files.Base, miscellaneous.Base):
 	
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
-	def add_bytes(self, data: bytes, **kwargs):
+	def add_bytes(self, data: bytes
+	        trickle: bool = False, only_hash: bool = False,
+	        chunker: ty.Optional[str] = None,
+	        pin: bool = True, raw_leaves: bool = None
+	        cid_version: ty.Optional[int] = None,
+	        **kwargs: base.CommonArgs):
+
 		"""Adds a set of bytes as a file to IPFS.
 
 		.. code-block:: python
@@ -254,12 +260,42 @@ class Client(files.Base, miscellaneous.Base):
 		----------
 		data
 			Content to be added as a file
+		trickle
+			Use trickle-dag format (optimized for streaming) when generating
+			the dag; see `the old FAQ <https://github.com/ipfs/faq/issues/218>`_
+			for more information
+		only_hash
+			Only chunk and hash, but do not write to disk
+		chunker
+			The chunking algorithm to use
+		pin
+			Pin this object when adding
+		raw_leaves
+			Use raw blocks for leaf nodes. (experimental). (Default: ``True``
+			when *nocopy* is True, or ``False`` otherwise)
+		cid_version
+			CID version. Default value is provided by IPFS daemon. (experimental)
 
 		Returns
 		-------
 			str
 				Hash of the added IPFS object
 		"""
+
+		opts = {
+			"trickle": trickle,
+			"only-hash": only_hash,
+			"pin": pin,
+			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
+		}  # type: ty.Dict[str, ty.Union[str, bool]]
+		for option_name, option_value in [
+			("chunker", chunker),
+			("cid-version", cid_version),
+		]:
+			if option_value is not None:
+				opts[option_name] = option_value
+		kwargs.setdefault("opts", {}).update(opts)
+
 		body, headers = multipart.stream_bytes(data, chunk_size=self.chunk_size)
 		return self._client.request('/add', decoder='json',
 		                            data=body, headers=headers, **kwargs)
@@ -269,7 +305,7 @@ class Client(files.Base, miscellaneous.Base):
 	def add_str(self, string,
 	        trickle: bool = False, only_hash: bool = False,
 	        chunker: ty.Optional[str] = None,
-	        pin: bool = True, raw_leaves: bool = None, nocopy: bool = False,
+	        pin: bool = True, raw_leaves: bool = None
 	        cid_version: ty.Optional[int] = None,
 	        **kwargs: base.CommonArgs):
 
@@ -299,8 +335,6 @@ class Client(files.Base, miscellaneous.Base):
 		raw_leaves
 			Use raw blocks for leaf nodes. (experimental). (Default: ``True``
 			when *nocopy* is True, or ``False`` otherwise)
-		nocopy
-			Add the file using filestore. Implies raw-leaves. (experimental).
 		cid_version
 			CID version. Default value is provided by IPFS daemon. (experimental)
 
@@ -315,7 +349,6 @@ class Client(files.Base, miscellaneous.Base):
 			"only-hash": only_hash,
 			"pin": pin,
 			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
-			"nocopy": nocopy
 		}  # type: ty.Dict[str, ty.Union[str, bool]]
 		for option_name, option_value in [
 			("chunker", chunker),
