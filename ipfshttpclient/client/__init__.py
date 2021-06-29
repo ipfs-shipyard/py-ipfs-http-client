@@ -366,7 +366,14 @@ class Client(files.Base, miscellaneous.Base):
 		return self._client.request('/add', decoder='json',
 		                            data=body, headers=headers, **kwargs)
 
-	def add_json(self, json_obj, **kwargs):
+	def add_json(self, json_obj,
+	        trickle: bool = False, 
+		only_hash: bool = False,
+	        chunker: ty.Optional[str] = None,
+	        pin: bool = True, 
+		raw_leaves: bool = None,
+	        cid_version: ty.Optional[int] = None,
+	        **kwargs: base.CommonArgs):
 		"""Adds a json-serializable Python dict as a json file to IPFS.
 
 		.. code-block:: python
@@ -378,12 +385,42 @@ class Client(files.Base, miscellaneous.Base):
 		----------
 		json_obj : dict
 			A json-serializable Python dictionary
+		trickle
+			Use trickle-dag format (optimized for streaming) when generating
+			the dag; see `the old FAQ <https://github.com/ipfs/faq/issues/218>`_
+			for more information
+		only_hash
+			Only chunk and hash, but do not write to disk
+		chunker
+			The chunking algorithm to use
+		pin
+			Pin this object when adding
+		raw_leaves
+			Use raw blocks for leaf nodes. (experimental). (Default: ``True``
+			when *nocopy* is True, or ``False`` otherwise)
+		cid_version
+			CID version. Default value is provided by IPFS daemon. (experimental)
+
 
 		Returns
 		-------
 			str
 				Hash of the added IPFS object
 		"""
+		opts: ty.Dict[str, ty.Union[str, bool]] = {
+			"trickle": trickle,
+			"only-hash": only_hash,
+			"pin": pin,
+			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
+		}  
+		for option_name, option_value in [
+			("chunker", chunker),
+			("cid-version", cid_version),
+		]:
+			if option_value is not None:
+				opts[option_name] = option_value
+		kwargs.setdefault("opts", {}).update(opts)
+
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
 	
 	
