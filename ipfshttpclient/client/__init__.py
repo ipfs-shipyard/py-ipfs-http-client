@@ -284,12 +284,12 @@ class Client(files.Base, miscellaneous.Base):
 				Hash of the added IPFS object
 		"""
 
-		opts = {
+		opts: ty.Dict[str, ty.Union[str, bool]] = {
 			"trickle": trickle,
 			"only-hash": only_hash,
 			"pin": pin,
 			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
-		}  # type: ty.Dict[str, ty.Union[str, bool]]
+		}  
 		for option_name, option_value in [
 			("chunker", chunker),
 			("cid-version", cid_version),
@@ -348,12 +348,12 @@ class Client(files.Base, miscellaneous.Base):
 				Hash of the added IPFS object
 		"""
 
-		opts = {
+		opts: ty.Dict[str, ty.Union[str, bool]] = {
 			"trickle": trickle,
 			"only-hash": only_hash,
 			"pin": pin,
 			"raw-leaves": raw_leaves if raw_leaves is not None else nocopy,
-		}  # type: ty.Dict[str, ty.Union[str, bool]]
+		}  
 		for option_name, option_value in [
 			("chunker", chunker),
 			("cid-version", cid_version),
