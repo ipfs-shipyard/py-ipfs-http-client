@@ -241,9 +241,11 @@ class Client(files.Base, miscellaneous.Base):
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
 	def add_bytes(self, data: bytes
-	        trickle: bool = False, only_hash: bool = False,
+	        trickle: bool = False, 
+		only_hash: bool = False,
 	        chunker: ty.Optional[str] = None,
-	        pin: bool = True, raw_leaves: bool = None,
+	        pin: bool = True, 
+		raw_leaves: bool = None,
 	        cid_version: ty.Optional[int] = None,
 	        **kwargs: base.CommonArgs):
 
@@ -303,9 +305,11 @@ class Client(files.Base, miscellaneous.Base):
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
 	def add_str(self, string,
-	        trickle: bool = False, only_hash: bool = False,
+	        trickle: bool = False, 
+		only_hash: bool = False,
 	        chunker: ty.Optional[str] = None,
-	        pin: bool = True, raw_leaves: bool = None,
+	        pin: bool = True, 
+		raw_leaves: bool = None,
 	        cid_version: ty.Optional[int] = None,
 	        **kwargs: base.CommonArgs):
 
