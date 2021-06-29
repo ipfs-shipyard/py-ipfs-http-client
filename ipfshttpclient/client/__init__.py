@@ -240,7 +240,7 @@ class Client(files.Base, miscellaneous.Base):
 	
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
-	def add_bytes(self, data: bytes
+	def add_bytes(self, data: bytes,
 	        trickle: bool = False, 
 		only_hash: bool = False,
 	        chunker: ty.Optional[str] = None,
