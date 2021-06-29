@@ -247,7 +247,7 @@ class Client(files.Base, miscellaneous.Base):
 	        pin: bool = True, 
 		raw_leaves: bool = None,
 	        cid_version: ty.Optional[int] = None,
-	        **kwargs: base.CommonArgs):
+	        **kwargs: base.CommonArgs) -> str:
 
 		"""Adds a set of bytes as a file to IPFS.
 
@@ -311,7 +311,7 @@ class Client(files.Base, miscellaneous.Base):
 	        pin: bool = True, 
 		raw_leaves: bool = None,
 	        cid_version: ty.Optional[int] = None,
-	        **kwargs: base.CommonArgs):
+	        **kwargs: base.CommonArgs) -> str:
 
 		"""Adds a Python string as a file to IPFS.
 
@@ -373,7 +373,7 @@ class Client(files.Base, miscellaneous.Base):
 	        pin: bool = True, 
 		raw_leaves: bool = None,
 	        cid_version: ty.Optional[int] = None,
-	        **kwargs: base.CommonArgs):
+	        **kwargs: base.CommonArgs) -> str:
 		"""Adds a json-serializable Python dict as a json file to IPFS.
 
 		.. code-block:: python
