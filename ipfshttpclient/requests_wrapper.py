@@ -230,19 +230,13 @@ class Session(requests.Session):
 		return super().request(method, url, *args, **kwargs)
 
 
+exceptions = requests.exceptions
 session = Session
 
-
-# Import other `requests` stuff to make the top-level API of this more compatible
-from requests import (
-	__title__, __description__, __url__, __version__, __build__, __author__,
-	__author_email__, __license__, __copyright__, __cake__,
-	
-	exceptions, utils, packages, codes,
-	Request, Response, PreparedRequest,
-	RequestException, Timeout, URLRequired, TooManyRedirects, HTTPError,
-	ConnectionError, FileModeWarning, ConnectTimeout, ReadTimeout
-)
+ConnectionError = requests.exceptions.ConnectionError
+ConnectTimeout = requests.exceptions.ConnectTimeout
+Request = requests.Request
+Timeout = requests.exceptions.Timeout
 
 
 # Re-implement the top-level “session-less” API
