@@ -1,6 +1,6 @@
 """HTTP client for API requests based on good old requests library
 
-This exists mainly for Python 3.5 compatibility.
+This exists while httpx remains in beta.
 """
 
 import math
@@ -20,8 +20,11 @@ from .http_common import (
 	Closable,
 )
 
-PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
-                  not in ("false", "no"))
+PATCH_REQUESTS = (
+	os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
+	not in ("false", "no")
+)
+
 if PATCH_REQUESTS:
 	from . import requests_wrapper as requests
 elif not ty.TYPE_CHECKING:  # pragma: no cover (always enabled in production)
