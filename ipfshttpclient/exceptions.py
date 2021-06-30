@@ -14,10 +14,10 @@ The class hierarchy for exceptions is::
           │    ├── ProtocolError
           │    ├── StatusError
           │    ├── ErrorResponse
-          │    │    └── PartialErrorResponse
           │    ├── ConnectionError
           │    └── TimeoutError
-          └── MatcherSpecInvalidError
+          ├── MatcherSpecInvalidError
+          └── PartialErrorResponse
 
 """
 
@@ -137,8 +137,7 @@ class CommunicationError(Error):
 
 	original: ty.Optional[Exception]
 	
-	def __init__(self, original: ty.Optional[Exception],
-	             _message: ty.Optional[str] = None) -> None:
+	def __init__(self, original: ty.Optional[Exception], _message: ty.Optional[str] = None) -> None:
 		self.original = original
 		
 		if _message:
@@ -158,7 +157,15 @@ class ProtocolError(CommunicationError):
 
 class StatusError(CommunicationError):
 	"""Raised when the daemon responds with an error to our request."""
-	__slots__ = ()
+	__slots__ = ('status_code',)
+
+	def __init__(self, status_code: int, message: str, original: ty.Optional[Exception]) -> None:
+		super().__init__(
+			_message=message,
+			original=original
+		)
+
+		self.status_code = status_code
 
 
 class ErrorResponse(StatusError):
@@ -166,17 +173,20 @@ class ErrorResponse(StatusError):
 	requested operation could not be carried out."""
 	__slots__ = ()
 	
-	def __init__(self, message: str, original: ty.Optional[Exception]) -> None:
-		super().__init__(original, message)
+	def __init__(self, status_code: int, message: str, original: ty.Optional[Exception]) -> None:
+		super().__init__(
+			status_code=status_code,
+			message=message,
+			original=original
+		)
 
 
-class PartialErrorResponse(ErrorResponse):
+class PartialErrorResponse(Error):
 	"""Raised when the daemon has responded with an error message after having
 	already returned some data."""
-	__slots__ = ()
-	
-	def __init__(self, message: str, original: ty.Optional[Exception] = None) -> None:
-		super().__init__(message, original)
+
+	def __init__(self, message: str) -> None:
+		super().__init__(message)
 
 
 class ConnectionError(CommunicationError):

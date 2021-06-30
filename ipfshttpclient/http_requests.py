@@ -117,8 +117,9 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 		except:  # pragma: no cover
 			session.close()
 			raise
-	
-	def _do_raise_for_status(self, response: requests.Request) -> None:  # type: ignore[name-defined]
+
+	@staticmethod
+	def _do_raise_for_status(response: requests.Response) -> None:  # type: ignore[name-defined]
 		try:
 			response.raise_for_status()
 		except requests.exceptions.HTTPError as error:  # type: ignore[attr-defined]
@@ -137,10 +138,18 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			if len(content) == 1 \
 			   and isinstance(content[0], dict) \
 			   and "Message" in content[0]:
-				msg = content[0]["Message"]
-				raise exceptions.ErrorResponse(msg, error) from error
+				msg: str = content[0]["Message"]
+				raise exceptions.ErrorResponse(
+					status_code=response.status_code,
+					message=msg,
+					original=error
+				) from error
 			else:
-				raise exceptions.StatusError(error) from error
+				raise exceptions.StatusError(
+					status_code=response.status_code,
+					message=str(error),
+					original=error
+				) from error
 	
 	def _request(
 			self, method: str, path: str, params: ty.Sequence[ty.Tuple[str, str]], *,

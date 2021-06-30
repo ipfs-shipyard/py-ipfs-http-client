@@ -129,8 +129,9 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 		return httpx.Client(**self._session_kwargs,
 		                    base_url  = self._session_base,
 		                    transport = connection_pool)
-	
-	def _do_raise_for_status(self, response: httpx.Response) -> None:
+
+	@staticmethod
+	def _do_raise_for_status(response: httpx.Response) -> None:
 		try:
 			response.raise_for_status()
 		except httpx.HTTPError as error:
@@ -150,9 +151,17 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 			   and isinstance(content[0], dict) \
 			   and "Message" in content[0]:
 				msg: str = content[0]["Message"]
-				raise exceptions.ErrorResponse(msg, error) from error
+				raise exceptions.ErrorResponse(
+					status_code=response.status_code,
+					message=msg,
+					original=error
+				) from error
 			else:
-				raise exceptions.StatusError(error) from error
+				raise exceptions.StatusError(
+					status_code=response.status_code,
+					message=str(error),
+					original=error
+				) from error
 	
 	def _request(
 			self, method: str, path: str, params: ty.Sequence[ty.Tuple[str, str]], *,
@@ -179,7 +188,7 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 					url=path,
 					**map_args_to_httpx(
 						params=params,
-						auth=auth,
+						auth=auth or session.auth,  # type: ignore[arg-type]
 						headers=headers,
 						timeout=timeout,
 					),
