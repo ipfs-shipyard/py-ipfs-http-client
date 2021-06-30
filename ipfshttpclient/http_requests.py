@@ -118,8 +118,8 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			session.close()
 			raise
 
-	@staticmethod
-	def _do_raise_for_status(response: requests.Response) -> None:  # type: ignore[name-defined]
+	@classmethod
+	def _do_raise_for_status(cls, response: requests.Response) -> None:  # type: ignore[name-defined]
 		try:
 			response.raise_for_status()
 		except requests.exceptions.HTTPError as error:  # type: ignore[attr-defined]
@@ -132,25 +132,8 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			except exceptions.DecodingError:
 				pass
 
-			# If we have decoded an error response from the server,
-			# use that as the exception message; otherwise, just pass
-			# the exception on to the caller.
-			if len(content) == 1 \
-			   and isinstance(content[0], dict) \
-			   and "Message" in content[0]:
-				msg: str = content[0]["Message"]
-				raise exceptions.ErrorResponse(
-					status_code=response.status_code,
-					message=msg,
-					original=error
-				) from error
-			else:
-				raise exceptions.StatusError(
-					status_code=response.status_code,
-					message=str(error),
-					original=error
-				) from error
-	
+			cls._raise_for_response_status(error, response.status_code, content)
+
 	def _request(
 			self, method: str, path: str, params: ty.Sequence[ty.Tuple[str, str]], *,
 			auth: auth_t,

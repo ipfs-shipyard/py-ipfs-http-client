@@ -130,8 +130,8 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 		                    base_url  = self._session_base,
 		                    transport = connection_pool)
 
-	@staticmethod
-	def _do_raise_for_status(response: httpx.Response) -> None:
+	@classmethod
+	def _do_raise_for_status(cls, response: httpx.Response) -> None:
 		try:
 			response.raise_for_status()
 		except httpx.HTTPError as error:
@@ -143,26 +143,9 @@ class ClientSync(ClientSyncBase[httpx.Client]):
 				content += list(decoder.parse_finalize())
 			except exceptions.DecodingError:
 				pass
-			
-			# If we have decoded an error response from the server,
-			# use that as the exception message; otherwise, just pass
-			# the exception on to the caller.
-			if len(content) == 1 \
-			   and isinstance(content[0], dict) \
-			   and "Message" in content[0]:
-				msg: str = content[0]["Message"]
-				raise exceptions.ErrorResponse(
-					status_code=response.status_code,
-					message=msg,
-					original=error
-				) from error
-			else:
-				raise exceptions.StatusError(
-					status_code=response.status_code,
-					message=str(error),
-					original=error
-				) from error
-	
+
+			cls._raise_for_response_status(error, response.status_code, content)
+
 	def _request(
 			self, method: str, path: str, params: ty.Sequence[ty.Tuple[str, str]], *,
 			auth: auth_t,
