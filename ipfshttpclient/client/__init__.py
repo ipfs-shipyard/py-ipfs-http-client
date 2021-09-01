@@ -21,7 +21,7 @@ DEFAULT_PASSWORD: ty.Optional[str] = os.getenv('PY_IPFS_HTTP_CLIENT_DEFAULT_PASS
 # for it to be considered compatible.
 VERSION_MINIMUM   = "0.5.0"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.9.0"
+VERSION_MAXIMUM   = "0.9.2"
 
 from . import base
 from . import bitswap
@@ -71,6 +71,7 @@ def assert_version(version: str, minimum: str = VERSION_MINIMUM,
 	minimum = list(map(int, minimum.split('-', 1)[0].split('.')))
 	maximum = list(map(int, maximum.split('-', 1)[0].split('.')))
 
+	print('Version', version)
 	if minimum > version or version >= maximum:
 		warnings.warn(exceptions.VersionMismatch(version, minimum, maximum))
 
