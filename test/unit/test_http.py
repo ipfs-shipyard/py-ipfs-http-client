@@ -152,6 +152,8 @@ def test_successful_request(http_client, http_server):
 
 def test_successful_request_uds(http_client_uds, http_server_uds):
 	"""Tests that a successful http request returns the proper message."""
+	print(http_client_uds)
+	print(http_server_uds)
 	http_server_uds.serve_content("okay", 200)
 	
 	res = http_client_uds.request("/okay")
