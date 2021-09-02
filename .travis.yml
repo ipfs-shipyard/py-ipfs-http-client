@@ -51,7 +51,7 @@ before_install:
       ### ==== MODIFY THIS WHEN CHANGING TARGET OR MINIMUM IPFS VERSION ==== ###
       case "${IPFS_VERSION:-latest}" in
          latest)  # Currently targeted version
-            VERSION=0.8.0
+            VERSION=0.9.1
             SHA512_LINUX=9c4b4a717696fccfea495dbfaef6d63cfffed597cf7eccbd7d849e421b72721d48f974ac0a34f8c6da66ab489af957e46a4e3e62c2f85cfb4879017016de15e6
             SHA512_DARWIN=c1fb197f88bf554533b1ed97dad078e92975d4e927a7fefe0cfd6a5cc280ed30c685255b43963c6f5978d20ceb6b750188f26eb9bddbac373297b1463cd3d9a2
             SHA512_WINDOWS=ce233e1f65107391c35643fcec653a1b30ce042c6ce72254373095c212837853dfc2a2cd9221f0b99df630615fd1acbd9603943d6e3a38dd284ae7ce6e43b997
