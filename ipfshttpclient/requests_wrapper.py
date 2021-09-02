@@ -227,6 +227,10 @@ class Session(requests.Session):
 			url = urllib.parse.urlparse(url)
 			url = url._replace(scheme="{0}+{1}".format(url.scheme, AF2NAME[int(family)]))
 			url = url.geturl()
+		print('URL', url)
+		print('Method', method)
+		print('args', *args)
+		print('kwargs', **kwargs)
 		return super().request(method, url, *args, **kwargs)
 
 
