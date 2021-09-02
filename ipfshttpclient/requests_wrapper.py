@@ -230,7 +230,7 @@ class Session(requests.Session):
 		print('URL', url)
 		print('Method', method)
 		print('args', *args)
-		print('kwargs', **kwargs)
+		# print('kwargs', **kwargs)
 		return super().request(method, url, *args, **kwargs)
 
 
