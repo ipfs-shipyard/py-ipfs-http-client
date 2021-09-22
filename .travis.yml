@@ -30,7 +30,7 @@ matrix:
         env: PYTHON_VERSION=3.6.8-macosx10.9
       - os: osx
         language: shell
-        env: PYTHON_VERSION=3.9.0-macosx10.9
+        env: PYTHON_VERSION=3.9.7-macosx10.9
      
       # Minimum testing version for Windows is 3.7 due to `-X utf8` flag support
       # being a life-saver for unbreaking the stupid INI parser used by all the
