@@ -111,7 +111,7 @@ install:
       ### ====== MODIFY THIS WHEN CHANGING MACOS PYTHON TEST VERSIONS ====== ###
       case "${PYTHON_VERSION}" in
          3.6.8-macosx10.9) MD5_MACOS="786c4d9183c754f58751d52f509bc971" ;;
-         3.9.0-macosx10.9) MD5_MACOS="16ca86fa3467e75bade26b8a9703c27f" ;;
+         3.9.0-macosx10.9) MD5_MACOS="ce8c2f885f26b09536857610644260d4" ;;
       esac
       ### ------------------------------ END ------------------------------- ###
       
