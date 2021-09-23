@@ -26,9 +26,11 @@ matrix:
       # When changing any version here also update the relevant checksum below with
       # the values found on the https://python.org/ website.
       - os: osx
+        osx_image: xcode12.5
         language: shell
         env: PYTHON_VERSION=3.6.8-macosx10.9
       - os: osx
+        osx_image: xcode12.5
         language: shell
         env: PYTHON_VERSION=3.9.7-macosx10.9
      
