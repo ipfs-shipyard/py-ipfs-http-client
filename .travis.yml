@@ -26,11 +26,13 @@ matrix:
       # When changing any version here also update the relevant checksum below with
       # the values found on the https://python.org/ website.
       - os: osx
+        osx_image: xcode12.5
         language: shell
         env: PYTHON_VERSION=3.6.8-macosx10.9
       - os: osx
+        osx_image: xcode12.5
         language: shell
-        env: PYTHON_VERSION=3.9.0-macosx10.9
+        env: PYTHON_VERSION=3.9.7-macosx10.9
      
       # Minimum testing version for Windows is 3.7 due to `-X utf8` flag support
       # being a life-saver for unbreaking the stupid INI parser used by all the
@@ -51,10 +53,10 @@ before_install:
       ### ==== MODIFY THIS WHEN CHANGING TARGET OR MINIMUM IPFS VERSION ==== ###
       case "${IPFS_VERSION:-latest}" in
          latest)  # Currently targeted version
-            VERSION=0.8.0
-            SHA512_LINUX=64d5464e5b8636c4e4d76a285350de23e77b03199037fc79e4a6ed65569788586af6993b7faa0a826a2b5ffca3795e67c0c10386f98d1be1842d9c284d3fcf07
-            SHA512_DARWIN=38d2196c7bfde43661c323c862928eb183f75d9879550f2c0eafb2b9db0bdf1b577d3bb5a201b2287c4e753628affbbbb90d37d0f9d197d00256ebefb2ff7203
-            SHA512_WINDOWS=f9e260ea039c4d263fd5ef9d6d9829b98f88d524a206985169a89549fdb46b329d2fee2ac3196885726781dae247dd1fed00a9dba3d4ddd86a6423f2374b2276
+            VERSION=0.9.1
+            SHA512_LINUX=9c4b4a717696fccfea495dbfaef6d63cfffed597cf7eccbd7d849e421b72721d48f974ac0a34f8c6da66ab489af957e46a4e3e62c2f85cfb4879017016de15e6
+            SHA512_DARWIN=a2311e22229cda24d060688142ab266a50a8756e9dbe5dcdb9ce89174cd257d4d6ad59b2357b7f2d971be97ecefb31db41ad3c9c025c2dbabb70f55c3a4f914e
+            SHA512_WINDOWS=ce233e1f65107391c35643fcec653a1b30ce042c6ce72254373095c212837853dfc2a2cd9221f0b99df630615fd1acbd9603943d6e3a38dd284ae7ce6e43b997
          ;;
          compat)  # Earliest supported version
             VERSION=0.5.0
@@ -111,7 +113,7 @@ install:
       ### ====== MODIFY THIS WHEN CHANGING MACOS PYTHON TEST VERSIONS ====== ###
       case "${PYTHON_VERSION}" in
          3.6.8-macosx10.9) MD5_MACOS="786c4d9183c754f58751d52f509bc971" ;;
-         3.9.0-macosx10.9) MD5_MACOS="16ca86fa3467e75bade26b8a9703c27f" ;;
+         3.9.7-macosx10.9) MD5_MACOS="ce8c2f885f26b09536857610644260d4" ;;
       esac
       ### ------------------------------ END ------------------------------- ###
       
