@@ -244,6 +244,7 @@ class Base(base.ClientBase):
 	        wrap_with_directory: bool = False, chunker: ty.Optional[str] = None,
 	        pin: bool = True, raw_leaves: bool = None, nocopy: bool = False,
 	        cid_version: ty.Optional[int] = None,
+			hash_function: 'sha2-256',
 	        **kwargs: base.CommonArgs):
 		"""Adds a file, several files or directory of files to IPFS
 		
@@ -350,6 +351,7 @@ class Base(base.ClientBase):
 		}  # type: ty.Dict[str, ty.Union[str, bool]]
 		for option_name, option_value in [
 			("chunker", chunker),
+			("hash", hash_function),
 			("cid-version", cid_version),
 		]:
 			if option_value is not None:
