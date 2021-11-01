@@ -186,6 +186,7 @@ class Client(files.Base, miscellaneous.Base):
 	key       = base.SectionProperty(key.Section)
 	name      = base.SectionProperty(name.Section)
 	object    = base.SectionProperty(object.Section)
+	p2p       = base.SectionProperty(p2p.Section)
 	pin       = base.SectionProperty(pin.Section)
 	pubsub    = base.SectionProperty(pubsub.Section)
 	repo      = base.SectionProperty(repo.Section)
