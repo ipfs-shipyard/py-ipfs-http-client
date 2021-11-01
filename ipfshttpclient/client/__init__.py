@@ -35,6 +35,7 @@ from . import key
 from . import miscellaneous
 from . import name
 from . import object
+from . import p2p
 from . import pin
 from . import pubsub
 from . import repo
