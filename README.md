@@ -9,7 +9,7 @@
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
-# A fork of ipfs-shipyard/py-ipfs-http-client, the official ipfshttpclient python module, which I have expanded to access IPFS's LibP2PStreamMounting feature.
+# A fork of [ipfs-shipyard/py-ipfs-http-client](https://github.com/ipfs-shipyard/py-ipfs-http-client), the official ipfshttpclient python module, which I have expanded to access IPFS's LibP2PStreamMounting feature.
 
 Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
 
