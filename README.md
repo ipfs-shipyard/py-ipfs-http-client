@@ -9,9 +9,9 @@
 
 ![Python IPFS HTTP Client Library](https://ipfs.io/ipfs/QmQJ68PFMDdAsgCZvA1UVzzn18asVcf7HVvCDgpjiSCAse)
 
-Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
+#A fork of ipfs-shipyard/py-ipfs-http-client, the official ipfshttpclient python module, which I have expanded to access IPFS's LibP2PStreamMounting feature.
 
-A fork of ipfs-shipyard/py-ipfs-http-client, the official ipfshttpclient python module, which I have expanded to access IPFS's LibP2PStreamMounting feature.
+Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
 
 **Note**: The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
 See the [relevant section of the CHANGELOG](CHANGELOG.md#py-ipfs-http-client-0411-13052019) for details. There is also a `ipfsApi` library from which this library originated that is completely
