@@ -11,6 +11,8 @@
 
 Check out [the HTTP Client reference](https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/) for the full command reference.
 
+A fork of ipfs-shipyard/py-ipfs-http-client, the official ipfshttpclient python module, which I have expanded to access IPFS's LibP2PStreamMounting feature.
+
 **Note**: The `ipfsapi` PIP package and Python module have both been renamed to `ipfshttpclient`!
 See the [relevant section of the CHANGELOG](CHANGELOG.md#py-ipfs-http-client-0411-13052019) for details. There is also a `ipfsApi` library from which this library originated that is completely
 unmaintained and does not work with any recent go-IPFS version.
@@ -222,49 +224,3 @@ and running `flit install --pth-file` from the repository root.
 
 Please see the next section for how to run tests and contribute code
 back into the project.
-
-
-### Pull requests
-
-Pull requests are welcome.  Before submitting a new pull request, please
-make sure that your code passes both the
-[code formatting](https://www.python.org/dev/peps/pep-0008/)
-(PEP-8 with tab indentation) and
-[typing](https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html)
-(PEP-484 using mypy) checks:
-
-    $ tox -e styleck -e typeck
-
-As well as the unit tests:
-
-    $ tox -e py3 -e py3-httpx
-
-If you are unsure, don't hesitate to just submit your code, and a human will
-take a look. 🙂
-
-If you can, Please make sure to include new unit tests for new features or
-changes in behavior. We aim to bring coverage to 100% at some point.
-
-#### Installing the pre-commit Hook
-
-You can arrange for the code style and typing tests to be run automatically
-before each commit by installing the GIT `pre-commit` hook:
-
-    $ ./tools/pre-commit --install
-
-### Chat with Us (IRC/Matrix)
-
-You can find us on [#py-ipfs on chat.freenode.org](http://webchat.freenode.net/?channels=%23py-ipfs)
-or in our [Matrix chat room](https://matrix.to/#/#py-ipfs:ninetailed.ninja?via=ninetailed.ninja&via=librem.one).
-Join us if you have any suggestions, questions or if you just want to discuss
-IPFS and Python in general.
-
-Please note that the channel is not monitored all the time and hence you may
-only receive a reply to your message later that day. Using Matrix makes it
-easier to stay connected in the background, so please prefer the Matrix option
-or use an IRC bouncer.
-
-## License
-
-This code is distributed under the terms of the [MIT license](https://opensource.org/licenses/MIT).  Details can be found in the file
-[LICENSE](LICENSE) in this repository.
