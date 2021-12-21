@@ -317,7 +317,8 @@ def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimpor
 		query    = "",
 		fragment = ""
 	).geturl()
-	
+
+	print(base_url)
 	return base_url, uds_path, family, host_numeric
 
 
