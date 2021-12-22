@@ -318,7 +318,6 @@ def multiaddr_to_url_data(addr: addr_t, base: str  # type: ignore[no-any-unimpor
 		fragment = ""
 	).geturl()
 
-	print(base_url)
 	return base_url, uds_path, family, host_numeric
 
 
@@ -580,7 +579,9 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		"""
 		method = "POST"
 		parser = encoding.get_encoding(decoder)
-		
+
+		print(path)
+		print(headers)
 		closables, res = self._request(
 			method, path, map_args_to_params(args, opts, offline=offline),
 			auth=auth, data=data, headers=headers, timeout=timeout,
