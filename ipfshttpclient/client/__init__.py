@@ -36,6 +36,7 @@ from . import miscellaneous
 from . import name
 from . import object
 from . import pin
+from . import pinremote
 from . import pubsub
 from . import repo
 #TODO: `from . import stats`
@@ -186,6 +187,7 @@ class Client(files.Base, miscellaneous.Base):
 	name      = base.SectionProperty(name.Section)
 	object    = base.SectionProperty(object.Section)
 	pin       = base.SectionProperty(pin.Section)
+	pinremote = base.SectionProperty(pinremote.Section)
 	pubsub    = base.SectionProperty(pubsub.Section)
 	repo      = base.SectionProperty(repo.Section)
 	swarm     = base.SectionProperty(swarm.Section)
