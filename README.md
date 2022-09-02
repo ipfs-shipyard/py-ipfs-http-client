@@ -1,3 +1,7 @@
+> #  ⚠️ THIS PROJECT IS LOOKING FOR A MAINTAINER 
+> 
+> See https://github.com/ipfs-shipyard/py-ipfs-http-client/issues/316
+
 # py-ipfs-http-client
 
 [![Made by the IPFS Community](https://img.shields.io/badge/made%20by-IPFS%20Community-blue.svg?style=flat-square)](https://docs.ipfs.io/community/)
