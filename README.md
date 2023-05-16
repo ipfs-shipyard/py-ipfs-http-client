@@ -1,6 +1,4 @@
-> #  ⚠️ THIS PROJECT IS LOOKING FOR A MAINTAINER 
-> 
-> See https://github.com/ipfs-shipyard/py-ipfs-http-client/issues/316
+[![Under Active Development](https://img.shields.io/badge/status-under%20active%20development-yellowgreen)](https://github.com/ipfs-shipyard/py-ipfs-http-client/issues/316#issuecomment-1548433735)
 
 # py-ipfs-http-client
 
