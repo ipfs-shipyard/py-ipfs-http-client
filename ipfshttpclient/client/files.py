@@ -8,7 +8,7 @@ from .. import utils
 
 class Section(base.SectionBase):
 	"""Manage files in IPFS's virtual “Mutable File System” (MFS) file storage space"""
-	
+
 	@base.returns_no_item
 	def cp(self, source: str, dest: str, **kwargs: base.CommonArgs):
 		"""Creates a copy of a file within the MFS
@@ -74,8 +74,8 @@ class Section(base.SectionBase):
 		"""
 		args = (path,)
 		return self._client.request('/files/ls', args, decoder='json', **kwargs)
-	
-	
+
+
 	@base.returns_no_item
 	def mkdir(self, path: str, parents: bool = False, **kwargs: base.CommonArgs):
 		"""Creates a directory within the MFS
@@ -93,11 +93,11 @@ class Section(base.SectionBase):
 			if the requested directory already exists
 		"""
 		kwargs.setdefault("opts", {})["parents"] = parents
-		
+
 		args = (path,)
 		return self._client.request('/files/mkdir', args, **kwargs)
-	
-	
+
+
 	@base.returns_no_item
 	def mv(self, source: str, dest: str, **kwargs: base.CommonArgs):
 		"""Moves files and directories within the MFS
@@ -115,8 +115,8 @@ class Section(base.SectionBase):
 		"""
 		args = (source, dest)
 		return self._client.request('/files/mv', args, **kwargs)
-	
-	
+
+
 	def read(self, path: str, offset: int = 0, count: ty.Optional[int] = None,
 	         **kwargs: base.CommonArgs):
 		"""Reads a file stored in the MFS
@@ -143,11 +143,11 @@ class Section(base.SectionBase):
 		if count is not None:
 			opts["count"] = count
 		kwargs.setdefault("opts", {}).update(opts)
-		
+
 		args = (path,)
 		return self._client.request('/files/read', args, **kwargs)
-	
-	
+
+
 	@base.returns_no_item
 	def rm(self, path: str, recursive: bool = False, **kwargs: base.CommonArgs):
 		"""Removes a file from the MFS
@@ -169,11 +169,11 @@ class Section(base.SectionBase):
 			Recursively remove directories?
 		"""
 		kwargs.setdefault("opts", {})["recursive"] = recursive
-		
+
 		args = (path,)
 		return self._client.request('/files/rm', args, **kwargs)
-	
-	
+
+
 	@base.returns_single_item(base.ResponseBase)
 	def stat(self, path: str, **kwargs: base.CommonArgs):
 		"""Returns basic ``stat`` information for an MFS file (including its hash)
@@ -195,8 +195,8 @@ class Section(base.SectionBase):
 		"""
 		args = (path,)
 		return self._client.request('/files/stat', args, decoder='json', **kwargs)
-	
-	
+
+
 	@base.returns_no_item
 	def write(self, path: str, file: utils.clean_file_t, offset: int = 0,
 	          create: bool = False, truncate: bool = False,
@@ -226,7 +226,7 @@ class Section(base.SectionBase):
 		if count is not None:
 			opts["count"] = count
 		kwargs.setdefault("opts", {}).update(opts)
-		
+
 		args = (path,)
 		body, headers = multipart.stream_files(file, chunk_size=self.chunk_size)
 		return self._client.request('/files/write', args, data=body, headers=headers, **kwargs)
@@ -234,8 +234,8 @@ class Section(base.SectionBase):
 
 class Base(base.ClientBase):
 	files = base.SectionProperty(Section)
-	
-	
+
+
 	def add(self, file: utils.clean_file_t, *files: utils.clean_file_t,
 	        recursive: bool = False,
 	        pattern: multipart.match_spec_t[ty.AnyStr] = None,
@@ -244,6 +244,7 @@ class Base(base.ClientBase):
 	        wrap_with_directory: bool = False, chunker: ty.Optional[str] = None,
 	        pin: bool = True, raw_leaves: bool = None, nocopy: bool = False,
 	        cid_version: ty.Optional[int] = None,
+			hash_function: "sha2-256",
 	        **kwargs: base.CommonArgs):
 		"""Adds a file, several files or directory of files to IPFS
 		
@@ -350,17 +351,18 @@ class Base(base.ClientBase):
 		}  # type: ty.Dict[str, ty.Union[str, bool]]
 		for option_name, option_value in [
 			("chunker", chunker),
+			("hash", hash_function),
 			("cid-version", cid_version),
 		]:
 			if option_value is not None:
 				opts[option_name] = option_value
 		kwargs.setdefault("opts", {}).update(opts)
-		
+
 		# There may be other cases where nocopy will silently fail to work, but
 		# this is by far the most obvious one
 		if isinstance(file, int) and nocopy:
 			raise ValueError("Passing file descriptors is incompatible with *nocopy*")
-		
+
 		assert not isinstance(file, (tuple, list)), \
 		       "Use `client.add(name1, name2, …)` to add several items"
 		multiple = (len(files) > 0)
@@ -369,7 +371,7 @@ class Base(base.ClientBase):
 			to_send, chunk_size=self.chunk_size, follow_symlinks=follow_symlinks,
 			period_special=period_special, patterns=pattern, recursive=recursive
 		)
-		
+
 		resp = self._client.request('/add', decoder='json', data=body, headers=headers, **kwargs)
 		if not multiple and not is_dir and not wrap_with_directory:
 			assert len(resp) == 1
@@ -377,8 +379,8 @@ class Base(base.ClientBase):
 		elif kwargs.get("stream", False):
 			return base.ResponseWrapIterator(resp, base.ResponseBase)
 		return [base.ResponseBase(v) for v in resp]
-	
-	
+
+
 	@base.returns_no_item
 	def get(self, cid: base.cid_t, target: utils.path_t = ".",
 	        **kwargs: base.CommonArgs) -> None:
@@ -395,8 +397,8 @@ class Base(base.ClientBase):
 		"""
 		args = (str(cid),)
 		return self._client.download('/get', target, args, **kwargs)
-	
-	
+
+
 	def cat(self, cid: base.cid_t, offset: int = 0,
 	        length: ty.Optional[int] = None, **kwargs: base.CommonArgs):
 		r"""Retrieves the contents of a file identified by hash
@@ -432,8 +434,8 @@ class Base(base.ClientBase):
 			opts['length'] = length
 		kwargs.setdefault('opts', opts)
 		return self._client.request('/cat', args, **kwargs)
-	
-	
+
+
 	@base.returns_single_item(base.ResponseBase)
 	def ls(self, cid: base.cid_t, **kwargs: base.CommonArgs):
 		"""Returns a list of objects linked to by the given hash

@@ -30,11 +30,11 @@ class Section(base.SectionBase):
 		+------+-----------------------------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["recursive"] = recursive
-		
+
 		args = (str(path), *(str(p) for p in paths))
 		return self._client.request('/pin/add', args, decoder='json', **kwargs)
-	
-	
+
+
 	@base.returns_single_item(base.ResponseBase)
 	def ls(self, *paths: base.cid_t, type: str = "all", **kwargs: base.CommonArgs):
 		"""Lists objects pinned in the local repository
@@ -108,14 +108,13 @@ class Section(base.SectionBase):
 		+------+--------------------------------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["type"] = type
-		
+
 		args = tuple(str(p) for p in paths)
 		return self._client.request('/pin/ls', args, decoder='json', **kwargs)
-	
-	
+
 	@base.returns_single_item(base.ResponseBase)
 	def rm(self, path: base.cid_t, *paths: base.cid_t, recursive: bool = True,
-	       **kwargs: base.CommonArgs):
+		   **kwargs: base.CommonArgs):
 		"""Removes a pinned object from local storage
 		
 		Removes the pin from the given object allowing it to be garbage
@@ -149,14 +148,13 @@ class Section(base.SectionBase):
 		+------+-------------------------------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["recursive"] = recursive
-		
+
 		args = (str(path), *(str(p) for p in paths))
 		return self._client.request('/pin/rm', args, decoder='json', **kwargs)
-	
-	
+
 	@base.returns_single_item(base.ResponseBase)
 	def update(self, from_path: base.cid_t, to_path: base.cid_t, *,
-	           unpin: bool = True, **kwargs: base.CommonArgs):
+			   unpin: bool = True, **kwargs: base.CommonArgs):
 		"""Replaces one pin with another
 		
 		Updates one pin to another, making sure that all objects in the new pin
@@ -190,14 +188,13 @@ class Section(base.SectionBase):
 		+------+-------------------------------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["unpin"] = unpin
-		
+
 		args = (str(from_path), str(to_path))
 		return self._client.request('/pin/update', args, decoder='json', **kwargs)
-	
-	
+
 	@base.returns_multiple_items(base.ResponseBase, stream=True)
 	def verify(self, path: base.cid_t, *paths: base.cid_t, verbose: bool = False,
-	           **kwargs: base.CommonArgs):
+			   **kwargs: base.CommonArgs):
 		"""Verifies that all recursive pins are completely available in the local
 		repository
 		
@@ -240,6 +237,6 @@ class Section(base.SectionBase):
 		+-----+----------------------------------------------------+
 		"""
 		kwargs.setdefault("opts", {})["verbose"] = verbose
-		
+
 		args = (str(path), *(str(p) for p in paths))
 		return self._client.request('/pin/verify', args, decoder='json', stream=True, **kwargs)

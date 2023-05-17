@@ -19,9 +19,9 @@ DEFAULT_PASSWORD: ty.Optional[str] = os.getenv('PY_IPFS_HTTP_CLIENT_DEFAULT_PASS
 # This range inclusive-exclusive, so the daemon version must match
 #   `VERSION_MINIMUM <= version < VERSION_MAXIMUM`
 # for it to be considered compatible.
-VERSION_MINIMUM   = "0.5.0"
+VERSION_MINIMUM = "0.5.0"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.9.0"
+VERSION_MAXIMUM = "0.11.0"
 
 from . import base
 from . import bitswap
@@ -38,7 +38,7 @@ from . import object
 from . import pin
 from . import pubsub
 from . import repo
-#TODO: `from . import stats`
+# TODO: `from . import stats`
 from . import swarm
 from . import unstable
 
@@ -46,8 +46,8 @@ from .. import encoding, exceptions, http, multipart, utils
 
 
 def assert_version(version: str, minimum: str = VERSION_MINIMUM,
-                   maximum: str = VERSION_MAXIMUM,
-                   blacklist: ty.Iterable[str] = VERSION_BLACKLIST) -> None:
+				   maximum: str = VERSION_MAXIMUM,
+				   blacklist: ty.Iterable[str] = VERSION_BLACKLIST) -> None:
 	"""Make sure that the given daemon version is supported by this client
 	version.
 
@@ -83,16 +83,16 @@ def assert_version(version: str, minimum: str = VERSION_MINIMUM,
 def connect(
 		addr: http.addr_t = DEFAULT_ADDR,
 		base: str = DEFAULT_BASE, *,
-		
+
 		chunk_size: int = multipart.default_chunk_size,
 		offline: bool = False,
 		session: bool = False,
-		
+
 		auth: http.auth_t = None,
 		cookies: http.cookies_t = None,
 		headers: http.headers_t = {},
 		timeout: http.timeout_t = 120,
-		
+
 		username: ty.Optional[str] = DEFAULT_USERNAME,
 		password: ty.Optional[str] = DEFAULT_PASSWORD
 ):
@@ -119,10 +119,10 @@ def connect(
 		auth=auth, cookies=cookies, headers=headers, timeout=timeout,
 		username=username, password=password,
 	)
-	
+
 	# Query version number from daemon and validate it
 	assert_version(client.apply_workarounds()["Version"])
-	
+
 	return client
 
 
@@ -172,37 +172,39 @@ class Client(files.Base, miscellaneous.Base):
 			def close(self):  # Call this when you're done
 				self._client.close()
 	"""
-	
+
 	# Fix up docstring so that Sphinx doesn't ignore the constructors parameter list
 	__doc__ += "\n\n" + "\n".join(l[1:] for l in base.ClientBase.__init__.__doc__.split("\n"))
-	
-	bitswap   = base.SectionProperty(bitswap.Section)
-	block     = base.SectionProperty(block.Section)
+
+	bitswap = base.SectionProperty(bitswap.Section)
+	block = base.SectionProperty(block.Section)
 	bootstrap = base.SectionProperty(bootstrap.Section)
-	config    = base.SectionProperty(config.Section)
-	dag       = base.SectionProperty(dag.Section)
-	dht       = base.SectionProperty(dht.Section)
-	key       = base.SectionProperty(key.Section)
-	name      = base.SectionProperty(name.Section)
-	object    = base.SectionProperty(object.Section)
-	pin       = base.SectionProperty(pin.Section)
-	pubsub    = base.SectionProperty(pubsub.Section)
-	repo      = base.SectionProperty(repo.Section)
-	swarm     = base.SectionProperty(swarm.Section)
-	unstable  = base.SectionProperty(unstable.Section)
-	
-	
+	config = base.SectionProperty(config.Section)
+	dag = base.SectionProperty(dag.Section)
+	dht = base.SectionProperty(dht.Section)
+	key = base.SectionProperty(key.Section)
+	name = base.SectionProperty(name.Section)
+	object = base.SectionProperty(object.Section)
+	pin = base.SectionProperty(pin.Section)
+	pubsub = base.SectionProperty(pubsub.Section)
+	repo = base.SectionProperty(repo.Section)
+	swarm = base.SectionProperty(swarm.Section)
+	unstable = base.SectionProperty(unstable.Section)
+
 	######################
 	# SESSION MANAGEMENT #
 	######################
-	
+
 	def __enter__(self):
 		self._client.open_session()
 		return self
-	
+
 	def __exit__(self, exc_type, exc_value, traceback):
 		self.close()
-	
+
+	def get_client(self):
+		return self._client
+
 	def close(self):
 		"""Close any currently open client session and free any associated
 		resources.
@@ -215,12 +217,11 @@ class Client(files.Base, miscellaneous.Base):
 		in the future. See the class's description for details.
 		"""
 		self._client.close_session()
-	
-	
+
 	###########
 	# HELPERS #
 	###########
-	
+
 	def apply_workarounds(self):
 		"""Query version information of the referenced daemon and enable any
 		   workarounds known for the corresponding version
@@ -231,13 +232,13 @@ class Client(files.Base, miscellaneous.Base):
 				The version information returned by the daemon
 		"""
 		version_info = self.version()
-		
+
 		version = tuple(map(int, version_info["Version"].split('-', 1)[0].split('.')))
-		
+
 		self._workarounds.clear()
-		
+
 		return version_info
-	
+
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
 	def add_bytes(self, data: bytes, **kwargs):
@@ -262,7 +263,7 @@ class Client(files.Base, miscellaneous.Base):
 		"""
 		body, headers = multipart.stream_bytes(data, chunk_size=self.chunk_size)
 		return self._client.request('/add', decoder='json',
-		                            data=body, headers=headers, **kwargs)
+									data=body, headers=headers, **kwargs)
 
 	@utils.return_field('Hash')
 	@base.returns_single_item(dict)
@@ -288,7 +289,7 @@ class Client(files.Base, miscellaneous.Base):
 		"""
 		body, headers = multipart.stream_text(string, chunk_size=self.chunk_size)
 		return self._client.request('/add', decoder='json',
-		                            data=body, headers=headers, **kwargs)
+									data=body, headers=headers, **kwargs)
 
 	def add_json(self, json_obj, **kwargs):
 		"""Adds a json-serializable Python dict as a json file to IPFS.
@@ -309,8 +310,7 @@ class Client(files.Base, miscellaneous.Base):
 				Hash of the added IPFS object
 		"""
 		return self.add_bytes(encoding.Json().encode(json_obj), **kwargs)
-	
-	
+
 	@base.returns_single_item()
 	def get_json(self, cid, **kwargs):
 		"""Loads a json object from IPFS.
