@@ -20,6 +20,7 @@ description-file = "README.md"
 #	     versions ensure that those are all available as well.)
 #
 #        Maintain this concurrently with verify.sh
+
 requires-python = ">=3.6.2,!=3.7.0,!=3.7.1"
 requires = [
 	"multiaddr (>=0.0.7)",
@@ -49,6 +50,7 @@ classifiers = [
 	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
+	
 ]
 
 [tool.flit.metadata.urls]
