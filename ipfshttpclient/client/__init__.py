@@ -36,7 +36,6 @@ from . import miscellaneous
 from . import name
 from . import object
 from . import pin
-from . import pubsub
 from . import repo
 #TODO: `from . import stats`
 from . import swarm
