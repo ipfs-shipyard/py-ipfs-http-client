@@ -1,6 +1,6 @@
 """HTTP client for API requests based on good old requests library
 
-This exists mainly for Python 3.5 compatibility.
+This exists while httpx remains in beta.
 """
 
 import math
@@ -20,8 +20,11 @@ from .http_common import (
 	Closable,
 )
 
-PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
-                  not in ("false", "no"))
+PATCH_REQUESTS = (
+	os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
+	not in ("false", "no")
+)
+
 if PATCH_REQUESTS:
 	from . import requests_wrapper as requests
 elif not ty.TYPE_CHECKING:  # pragma: no cover (always enabled in production)
@@ -117,8 +120,9 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 		except:  # pragma: no cover
 			session.close()
 			raise
-	
-	def _do_raise_for_status(self, response: requests.Request) -> None:  # type: ignore[name-defined]
+
+	@classmethod
+	def _do_raise_for_status(cls, response: requests.Response) -> None:  # type: ignore[name-defined]
 		try:
 			response.raise_for_status()
 		except requests.exceptions.HTTPError as error:  # type: ignore[attr-defined]
@@ -131,17 +135,8 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			except exceptions.DecodingError:
 				pass
 
-			# If we have decoded an error response from the server,
-			# use that as the exception message; otherwise, just pass
-			# the exception on to the caller.
-			if len(content) == 1 \
-			   and isinstance(content[0], dict) \
-			   and "Message" in content[0]:
-				msg = content[0]["Message"]
-				raise exceptions.ErrorResponse(msg, error) from error
-			else:
-				raise exceptions.StatusError(error) from error
-	
+			cls._raise_for_response_status(error, response.status_code, content)
+
 	def _request(
 			self, method: str, path: str, params: ty.Sequence[ty.Tuple[str, str]], *,
 			auth: auth_t,
