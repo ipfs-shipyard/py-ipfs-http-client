@@ -35,6 +35,7 @@ from . import key
 from . import miscellaneous
 from . import name
 from . import object
+from . import p2p
 from . import pin
 from . import repo
 #TODO: `from . import stats`
@@ -184,6 +185,7 @@ class Client(files.Base, miscellaneous.Base):
 	key       = base.SectionProperty(key.Section)
 	name      = base.SectionProperty(name.Section)
 	object    = base.SectionProperty(object.Section)
+	p2p       = base.SectionProperty(p2p.Section)
 	pin       = base.SectionProperty(pin.Section)
 	repo      = base.SectionProperty(repo.Section)
 	swarm     = base.SectionProperty(swarm.Section)
