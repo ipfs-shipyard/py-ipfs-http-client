@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  ipfs:
+    build:
+      dockerfile: ../../tools/ipfs/Dockerfile
+      context: ../../tools/ipfs
+    expose: [5001]
+
+  proxy:
+    depends_on: [ipfs]
+    build:
+      dockerfile: ../../tools/nginx/Dockerfile
+      context: ../../tools/nginx
+    ports: [80:80]

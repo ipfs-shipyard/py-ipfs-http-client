@@ -20,8 +20,11 @@ O_DIRECTORY: int = getattr(os, "O_DIRECTORY", 0)
 FAKE_FILE1_PATH = conftest.TEST_DIR / "fake_dir" / "fsdfgh"
 FAKE_FILE2_PATH = conftest.TEST_DIR / "fake_dir" / "popoiopiu"
 
-FAKE_FILE1_HASH = {"Hash": "QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX",
-                   "Name": "fsdfgh", "Size": "16"}
+FAKE_FILE1_HASH = {
+	"Hash": "QmQcCtMgLVwvMQGu6mvsRYLjwqrZJcYtH4mboM9urWW9vX",
+	"Name": "fsdfgh", "Size": "16"
+}
+
 FAKE_FILE1_RAW_LEAVES_HASH = {
 	"Hash": "zb2rhXxZH5PFgCwBAm7xQMoBa6QWqytN8NPvXK7Qc9McDz9zJ",
 	"Name": "fsdfgh", "Size": "8"
