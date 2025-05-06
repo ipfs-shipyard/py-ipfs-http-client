@@ -15,12 +15,10 @@ description-file = "README.md"
 # Notes: `typing.NoReturn` was introduced post-release in Python 3.5.4 and 3.6.2 and had
 #        a critical bug (https://bugs.python.org/issue34921) in 3.7.0 to 3.7.1. So the
 #        compatible versions below reflect the range of Python versions with working
-#        `typing.NoReturn` function signature support. (Also, many other `typing` module
-#        items were only introduced post-release in 3.6 and version restrictions on these
-#	     versions ensure that those are all available as well.)
+#        `typing.NoReturn` function signature support.
 #
 #        Maintain this concurrently with verify.sh
-requires-python = ">=3.6.2,!=3.7.0,!=3.7.1"
+requires-python = ">=3.7.2"
 requires = [
 	"multiaddr (>=0.0.7)",
 	"requests (>=2.11)"
@@ -45,7 +43,6 @@ classifiers = [
 	# Specify the Python versions you support here. In particular, ensure
 	# that you indicate whether you support Python 2, Python 3 or both.
 	"Programming Language :: Python :: 3 :: Only",
-	"Programming Language :: Python :: 3.6",
 	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",

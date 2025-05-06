@@ -19,14 +19,10 @@ from .exceptions import MatcherSpecInvalidError
 # This will get inlined if/when PyCharm no longer flags typing.AnyStr.
 AnyStr = ty.TypeVar('AnyStr', bytes, str)
 
-if sys.version_info >= (3, 7):  #PY37+
-	re_pattern_type = re.Pattern
-	if ty.TYPE_CHECKING:
-		re_pattern_t = re.Pattern[AnyStr]
-	else:
-		re_pattern_t = re.Pattern
-else:  #PY36-
-	re_pattern_t = re_pattern_type = type(re.compile(""))
+if ty.TYPE_CHECKING:
+	re_pattern_t = re.Pattern[AnyStr]
+else:
+	re_pattern_t = re.Pattern
 
 # Windows does not have os.O_DIRECTORY
 O_DIRECTORY: int = getattr(os, "O_DIRECTORY", 0)
@@ -475,7 +471,7 @@ def _matcher_from_spec(spec: match_spec_t[AnyStr], *,
 
 def _recursive_matcher_from_spec(spec: match_spec_t[AnyStr], *,
                                  period_special: bool = True) -> Matcher[AnyStr]:
-	if isinstance(spec, re_pattern_type):
+	if isinstance(spec, re.Pattern):
 		return ReMatcher(spec)
 	elif isinstance(spec, (str, bytes)):
 		return GlobMatcher(spec, period_special=period_special)
@@ -576,8 +572,6 @@ class walk(ty.Generator[FSNodeEntry[AnyStr], ty.Any, None], ty.Generic[AnyStr]):
 			os.stat(directory_str)
 			
 			# … and possibly open it as a FD if this is supported by the platform
-			#
-			# Note: `os.fwalk` support for binary paths was only added in 3.7+.
 			directory_str_or_fd: ty.Union[AnyStr, int] = directory_str
 			if HAVE_FWALK and (not isinstance(directory_str, bytes) or HAVE_FWALK_BYTES):
 				fd = os.open(directory_str, os.O_RDONLY | O_DIRECTORY)

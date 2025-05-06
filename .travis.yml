@@ -1,15 +1,14 @@
 # Config file for automatic testing at travis-ci.com
 
 language: python
-dist: bionic
+dist: focal
 
 matrix:
    include:
-      - python: "3.6"
       - python: "3.7"
       - python: "3.8"
       - python: "3.9"
-      - python: "pypy3"  # Python 3.6.12-7.3.3 as of April 2021
+      # - python: "pypy3"  travis doesn't support pypy on Python 3.7 yet
       - python: "3.9"
         env: IPFS_VERSION=compat
       - python: "3.9"
@@ -20,14 +19,14 @@ matrix:
       - python: "3.9"
         env: TOXENV=typeck
         before_install: ":"
-     
+
       # Testing on macOS/Darwin tends to be much slower so only test the bare minimum
       #
       # When changing any version here also update the relevant checksum below with
       # the values found on the https://python.org/ website.
       - os: osx
         language: shell
-        env: PYTHON_VERSION=3.6.8-macosx10.9
+        env: PYTHON_VERSION=3.7.9-macosx10.9
       - os: osx
         language: shell
         env: PYTHON_VERSION=3.9.0-macosx10.9
@@ -110,7 +109,7 @@ install:
       
       ### ====== MODIFY THIS WHEN CHANGING MACOS PYTHON TEST VERSIONS ====== ###
       case "${PYTHON_VERSION}" in
-         3.6.8-macosx10.9) MD5_MACOS="786c4d9183c754f58751d52f509bc971" ;;
+         3.7.9-macosx10.9) MD5_MACOS="4b544fc0ac8c3cffdb67dede23ddb79e" ;;
          3.9.0-macosx10.9) MD5_MACOS="16ca86fa3467e75bade26b8a9703c27f" ;;
       esac
       ### ------------------------------ END ------------------------------- ###
