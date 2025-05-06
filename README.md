@@ -210,10 +210,8 @@ You can submit bug reports using the
 
 ### Setting up a local development environment
 
- 1. Follow the instructions in the IPFS documentation to install go-IPFS into your `${PATH}`:  
-    https://docs.ipfs.io/install/command-line/
- 2. Follow the instructions in the (Python) tox documentation to install the `tox` Python environment runner:  
-    https://tox.readthedocs.io/en/latest/install.html
+ 1. [Install tox](https://tox.readthedocs.io/en/latest/install.html)
+ 2. [Install a local IPFS server](tools/ipfs/README.md):
  3. Clone the GIT repository if you haven't already:  
     `git clone https://github.com/ipfs-shipyard/py-ipfs-http-client.git`
 
@@ -237,15 +235,16 @@ make sure that your code passes both the
 
     $ tox -e styleck -e typeck
 
-As well as the unit tests:
+As well as the tests:
 
     $ tox -e py3 -e py3-httpx
 
 If you are unsure, don't hesitate to just submit your code, and a human will
 take a look. 🙂
 
-If you can, Please make sure to include new unit tests for new features or
-changes in behavior. We aim to bring coverage to 100% at some point.
+Please make sure to include new unit tests for new features or
+changes in behavior.
+
 
 #### Installing the pre-commit Hook
 
