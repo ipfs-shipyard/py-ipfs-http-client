@@ -21,7 +21,7 @@ DEFAULT_PASSWORD: ty.Optional[str] = os.getenv('PY_IPFS_HTTP_CLIENT_DEFAULT_PASS
 # for it to be considered compatible.
 VERSION_MINIMUM   = "0.5.0"
 VERSION_BLACKLIST = []
-VERSION_MAXIMUM   = "0.9.0"
+VERSION_MAXIMUM   = "0.19.0"
 
 from . import base
 from . import bitswap
