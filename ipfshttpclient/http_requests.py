@@ -5,7 +5,7 @@ This exists mainly for Python 3.5 compatibility.
 
 import math
 import http.client
-import os
+import requests
 import typing as ty
 import urllib.parse
 
@@ -19,13 +19,8 @@ from .http_common import (
 	addr_t, auth_t, cookies_t, headers_t, params_t, reqdata_sync_t, timeout_t,
 	Closable,
 )
-
-PATCH_REQUESTS = (os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
-                  not in ("false", "no"))
-if PATCH_REQUESTS:
-	from . import requests_wrapper as requests
-elif not ty.TYPE_CHECKING:  # pragma: no cover (always enabled in production)
-	import requests
+from .requests_wrapper import PATCH_REQUESTS
+from .requests_wrapper import wrapped_session
 
 
 def map_args_to_requests(
@@ -70,7 +65,7 @@ def map_args_to_requests(
 	return kwargs
 
 
-class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined]
+class ClientSync(ClientSyncBase[requests.Session]):
 	__slots__ = ("_base_url", "_default_timeout", "_request_proxies", "_session_props")
 	#_base_url: str
 	#_default_timeout: timeout_t
@@ -92,7 +87,8 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			params=params,
 		)
 		self._default_timeout = timeout
-		if PATCH_REQUESTS:  # pragma: no branch (always enabled in production)
+
+		if PATCH_REQUESTS:
 			self._session_props["family"] = family
 		
 		# Ensure that no proxy lookups are done for the UDS pseudo-hostname
@@ -106,8 +102,8 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 				"no_proxy": urllib.parse.quote(uds_path, safe=""),
 			}
 	
-	def _make_session(self) -> requests.Session:  # type: ignore[name-defined]
-		session = requests.Session()  # type: ignore[attr-defined]
+	def _make_session(self) -> requests.Session:
+		session = wrapped_session()
 		try:
 			for name, value in self._session_props.items():
 				setattr(session, name, value)
@@ -118,10 +114,10 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			session.close()
 			raise
 	
-	def _do_raise_for_status(self, response: requests.Request) -> None:  # type: ignore[name-defined]
+	def _do_raise_for_status(self, response: requests.Response) -> None:
 		try:
 			response.raise_for_status()
-		except requests.exceptions.HTTPError as error:  # type: ignore[attr-defined]
+		except requests.exceptions.HTTPError as error:
 			content = []
 			try:
 				decoder = encoding.get_encoding("json")
@@ -155,7 +151,7 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			path = path[1:]
 		
 		url = urllib.parse.urljoin(self._base_url, path)
-		
+
 		try:
 			# Determine session object to use
 			closables, session = self._access_session()
@@ -172,13 +168,15 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 						timeout=(timeout if timeout is not None else self._default_timeout),
 					),
 					proxies=self._request_proxies,
-					data=data,
+					# requests.Session.request does not accept Optional[Iterator[bytes]],
+					# but we seem to be passing that here.
+					data=data,  # type: ignore[arg-type]
 					stream=True,
 				)
 				closables.insert(0, res)
 			except (requests.ConnectTimeout, requests.Timeout) as error:  # type: ignore[attr-defined]
 				raise exceptions.TimeoutError(error) from error
-			except requests.ConnectionError as error:  # type: ignore[attr-defined]
+			except requests.ConnectionError as error:
 				# Report protocol violations separately
 				#
 				# This used to happen because requests wouldn't catch
@@ -196,7 +194,7 @@ class ClientSync(ClientSyncBase[requests.Session]):  # type: ignore[name-defined
 			# (optionally incorporating the response message, if available)
 			self._do_raise_for_status(res)
 			
-			return closables, res.iter_content(chunk_size=chunk_size)
+			return closables, (portion for portion in res.iter_content(chunk_size=chunk_size))
 		except:
 			for closable in closables:
 				closable.close()

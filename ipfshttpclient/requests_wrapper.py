@@ -1,18 +1,20 @@
-# type: ignore
 """Exposes the full ``requests`` HTTP library API, while adding an extra
 ``family`` parameter to all HTTP request operations that may be used to restrict
 the address family used when resolving a domain-name to an IP address.
 """
+
+import os
 import socket
 import urllib.parse
 
 import requests
 import requests.adapters
-import urllib3
-import urllib3.connection
-import urllib3.exceptions
-import urllib3.poolmanager
-import urllib3.util.connection
+import typing as ty
+import urllib3  # type: ignore[import]
+import urllib3.connection  # type: ignore[import]
+import urllib3.exceptions  # type: ignore[import]
+import urllib3.poolmanager  # type: ignore[import]
+import urllib3.util.connection  # type: ignore[import]
 
 AF2NAME = {
 	int(socket.AF_INET):  "ip4",
@@ -21,6 +23,11 @@ AF2NAME = {
 if hasattr(socket, "AF_UNIX"):
 	AF2NAME[int(socket.AF_UNIX)] = "unix"
 NAME2AF = {name: af for af, name in AF2NAME.items()}
+
+PATCH_REQUESTS = (
+	os.environ.get("PY_IPFS_HTTP_CLIENT_PATCH_REQUESTS", "yes").lower()
+	not in ("false", "no")
+)
 
 
 # This function is copied from urllib3/util/connection.py (that in turn copied
@@ -31,9 +38,13 @@ NAME2AF = {name: af for af, name in AF2NAME.items()}
 # The entire remainder of this file after this only exists to ensure that this
 # `family` parameter is exposed all the way up to request's `Session` interface,
 # storing it as part of the URL scheme while traversing most of the layers.
-def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
-                      source_address=None, socket_options=None,
-                      family=socket.AF_UNSPEC):
+def create_connection(
+		address: ty.Tuple[str, int],
+		timeout: int = socket._GLOBAL_DEFAULT_TIMEOUT,  # type: ignore[attr-defined]
+		source_address: ty.Optional[ty.Union[ty.Tuple[str, int], str, bytes]] = None,
+		socket_options: ty.Optional[ty.List[ty.Tuple[int, int, ty.Union[int, bytes]]]] = None,
+		family: int = socket.AF_UNSPEC
+) -> socket.socket:
 	host, port = address
 	if host.startswith('['):
 		host = host.strip('[]')
@@ -44,7 +55,29 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 
 	# Extension for Unix domain sockets
 	if hasattr(socket, "AF_UNIX") and family == socket.AF_UNIX:
-		gai_result = [(socket.AF_UNIX, socket.SOCK_STREAM, 0, "", host)]
+		gai_result: ty.Union[
+			ty.List[
+				ty.Tuple[
+					socket.AddressFamily,
+					socket.SocketKind,
+					int,
+					str,
+					str
+				]
+			],
+			ty.List[
+				ty.Tuple[
+					socket.AddressFamily,
+					socket.SocketKind,
+					int,
+					str,
+					ty.Union[
+						ty.Tuple[str, int],
+						ty.Tuple[str, int, int, int]
+					]
+				]
+			]
+		] = [(socket.AF_UNIX, socket.SOCK_STREAM, 0, "", host)]
 	else:
 		gai_result = socket.getaddrinfo(host, port, family, socket.SOCK_STREAM)
 
@@ -59,7 +92,7 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 				for opt in socket_options:
 					sock.setsockopt(*opt)
 
-			if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+			if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:  # type: ignore[attr-defined]
 				sock.settimeout(timeout)
 			if source_address:
 				sock.bind(source_address)
@@ -69,7 +102,6 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 			err = e
 			if sock is not None:
 				sock.close()
-				sock = None
 
 	if err is not None:
 		raise err
@@ -79,8 +111,11 @@ def create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
 
 # Override the `urllib3` low-level Connection objects that do the actual work
 # of speaking HTTP
-def _kw_scheme_to_family(kw, base_scheme):
-	family = socket.AF_UNSPEC
+def _kw_scheme_to_family(
+		kw: ty.Dict[str, ty.Any],
+		base_scheme: str
+) -> ty.Union[int, socket.AddressFamily]:
+	family: ty.Union[int, socket.AddressFamily] = socket.AF_UNSPEC
 	scheme = kw.pop("scheme", None)
 	if isinstance(scheme, str):
 		parts = scheme.rsplit("+", 1)
@@ -90,26 +125,26 @@ def _kw_scheme_to_family(kw, base_scheme):
 
 
 class ConnectionOverrideMixin:
-	def _new_conn(self):
+	def _new_conn(self) -> socket.socket:
 		extra_kw = {
-			"family": self.family
+			"family": self.family  # type: ignore[attr-defined]
 		}
-		if self.source_address:
-			extra_kw['source_address'] = self.source_address
+		if self.source_address:  # type: ignore[attr-defined]
+			extra_kw['source_address'] = self.source_address  # type: ignore[attr-defined]
 
-		if self.socket_options:
-			extra_kw['socket_options'] = self.socket_options
+		if self.socket_options:  # type: ignore[attr-defined]
+			extra_kw['socket_options'] = self.socket_options  # type: ignore[attr-defined]
 
 		try:
-			dns_host = getattr(self, "_dns_host", self.host)
+			dns_host = getattr(self, "_dns_host", self.host)  # type: ignore[attr-defined]
 			if hasattr(socket, "AF_UNIX") and extra_kw["family"] == socket.AF_UNIX:
 				dns_host = urllib.parse.unquote(dns_host)
 			conn = create_connection(
-				(dns_host, self.port), self.timeout, **extra_kw)
+				(dns_host, self.port), self.timeout, **extra_kw)  # type: ignore[attr-defined]
 		except socket.timeout:
 			raise urllib3.exceptions.ConnectTimeoutError(
 				self, "Connection to %s timed out. (connect timeout=%s)" %
-				(self.host, self.timeout))
+				(self.host, self.timeout))  # type: ignore[attr-defined]
 		except OSError as e:
 			raise urllib3.exceptions.NewConnectionError(
 				self, "Failed to establish a new connection: %s" % e)
@@ -117,39 +152,45 @@ class ConnectionOverrideMixin:
 		return conn
 
 
-class HTTPConnection(ConnectionOverrideMixin, urllib3.connection.HTTPConnection):
-	def __init__(self, *args, **kw):
+class HTTPConnection(
+		ConnectionOverrideMixin,
+		urllib3.connection.HTTPConnection  # type: ignore[misc,no-any-unimported]
+):
+	def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
 		self.family = _kw_scheme_to_family(kw, "http")
 		super().__init__(*args, **kw)
 
 
-class HTTPSConnection(ConnectionOverrideMixin, urllib3.connection.HTTPSConnection):
-	def __init__(self, *args, **kw):
+class HTTPSConnection(
+		ConnectionOverrideMixin,
+		urllib3.connection.HTTPSConnection  # type: ignore[misc,no-any-unimported]
+):
+	def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
 		self.family = _kw_scheme_to_family(kw, "https")
 		super().__init__(*args, **kw)
 
 
 # Override the higher-level `urllib3` ConnectionPool objects that instantiate
 # one or more Connection objects and dispatch work between them
-class HTTPConnectionPool(urllib3.HTTPConnectionPool):
+class HTTPConnectionPool(urllib3.HTTPConnectionPool):  # type: ignore[misc,no-any-unimported]
 	ConnectionCls = HTTPConnection
 
 
-class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):
+class HTTPSConnectionPool(urllib3.HTTPSConnectionPool):  # type: ignore[misc,no-any-unimported]
 	ConnectionCls = HTTPSConnection
 
 
 # Override the highest-level `urllib3` PoolManager to also properly support the
 # address family extended scheme values in URLs and pass these scheme values on
 # to the individual ConnectionPool objects
-class PoolManager(urllib3.PoolManager):
-	def __init__(self, *args, **kwargs):
+class PoolManager(urllib3.PoolManager):  # type: ignore[misc,no-any-unimported]
+	def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
 		super().__init__(*args, **kwargs)
 		
 		# Additionally to adding our variant of the usual HTTP and HTTPS
 		# pool classes, also add these for some variants of the default schemes
 		# that are limited to some specific address family only
-		self.pool_classes_by_scheme = {}
+		self.pool_classes_by_scheme: ty.Dict[str, type] = {}
 		for scheme, ConnectionPool in (("http", HTTPConnectionPool), ("https", HTTPSConnectionPool)):
 			self.pool_classes_by_scheme[scheme] = ConnectionPool
 			for name in AF2NAME.values():
@@ -159,8 +200,14 @@ class PoolManager(urllib3.PoolManager):
 	# These next two are only required to ensure that our custom `scheme` values
 	# will be passed down to the `*ConnectionPool`s and finally to the actual
 	# `*Connection`s as parameter
-	def _new_pool(self, scheme, host, port, request_context=None):
-		# Copied from `urllib3` to *not* surpress the `scheme` parameter
+	def _new_pool(
+			self,
+			scheme: str,
+			host: str,
+			port: int,
+			request_context: ty.Optional[ty.Dict[str, ty.Any]] = None
+	) -> ty.Union[HTTPConnectionPool, HTTPSConnectionPool]:
+		# Copied from `urllib3` to *not* suppress the `scheme` parameter
 		pool_cls = self.pool_classes_by_scheme[scheme]
 		if request_context is None:
 			request_context = self.connection_pool_kw.copy()
@@ -172,15 +219,25 @@ class PoolManager(urllib3.PoolManager):
 			for kw in urllib3.poolmanager.SSL_KEYWORDS:
 				request_context.pop(kw, None)
 		
-		return pool_cls(host, port, **request_context)
+		return ty.cast(
+			ty.Union[HTTPConnectionPool, HTTPSConnectionPool],
+			pool_cls(host, port, **request_context)
+		)
 
-	def connection_from_pool_key(self, pool_key, request_context=None):
+	def connection_from_pool_key(
+			self,
+			pool_key: str,
+			request_context: ty.Optional[ty.Dict[str, ty.Any]] = None
+	) -> ty.Union[HTTPConnectionPool, HTTPSConnectionPool]:
 		# Copied from `urllib3` so that we continue to ensure that this will
 		# call `_new_pool`
 		with self.pools.lock:
-			pool = self.pools.get(pool_key)
+			pool: ty.Union[HTTPConnectionPool, HTTPSConnectionPool] = self.pools.get(pool_key)
 			if pool:
 				return pool
+
+			if request_context is None:
+				raise ValueError('request_context required')
 
 			scheme = request_context['scheme']
 			host = request_context['host']
@@ -193,7 +250,13 @@ class PoolManager(urllib3.PoolManager):
 # Override the lower-level `requests` adapter that invokes the `urllib3`
 # PoolManager objects
 class HTTPAdapter(requests.adapters.HTTPAdapter):
-	def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
+	def init_poolmanager(  # type: ignore[no-untyped-def]
+			self,
+			connections: int,
+			maxsize: int,
+			block: bool = False,
+			**pool_kwargs
+	) -> None:
 		# save these values for pickling (copied from `requests`)
 		self._pool_connections = connections
 		self._pool_maxsize = maxsize
@@ -206,9 +269,9 @@ class HTTPAdapter(requests.adapters.HTTPAdapter):
 # Override the highest-level `requests` Session object to accept the `family`
 # parameter for any request and encode its value as part of the URL scheme
 # when passing it down to the adapter
-class Session(requests.Session):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
+class PatchedSession(requests.Session):
+	def __init__(self) -> None:
+		super().__init__()
 		self.family = socket.AF_UNSPEC
 
 		# Additionally to mounting our variant of the usual HTTP and HTTPS
@@ -220,63 +283,32 @@ class Session(requests.Session):
 			for name in AF2NAME.values():
 				self.mount("{0}+{1}://".format(scheme, name), adapter)
 
-	def request(self, method, url, *args, **kwargs):
-		family = kwargs.pop("family", self.family)
-		if family != socket.AF_UNSPEC:
+	@staticmethod
+	def replace_scheme(family: int, url: str) -> str:
+		if family == socket.AF_UNSPEC:
+			return url
+		else:
 			# Inject provided address family value as extension to scheme
-			url = urllib.parse.urlparse(url)
-			url = url._replace(scheme="{0}+{1}".format(url.scheme, AF2NAME[int(family)]))
-			url = url.geturl()
+			parsed = urllib.parse.urlparse(url)
+			parsed = parsed._replace(scheme="{0}+{1}".format(parsed.scheme, AF2NAME[int(family)]))
+			return parsed.geturl()
+
+	def request(  # type: ignore[override,no-untyped-def]
+			self,
+			method: str,
+			url: str,
+			*args,
+			**kwargs
+	) -> requests.Response:
+		family = kwargs.pop("family", self.family)
+
+		url = self.replace_scheme(family, url)
+
 		return super().request(method, url, *args, **kwargs)
 
 
-session = Session
-
-
-# Import other `requests` stuff to make the top-level API of this more compatible
-from requests import (
-	__title__, __description__, __url__, __version__, __build__, __author__,
-	__author_email__, __license__, __copyright__, __cake__,
-	
-	exceptions, utils, packages, codes,
-	Request, Response, PreparedRequest,
-	RequestException, Timeout, URLRequired, TooManyRedirects, HTTPError,
-	ConnectionError, FileModeWarning, ConnectTimeout, ReadTimeout
-)
-
-
-# Re-implement the top-level “session-less” API
-def request(method, url, **kwargs):
-	with Session() as session:
-		return session.request(method=method, url=url, **kwargs)
-
-
-def get(url, params=None, **kwargs):
-	kwargs.setdefault('allow_redirects', True)
-	return request('get', url, params=params, **kwargs)
-
-
-def options(url, **kwargs):
-	kwargs.setdefault('allow_redirects', True)
-	return request('options', url, **kwargs)
-
-
-def head(url, **kwargs):
-	kwargs.setdefault('allow_redirects', False)
-	return request('head', url, **kwargs)
-
-
-def post(url, data=None, json=None, **kwargs):
-	return request('post', url, data=data, json=json, **kwargs)
-
-
-def put(url, data=None, **kwargs):
-	return request('put', url, data=data, **kwargs)
-
-
-def patch(url, data=None, **kwargs):
-	return request('patch', url, data=data, **kwargs)
-
-
-def delete(url, **kwargs):
-	return request('delete', url, **kwargs)
+def wrapped_session() -> requests.Session:
+	if PATCH_REQUESTS:
+		return PatchedSession()
+	else:
+		return requests.Session()
