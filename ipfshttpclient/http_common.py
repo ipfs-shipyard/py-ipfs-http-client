@@ -684,3 +684,34 @@ class ClientSyncBase(ty.Generic[S], metaclass=abc.ABCMeta):
 		finally:
 			for closable in closables:
 				closable.close()
+
+	@staticmethod
+	def _raise_for_response_status(
+			error: Exception,
+			status_code: int,
+			content: ty.List[object]
+	) -> None:
+
+		"""
+		If we have decoded an error response from the server,
+		use that as the exception message; otherwise, just pass
+		the exception on to the caller.
+		"""
+
+		if len(content) == 1:
+			item = content[0]
+
+			if isinstance(item, dict) and "Message" in item:
+				msg: str = item["Message"]
+
+				raise exceptions.ErrorResponse(
+					status_code=status_code,
+					message=msg,
+					original=error
+				) from error
+
+		raise exceptions.StatusError(
+			status_code=status_code,
+			message=str(error),
+			original=error
+		) from error

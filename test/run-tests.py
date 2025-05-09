@@ -113,16 +113,18 @@ try:
 	with tempfile.NamedTemporaryFile("r+") as coveragerc:
 		coverage_args = []
 		if os.name != "nt":
-			PREFER_HTTPX = (os.environ.get("PY_IPFS_HTTP_CLIENT_PREFER_HTTPX", "no").lower()
-			                not in ("0", "f", "false", "n", "no"))
+			PREFER_HTTPX = (
+				os.environ.get("PY_IPFS_HTTP_CLIENT_PREFER_HTTPX", "no").lower()
+				not in ("0", "f", "false", "n", "no")
+			)
 			
 			# Assemble list of files to exclude from coverage analysis
 			omitted_files = [
 				"ipfshttpclient/requests_wrapper.py",
 			]
-			if PREFER_HTTPX and sys.version_info >= (3, 6):
+			if PREFER_HTTPX:
 				omitted_files.append("ipfshttpclient/http_requests.py")
-			else:  #PY35: Fallback to old requests-based code instead of HTTPX
+			else:
 				omitted_files.append("ipfshttpclient/http_httpx.py")
 			
 			# Assemble list of coverage data exclusion patterns (also escape the
@@ -152,9 +154,9 @@ try:
 					"|".join(map(str, range(sys.version_info.minor + 1, 20)))
 				))
 			
-			if PREFER_HTTPX and sys.version_info >= (3, 6):
+			if PREFER_HTTPX:
 				exclusions.append(r"\# pragma: http-backend=requests")
-			else:  #PY35: Fallback to old requests-based code instead of HTTPX
+			else:
 				exclusions.append(r"\# pragma: http-backend=httpx")
 			
 			# Create temporary file with extended *coverage.py* configuration data
