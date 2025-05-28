@@ -1,14 +1,15 @@
 import pytest
+import warnings
 
 import ipfshttpclient
 
 
 def test_assert_version():
-	with pytest.warns(None) as warnings:
+	with warnings.catch_warnings():
 		# Minimum required version
 		ipfshttpclient.assert_version("0.1.0", "0.1.0", "0.2.0", ["0.1.2"])
 
-	assert len(warnings) == 0
+	warnings.simplefilter("error")
 
 	# Too high version
 	with pytest.warns(ipfshttpclient.exceptions.VersionMismatch):
